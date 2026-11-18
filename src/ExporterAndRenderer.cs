@@ -360,14 +360,27 @@ namespace DjiNeo2OrbeaMounts
             return m;
         }
 
-        // Rotate Universal Cradle 90 deg onto its side to mount onto the Vertical L-Tower wall (Y_tower = -13.0mm, Z_tower = 100.0mm)
-        // Mapping: (X, Y, Z) -> (X - 9.50, Z - 13.00, -Y + 100.00) has determinant +1 (preserves outward normals!)
-        private static MeshData RotateCradleSidewaysOnTower(MeshData src, string newName)
+        // Rotate Universal Cradle 90 deg onto its side to mount onto the Angled-Outward Vertical L-Tower wall
+        // With the 7.5mm TPU Isolator Puck nested 3.5mm into the Y = -28.0mm pocket, the cradle back sits at Y = -20.50mm!
+        // Mapping: (X, Y, Z) -> (X - 9.50, Z + yMountFace, -Y + 100.00) has determinant +1 (preserves outward normals!)
+        private static MeshData RotateCradleSidewaysOnTower(MeshData src, string newName, double yMountFace = -20.50)
         {
             var m = new MeshData(newName);
             foreach (var v in src.Vertices)
             {
-                m.Vertices.Add(new Vec3(v.X - 9.50, v.Z - 13.00, -v.Y + 100.00));
+                m.Vertices.Add(new Vec3(v.X - 9.50, v.Z + yMountFace, -v.Y + 100.00));
+            }
+            m.Triangles.AddRange(src.Triangles);
+            return m;
+        }
+
+        // Rotate TPU Isolator Pad (Z in [0, 7.5]) to sit on the L-Tower recessed pocket face (Y = -28.00 to -20.50, Z = 100.00)
+        private static MeshData RotateIsolatorSidewaysOnTower(MeshData src, string newName)
+        {
+            var m = new MeshData(newName);
+            foreach (var v in src.Vertices)
+            {
+                m.Vertices.Add(new Vec3(v.X, v.Z - 28.00, -v.Y + 100.00));
             }
             m.Triangles.AddRange(src.Triangles);
             return m;
@@ -415,24 +428,27 @@ namespace DjiNeo2OrbeaMounts
             SaveAndReport(downtubeTpuPads, Path.Combine(stlDir, "02b_Downtube_TPU_Damping_Pads.stl"));
 
             Console.WriteLine("4. Building Integrated One-Piece Side-Mount Downtube L-Tower + Sideways Cradle...");
-            var sidewaysCradle = RotateCradleSidewaysOnTower(universalCradle, "Sideways_Cradle");
+            var sidewaysCradleFused = RotateCradleSidewaysOnTower(universalCradle, "Sideways_Cradle_Fused", -25.00);
             var integratedDowntube = downtubeSideTower.Clone("02c_Integrated_Downtube_SideMount_Cradle");
-            integratedDowntube.Append(sidewaysCradle);
+            integratedDowntube.Append(sidewaysCradleFused);
             SaveAndReport(integratedDowntube, Path.Combine(stlDir, "02c_Integrated_Downtube_SideMount_Cradle.stl"));
 
             // Also save the flat downtube mount as 02d in case user wants both options
             var downtubeFlat = PartDesigns.BuildDowntubeFlatFidlockMount(0.45);
             SaveAndReport(downtubeFlat, Path.Combine(stlDir, "02d_Orbea_Wild_Downtube_Flat_Fidlock_Mount.stl"));
 
-            // Render Multi-Color Side-Mount Downtube Assembly
+            // Render Multi-Color Side-Mount Downtube Assembly (with Angled L-Tower + Cyan TPU Isolator Puck + Blue Sideways Cradle centered over downtube!)
+            var sidewaysCradleWithPuck = RotateCradleSidewaysOnTower(universalCradle, "Sideways_Cradle_With_Puck", -20.50);
+            var tpuIsolatorForTower = RotateIsolatorSidewaysOnTower(PartDesigns.BuildTpuVibrationIsolatorSystem(0.32, false), "Tower_Isolator");
             MeshRenderer.RenderMultiColorSheet(
                 Path.Combine(rendersDir, "05_Downtube_Assembly_Preview.png"),
-                "Assembly 1 - Side-Mount Downtube L-Tower (Edgewise Between Top Tube & Downtube)",
-                "Only 58mm Total Width (Zero Knee Interference!) | Orange: Fidlock/64mm L-Tower + Prop Saddles | Blue: Sideways Cradle",
+                "Assembly 1 - Angled Centering Side-Mount Downtube L-Tower + TPU Isolator + Cradle",
+                "Angled Tower Offsets TPU Puck (-28..-20.5mm) so Mount + Puck + Cradle + Drone Center at Y=0!",
                 new List<ColoredMeshPart>
                 {
                     new ColoredMeshPart(downtubeSideTower, Color.FromArgb(235, 110, 40)),
-                    new ColoredMeshPart(sidewaysCradle, Color.FromArgb(45, 125, 230))
+                    new ColoredMeshPart(tpuIsolatorForTower, Color.FromArgb(40, 195, 210)),
+                    new ColoredMeshPart(sidewaysCradleWithPuck, Color.FromArgb(45, 125, 230))
                 });
 
             Console.WriteLine("5. Building Over-Stem Bridge Plate for OC Mountain Control MC11 40mm Stem...");
@@ -529,7 +545,7 @@ namespace DjiNeo2OrbeaMounts
                 });
 
             // Render sheet 08: Cradle with TPU Vibration Isolator + TPU Gimbal Lock/Sensor Shield + TPU Heatsink Louver installed!
-            var installedIsolator = PartDesigns.BuildTpuVibrationIsolatorSystem(0.30);
+            var installedIsolator = PartDesigns.BuildTpuVibrationIsolatorSystem(0.30, false);
             installedIsolator.Translate(9.50, 0.0, -7.50);
             var installedGimbalShield = tpuGimbalShield.Clone("Installed_Shield");
             installedGimbalShield.Translate(50.50, 0.0, -1.40);

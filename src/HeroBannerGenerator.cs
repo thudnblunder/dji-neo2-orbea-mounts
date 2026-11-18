@@ -21,9 +21,15 @@ namespace DjiNeo2OrbeaMounts
             universalCradle.Append(cradleInsert);
 
             var downtubeSideTower = PartDesigns.BuildDowntubeSideMountLTower(0.48);
+            var sidewaysIsolator = new MeshData("SidewaysIsolator");
+            var rawIsolator = PartDesigns.BuildTpuVibrationIsolatorSystem(0.35, false);
+            foreach (var v in rawIsolator.Vertices)
+                sidewaysIsolator.Vertices.Add(new Vec3(v.X, v.Z - 28.00, -v.Y + 100.00));
+            sidewaysIsolator.Triangles.AddRange(rawIsolator.Triangles);
+
             var sidewaysCradle = new MeshData("SidewaysCradle");
             foreach (var v in universalCradle.Vertices)
-                sidewaysCradle.Vertices.Add(new Vec3(v.X - 9.50, v.Z - 13.00, -v.Y + 100.00));
+                sidewaysCradle.Vertices.Add(new Vec3(v.X - 9.50, v.Z - 20.50, -v.Y + 100.00));
             sidewaysCradle.Triangles.AddRange(universalCradle.Triangles);
 
             var stemBridge = PartDesigns.BuildStemBridgePlate(0.42);
@@ -72,10 +78,11 @@ namespace DjiNeo2OrbeaMounts
                 }
 
                 RenderHeroCard(bmp, g, new Rectangle(24, 116, 504, 520),
-                    "1. SIDE-MOUNT DOWNTUBE L-TOWER",
-                    "55.4mm Width (Zero Knee Hit) | Fidlock TWIST + 64mm Bosses",
+                    "1. ANGLED CENTERING DOWNTUBE L-TOWER",
+                    "Angles Outward so Tower + TPU Puck + Cradle + Drone Center at Y=0",
                     new List<ColoredMeshPart> {
                         new ColoredMeshPart(downtubeSideTower, Color.FromArgb(235, 110, 40)),
+                        new ColoredMeshPart(sidewaysIsolator, Color.FromArgb(40, 195, 210)),
                         new ColoredMeshPart(sidewaysCradle, Color.FromArgb(45, 125, 230))
                     }, 40.0, 22.0);
 
