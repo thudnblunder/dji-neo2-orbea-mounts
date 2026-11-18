@@ -347,13 +347,14 @@ namespace DjiNeo2OrbeaMounts
                 }
 
                 // (C) Front Plate Mounting M4 Bolt Holes (at sAlong = -8.0 and +8.0, centered at Z = 7.5mm)
-                // Socket head counterbore r = 3.90mm (7.8mm wide out of 15.0mm -> 3.6mm side walls) to sNormal = -4.5 (4.5mm solid clamping wall!)
+                // Punch BOTH the M4 bore (r = 2.15mm) and rear socket-head / hex-wrench access tunnel (r = 3.90mm) ALL THE WAY OUT THE BACK (sNormal to -38.0mm)!
+                // Leaves a solid 4.5mm clamping flange at the front (sNormal in [-4.5, 0.0]) and 100% unobstructed rear bolt & Allen-key access!
                 for (int ss = -1; ss <= 1; ss += 2)
                 {
                     double sa = ss * 8.0;
                     double dRad = Math.Sqrt((sAlong - sa) * (sAlong - sa) + (z - 7.5) * (z - 7.5));
-                    double dPlateBore = Math.Max(dRad - 2.15, Math.Max(-10.5 - sNormal, sNormal - 1.0));
-                    double dPlateCbore = Math.Max(dRad - 3.90, Math.Max(-10.5 - sNormal, sNormal - (-4.5)));
+                    double dPlateBore = Math.Max(dRad - 2.15, Math.Max(-38.0 - sNormal, sNormal - 1.0));
+                    double dPlateCbore = Math.Max(dRad - 3.90, Math.Max(-38.0 - sNormal, sNormal - (-4.5)));
                     cut = Math.Min(cut, Math.Min(dPlateBore, dPlateCbore));
                 }
 
