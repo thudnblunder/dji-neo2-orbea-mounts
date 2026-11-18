@@ -375,7 +375,7 @@ namespace DjiNeo2OrbeaMounts
             {
                 var v = pairMesh.Vertices[vStart + i];
                 double yLocal = v.Y + shiftBackY;
-                m.Vertices.Add(new Vec3(v.X, (v.Z - 6.5) + offsetY, yLocal + 24.5));
+                m.Vertices.Add(new Vec3(v.X, (v.Z - 7.5) + offsetY, yLocal + 24.5));
             }
             int tStart = takeFirstHalf ? 0 : halfT;
             for (int i = 0; i < halfT; i++)

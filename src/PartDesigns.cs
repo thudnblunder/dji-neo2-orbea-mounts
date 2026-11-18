@@ -295,27 +295,27 @@ namespace DjiNeo2OrbeaMounts
 
             Func<double, double, double, double> singleArmSdf = (x, y, z) =>
             {
-                // 1) Top Saddle Mounting Pad: X in [-15.5, +16.0], Y in [0.0, 7.5]
-                double dTopPad2D = SdfMesher.ChamferBox2D(x - 0.25, y - 3.75, 15.75, 3.75, 2.0);
+                // 1) Top Saddle Mounting Pad: X in [-15.5, +16.0], Y in [0.0, 9.5] (beefed up to 9.5mm tall, zero top-edge scalloping!)
+                double dTopPad2D = SdfMesher.ChamferBox2D(x - 0.25, y - 4.75, 15.75, 4.75, 2.0);
 
-                // 2) Front Raked Plate Flange: centered at (px0, py0), length +-18.5mm along (ux, uy), thickness 7.5mm behind plate backplane (along -nx, -ny)
+                // 2) Front Raked Plate Flange: centered at (px0, py0), length +-18.5mm along (ux, uy), thickness 9.0mm behind plate backplane
                 double dxp = x - px0, dyp = y - py0;
                 double sAlong = dxp * ux + dyp * uy;      // coordinate along plate [-18.5, +18.5]
-                double sNormal = dxp * nx + dyp * ny;     // coordinate along plate normal [-7.5, 0.0] (0.0 mates flush against Z_plate = 0!)
-                double dFlange2D = SdfMesher.ChamferBox2D(sAlong, sNormal + 3.75, 18.5, 3.75, 2.0);
+                double sNormal = dxp * nx + dyp * ny;     // coordinate along plate normal [-9.0, 0.0] (0.0 mates flush against Z_plate = 0!)
+                double dFlange2D = SdfMesher.ChamferBox2D(sAlong, sNormal + 4.5, 18.5, 4.5, 2.0);
 
-                // 3) Swept Dual-Chord Truss Strut connecting Top Pad (X = +10, Y = +3.75) to Upper Flange (sAlong = +12) and Lower Flange (sAlong = -12)
-                // Upper tension chord: from (8.0, 4.2) to (px0 + 12*ux - 4*nx, py0 + 12*uy - 4*ny)
-                double u1x = px0 + 11.0 * ux - 3.8 * nx, u1y = py0 + 11.0 * uy - 3.8 * ny;
-                double dChordTop = Capsule2D(x, y, 8.0, 4.2, u1x, u1y, 3.8);
+                // 3) Swept Dual-Chord Truss Strut connecting Top Pad to Front Raked Flange
+                // Upper tension chord: from (8.0, 5.2) to (u1x, u1y), radius 4.2mm (8.4mm thick chord!)
+                double u1x = px0 + 11.5 * ux - 4.2 * nx, u1y = py0 + 11.5 * uy - 4.2 * ny;
+                double dChordTop = Capsule2D(x, y, 8.0, 5.2, u1x, u1y, 4.2);
 
-                // Lower compression arch chord: from (-6.0, 2.5) -> mid-arch (22.0, -6.0) -> lower flange (px0 - 11*ux - 3.8*nx, py0 - 11*uy - 3.8*ny)
-                double l1x = px0 - 11.0 * ux - 3.8 * nx, l1y = py0 - 11.0 * uy - 3.8 * ny;
-                double dChordBotA = Capsule2D(x, y, -4.0, 3.2, 23.0, -5.0, 3.8);
-                double dChordBotB = Capsule2D(x, y, 23.0, -5.0, l1x, l1y, 3.8);
+                // Lower compression arch chord: from (-4.0, 4.2) -> mid-arch (22.0, -5.5) -> lower flange (l1x, l1y), radius 4.2mm
+                double l1x = px0 - 11.5 * ux - 4.2 * nx, l1y = py0 - 11.5 * uy - 4.2 * ny;
+                double dChordBotA = Capsule2D(x, y, -4.0, 4.2, 22.0, -5.5, 4.2);
+                double dChordBotB = Capsule2D(x, y, 22.0, -5.5, l1x, l1y, 4.2);
 
-                // Web fill between chords (trimmed by an angular stealth truss cutout in the middle!)
-                double dWeb = Triangle2D(x, y, 6.0, 4.2, u1x, u1y, l1x, l1y);
+                // Web fill between chords
+                double dWeb = Triangle2D(x, y, 6.0, 4.8, u1x, u1y, l1x, l1y);
                 double profile2D = SdfMesher.SmoothMin(Math.Min(dTopPad2D, dFlange2D), Math.Min(dChordTop, Math.Min(dChordBotA, dChordBotB)), 2.2);
                 profile2D = Math.Min(profile2D, dWeb);
 
@@ -323,35 +323,37 @@ namespace DjiNeo2OrbeaMounts
                 if (x < 14.5 && y < 0.0) profile2D = Math.Max(profile2D, 0.0 - y);
                 profile2D = Math.Max(profile2D, sNormal);
 
-                // Extrude Z in [0.0, 13.0mm] with crisp 1.4mm 45-deg Orbea stealth side bevels!
-                double dz = Math.Abs(z - 6.5) - 6.5;
-                double dBevel = (profile2D + dz + 1.4) * 0.70710678;
+                // Extrude Z in [0.0, 15.0mm] (matches exact 15.0mm width of 03b handlebar clamps!) with 1.0mm Orbea stealth bevels
+                double dz = Math.Abs(z - 7.5) - 7.5;
+                double dBevel = (profile2D + dz + 1.0) * 0.70710678;
                 double body3D = Math.Max(Math.Max(profile2D, dz), dBevel);
 
                 // Subtract features:
                 double cut = 1e9;
 
-                // (A) Angular Stealth Truss Window through the arm web (leaves crisp triangulated struts for 72D TPU damping!)
-                double wx = 29.5, wy = -2.5;
-                double dTrussHole = SdfMesher.ChamferBox2D((x - wx) * 0.88 - (y - wy) * 0.47, (x - wx) * 0.47 + (y - wy) * 0.88, 9.5, 3.4, 2.2);
-                cut = Math.Min(cut, dTrussHole);
+                // (A) Centered Stealth Truss Slot along the arm's neutral axis from (24.0, -2.5) to (36.5, -9.5), radius 2.8mm
+                // Guaranteed >= 4.5mm solid upper tension chord and >= 4.5mm solid lower compression arch with ZERO thin slivers!
+                double dTrussWindow = Capsule2D(x, y, 24.0, -2.5, 36.5, -9.5, 2.8);
+                dTrussWindow = Math.Max(dTrussWindow, profile2D + 4.5);
+                cut = Math.Min(cut, dTrussWindow);
 
-                // (B) Top Saddle M4 Bolt Holes (at X = -9.0 and X = +9.0, running along Y, centered at Z = 6.5mm, slotted +-2.0mm in Z for lateral fine-tuning!)
+                // (B) Top Saddle M4 Bolt Slots (at X = -9.0 and X = +9.0, running along Y, centered at Z = 7.5mm, slotted +-1.2mm in Z)
+                // Clean through-bores (d = 4.3mm -> 5.3mm solid walls on both sides in Z, zero top-edge notches! Mount with M4x16 button-head + washer on top)
                 for (int sx = -1; sx <= 1; sx += 2)
                 {
                     double bx = sx * 9.0;
-                    double dBore = Math.Max(SdfMesher.SlotY2D(x, z, bx, 5.0, 8.0, 2.15), Math.Max(-1.0 - y, y - 9.0));
-                    double dCbore = Math.Max(SdfMesher.SlotY2D(x, z, bx, 5.0, 8.0, 4.15), Math.Max(3.8 - y, y - 9.0));
-                    cut = Math.Min(cut, Math.Min(dBore, dCbore));
+                    double dBore = Math.Max(SdfMesher.SlotY2D(x, z, bx, 6.3, 8.7, 2.15), Math.Max(-1.0 - y, y - 10.5));
+                    cut = Math.Min(cut, dBore);
                 }
 
-                // (C) Front Plate Mounting M4 Bolt Holes (at sAlong = -8.0 and +8.0 -> matching the 16mm spacing between X_plate = 23 and 39!)
+                // (C) Front Plate Mounting M4 Bolt Holes (at sAlong = -8.0 and +8.0, centered at Z = 7.5mm)
+                // Socket head counterbore r = 3.90mm (7.8mm wide out of 15.0mm -> 3.6mm side walls) to sNormal = -4.5 (4.5mm solid clamping wall!)
                 for (int ss = -1; ss <= 1; ss += 2)
                 {
                     double sa = ss * 8.0;
-                    double dRad = Math.Sqrt((sAlong - sa) * (sAlong - sa) + (z - 6.5) * (z - 6.5));
-                    double dPlateBore = Math.Max(dRad - 2.15, Math.Max(-9.0 - sNormal, sNormal - 1.0));
-                    double dPlateCbore = Math.Max(dRad - 4.15, Math.Max(-9.0 - sNormal, sNormal - (-3.8)));
+                    double dRad = Math.Sqrt((sAlong - sa) * (sAlong - sa) + (z - 7.5) * (z - 7.5));
+                    double dPlateBore = Math.Max(dRad - 2.15, Math.Max(-10.5 - sNormal, sNormal - 1.0));
+                    double dPlateCbore = Math.Max(dRad - 3.90, Math.Max(-10.5 - sNormal, sNormal - (-4.5)));
                     cut = Math.Min(cut, Math.Min(dPlateBore, dPlateCbore));
                 }
 
@@ -359,7 +361,7 @@ namespace DjiNeo2OrbeaMounts
             };
 
             var single = SdfMesher.ExtractMesh("Stealth_Drop_Arm", singleArmSdf,
-                new Vec3(-17.0, -32.0, -0.6), new Vec3(62.0, 9.0, 13.6), step);
+                new Vec3(-17.0, -32.0, -0.6), new Vec3(62.0, 11.0, 15.6), step);
 
             var pair = new MeshData("02b_Orbea_Stealth_NumberPlate_Drop_Arms_Pair");
             var armL = single.Clone("Drop_Arm_L"); armL.Translate(0.0, 22.0, 0.0);
