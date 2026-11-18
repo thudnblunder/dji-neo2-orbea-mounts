@@ -824,5 +824,111 @@ namespace DjiNeo2OrbeaMounts
                 new Vec3(29.5, 25.5, 56.0),
                 step);
         }
+
+        // 01c. Mounting Insert for 72D TPU Cradle with Recessed Snap-In Pocket for the Rigid PETG Multi-Nut Carrier Plate (05a)
+        public static MeshData BuildCradle72DMountingInsertForPetgCarrier(double step = 0.28)
+        {
+            Func<double, double, double, double> sdf = (x, y, z) =>
+            {
+                double w1 = SdfMesher.RoundedBox3D(x - (-4.125), y, z - 1.425, 10.075, 11.50, 1.425, 0.8);
+                double w2 = SdfMesher.RoundedBox3D(x - 23.00, y, z - 1.425, 9.95, 11.50, 1.425, 0.8);
+                double deck = SdfMesher.RoundedBox3D(x - 9.50, y, z - 4.125, 25.00, 13.20, 1.425, 2.0);
+                double body = Math.Min(Math.Min(w1, w2), deck);
+
+                // Subtract:
+                // (1) Recessed pocket in upper deck (Z in [1.95, 6.00], X in [-12.0, +31.0] -> hx=21.5 centered at 9.5, Y in [-10.8, +10.8] -> hy=10.8)
+                // With a subtle 0.35mm top snap-retention lip at Z in [5.0, 5.55] so the 3.5mm thick PETG carrier plate snaps in and stays captive!
+                double snapLip = (z >= 4.95 && z <= 5.55) ? -0.35 : 0.0;
+                double dCarrierPocket2D = SdfMesher.Box2D(x - 9.50, y, 21.50 + snapLip, 10.80 + snapLip, 3.0);
+                double dCarrierPocket3D = Math.Max(dCarrierPocket2D, 1.95 - z);
+
+                // (2) 6 x M4 Bolt Through-Bores (r = 2.15mm) through the bottom 1.95mm floor
+                double holes = 1e9;
+                holes = Math.Min(holes, Math.Sqrt((x - 2.00) * (x - 2.00) + (y + 7.50) * (y + 7.50)) - 2.15);
+                holes = Math.Min(holes, Math.Sqrt((x - 2.00) * (x - 2.00) + (y - 7.50) * (y - 7.50)) - 2.15);
+                holes = Math.Min(holes, Math.Sqrt((x - 17.00) * (x - 17.00) + (y + 7.50) * (y + 7.50)) - 2.15);
+                holes = Math.Min(holes, Math.Sqrt((x - 17.00) * (x - 17.00) + (y - 7.50) * (y - 7.50)) - 2.15);
+                holes = Math.Min(holes, Math.Sqrt((x + 5.50) * (x + 5.50) + y * y) - 2.15);
+                holes = Math.Min(holes, Math.Sqrt((x - 24.50) * (x - 24.50) + y * y) - 2.15);
+
+                return Math.Max(body, -Math.Min(dCarrierPocket3D, holes));
+            };
+
+            return SdfMesher.ExtractMesh(
+                "Cradle_72D_Pocket_Insert",
+                sdf,
+                new Vec3(-17.0, -15.0, -0.5),
+                new Vec3(36.0, 15.0, 6.2),
+                step);
+        }
+
+        // 05. Complete PETG Rigid Fastener Reinforcement Insert Kit for 72D TPU Prints:
+        //   (A) 05a: Unified 6-Nut Rigid PETG Carrier Plate (42.6 x 21.2 x 3.5 mm) that snaps into 01c (72D TPU Cradle)
+        //   (B) 05b: Pair of Rigid PETG M5 Bottle-Boss Slot Load-Spreader Plates (25.6 x 9.8 x 2.4 mm) that drop into 02a's M5 counterbore slots
+        //   (C) 05c: Set of 8 Press-In Flanged PETG Hex-Collar M4 Bushings (7.10mm AF hex outer collar + 9.2mm top washer flange + 4.25mm M4 bore)
+        //            that press directly into the standard M4 hex pockets of 01 (72D Cradle) or 02a (72D L-Tower)!
+        public static MeshData BuildPetgReinforcementInsertKit(double step = 0.24)
+        {
+            // (A) Unified 6-Nut PETG Cradle Carrier Plate (centered at X = 0, Y = 0, Z in [0.0, 3.5])
+            Func<double, double, double, double> carrierPlateSdf = (x, y, z) =>
+            {
+                double ax = Math.Abs(x);
+                double ay = Math.Abs(y);
+                double body = SdfMesher.RoundedBox3D(x, y, z - 1.75, 21.30, 10.60, 1.75, 2.8);
+                // Subtract 6 x M4 holes + captive M4 hex nut pockets (Z in [1.10, 3.60] -> 2.4mm deep hex trap + 1.1mm solid PETG floor!)
+                double holes = 1e9;
+                holes = Math.Min(holes, M4HoleAndHexNutSdf(ax, ay, z, 7.50, 7.50, 1.10, 3.80));
+                holes = Math.Min(holes, M4HoleAndHexNutSdf(ax, y, z, 15.00, 0.00, 1.10, 3.80));
+                return Math.Max(body, -holes);
+            };
+
+            // (B) Rigid PETG M5 Bottle-Cage Slot Load-Spreader Insert (fits 02a's 10.2mm wide x 26.2mm long M5 counterbore track!)
+            // Length = 25.6mm (capsule from x=-7.9 to +7.9 with r=4.9mm -> 25.6 x 9.8mm), thickness Z in [0.0, 2.4mm], inner M5 slot width = 5.30mm (r=2.65mm)
+            Func<double, double, double, double> m5SlotInsertSdf = (x, y, z) =>
+            {
+                double dOuter = SdfMesher.SlotX2D(x, y, -7.9, 7.9, 0.0, 4.90);
+                double dInner = SdfMesher.SlotX2D(x, y, -7.9, 7.9, 0.0, 2.65);
+                double d2D = Math.Max(dOuter, -dInner);
+                return Math.Max(d2D, Math.Max(0.0 - z, z - 2.40));
+            };
+
+            // (C) Press-In Flanged PETG Hex-Collar M4 Bolt Bushing (presses into any standard 7.18mm AF hex pocket in 01 or 02a!)
+            // Lower Hex Collar: 7.08mm across flats, Z in [0.0, 3.2]
+            // Upper Load-Spreading Flange: d = 9.6mm (r = 4.8mm), Z in [3.2, 4.6]
+            // Through-Bore: d = 4.25mm (r = 2.125mm) for M4 bolt
+            Func<double, double, double, double> hexBushingSdf = (x, y, z) =>
+            {
+                double r = Math.Sqrt(x * x + y * y);
+                double dOuter = z <= 3.2 ? SdfMesher.Hexagon2D(x, y, 7.08) : (r - 4.75);
+                double d2D = Math.Max(dOuter, 2.125 - r);
+                return Math.Max(d2D, Math.Max(0.0 - z, z - 4.60));
+            };
+
+            var carrierMesh = SdfMesher.ExtractMesh("05a_PETG_Cradle_6Nut_Carrier_Plate", carrierPlateSdf,
+                new Vec3(-22.5, -12.0, -0.4), new Vec3(22.5, 12.0, 4.0), step);
+            var m5SlotMesh = SdfMesher.ExtractMesh("05b_PETG_M5_Slot_Washer", m5SlotInsertSdf,
+                new Vec3(-14.0, -6.0, -0.4), new Vec3(14.0, 6.0, 2.9), 0.22);
+            var hexBushMesh = SdfMesher.ExtractMesh("05c_PETG_Hex_Collar_M4_Bushing", hexBushingSdf,
+                new Vec3(-5.5, -5.5, -0.4), new Vec3(5.5, 5.5, 5.0), 0.20);
+
+            var kitMesh = new MeshData("05_PETG_Reinforcement_Inserts_For_72D_TPU");
+            kitMesh.Append(carrierMesh);
+
+            // Add 2 x M5 Bottle-Slot Load-Spreader Plates above the carrier plate
+            var m5L = m5SlotMesh.Clone("M5_Slot_1"); m5L.Translate(-15.0, 19.0, 0.0);
+            var m5R = m5SlotMesh.Clone("M5_Slot_2"); m5R.Translate(15.0, 19.0, 0.0);
+            kitMesh.Append(m5L);
+            kitMesh.Append(m5R);
+
+            // Add 8 x Press-In Flanged Hex-Collar M4 Bushings below the carrier plate
+            for (int i = 0; i < 8; i++)
+            {
+                var b = hexBushMesh.Clone("Hex_Bush_" + i);
+                b.Translate(-38.5 + i * 11.0, -19.0, 0.0);
+                kitMesh.Append(b);
+            }
+
+            return kitMesh;
+        }
     }
 }

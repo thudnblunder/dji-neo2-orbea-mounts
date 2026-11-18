@@ -528,6 +528,22 @@ namespace DjiNeo2OrbeaMounts
                     new ColoredMeshPart(anchorFin45, Color.FromArgb(245, 165, 35))
                 });
 
+            Console.WriteLine("13c. Building 72D TPU Cradle w/ Snap-In Pocket for Rigid PETG Multi-Nut Carrier + PETG Reinforcement Insert Kit...");
+            var cradle72DPocketInsert = PartDesigns.BuildCradle72DMountingInsertForPetgCarrier(0.28);
+            var cradle72D = cradleShell.Clone("01c_DJI_Neo2_72D_TPU_Cradle_For_PETG_Insert");
+            cradle72D.Append(cradle72DPocketInsert);
+            SaveAndReport(cradle72D, Path.Combine(stlDir, "01c_DJI_Neo2_72D_TPU_Cradle_For_PETG_Insert.stl"));
+
+            var petgInsertKit = PartDesigns.BuildPetgReinforcementInsertKit(0.24);
+            SaveAndReport(petgInsertKit, Path.Combine(stlDir, "05_PETG_Reinforcement_Inserts_For_72D_TPU.stl"));
+
+            MeshRenderer.RenderMultiViewSheet(
+                Path.Combine(rendersDir, "10_PETG_Inserts_For_72D_TPU_Preview.png"),
+                "05 - Rigid PETG Reinforcement Insert Kit for 72D TPU Mounts",
+                "Center: Unified 6-Nut Cradle Carrier Plate (Snaps into 01c) | Top: 2x M5 Bottle-Slot Plates (02a) | Bottom: 8x Flanged Hex-Collar M4 Bushings",
+                petgInsertKit,
+                Color.FromArgb(230, 75, 95));
+
             // Render sheet 07: All 3 TPU Gimbal/Sensor/Vibration Protection Parts laid out together
             var shieldForSheet = tpuGimbalShield.Clone("Shield");
             shieldForSheet.Translate(48.0, 5.0, 0.0);
@@ -623,6 +639,14 @@ namespace DjiNeo2OrbeaMounts
                 new List<PlateItem>
                 {
                     new PlateItem(cradle45WithFin, 0.0, 0.0, 0.0)
+                });
+
+            ThreeMfWriter.Save3mf(
+                Path.Combine(threeMfDir, "Plate5_PETG_Inserts_For_72D_TPU.3mf"),
+                "DJI Neo 2 - Rigid PETG Fastener Reinforcement Inserts for 72D TPU Mounts",
+                new List<PlateItem>
+                {
+                    new PlateItem(petgInsertKit, 0.0, 0.0, 0.0)
                 });
 
             Console.WriteLine("ALL UPDATED STL, 3MF, AND RENDER FILES GENERATED SUCCESSFULLY.");

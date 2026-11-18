@@ -41,6 +41,7 @@ All parts are pre-oriented on `256 × 256 mm` build plates for the **Bambu Lab P
 | **Plate 2 — TPU Protection & Isolator Suite** | `TPU 95A` | Ø35mm Carbon Bar Grip Sleeves (`03d`) + Prop-Guard Saddle Cushions (`02b`) + Shear Vibration Isolator Puck & 6× M4 Grommets (`04a`) + Gimbal Lock & Sensor Shield (`04b`) + Heatsink Mud Louver (`04c`) | [**Download Plate 2 (.3mf)**](3mf/Plate2_Flexible_Dampers_TPU.3mf) |
 | **Plate 3 — Monolithic 1-Piece Variants** | `ASA` / `Easy Nylon` / `PETG` | Optional 1-Piece Fused Side-Mount Downtube+Cradle (`02c`) + 1-Piece Fused StemBridge+Cradle (`03e`) | [**Download Plate 3 (.3mf)**](3mf/Plate3_Integrated_OnePiece_Variants.3mf) |
 | **Plate 4 — 45° Sunlu Easy-PA Cradle w/ Snap-Off Anchor Fin** | `Sunlu Easy-PA` (Nylon) | Pre-angled `47.1°` Universal Cradle (`01b`) with integrated perforated snap-off A-frame stabilization foot for maximum hook & cup fiber strength with zero slicer supports | [**Download Plate 4 (.3mf)**](3mf/Plate4_Cradle_45Deg_Sunlu_EasyPA.3mf) |
+| **Plate 5 — Rigid PETG Fastener Inserts for 72D TPU Mounts** | `PETG` / `ASA` / `Easy-PA` | Unified 6-Nut Cradle Carrier Plate (snaps into `01c`) + 2× M5 Bottle-Slot Load-Spreader Plates (for `02a`) + 8× Press-In Flanged Hex-Collar M4 Bolt Bushings (for `01` & `02a`) | [**Download Plate 5 (.3mf)**](3mf/Plate5_PETG_Inserts_For_72D_TPU.3mf) |
 
 ---
 
@@ -147,6 +148,14 @@ All parts are pre-oriented on `256 × 256 mm` build plates for the **Bambu Lab P
       <sub>Rotated to its native <code>47.1°</code> self-supporting angle so continuous Nylon fibers run through the latch hooks and nose cup. Perforated <code>0.64 mm</code> tabs snap off cleanly after printing.</sub>
     </td>
   </tr>
+  <tr>
+    <td colspan="2" align="center">
+      <img src="renders/10_PETG_Inserts_For_72D_TPU_Preview.png" alt="05 - Rigid PETG Reinforcement Insert Kit for 72D TPU Mounts" width="68%"/>
+      <br/>
+      <b><code>05</code> — Rigid PETG Fastener Reinforcement Insert Kit for 72D TPU Mounts</b><br/>
+      <sub><b>Center:</b> Unified 6-Nut Carrier Plate (snaps into <code>01c</code> so M4 nuts can never spin or pull through <code>72D TPU</code>) &nbsp;|&nbsp; <b>Top:</b> 2× M5 Bottle-Boss Slot Load-Spreader Plates (drop into <code>02a</code>) &nbsp;|&nbsp; <b>Bottom:</b> 8× Flanged Hex-Collar M4 Bushings (press into standard <code>7.18 mm</code> hex pockets on <code>01</code> or <code>02a</code>).</sub>
+    </td>
+  </tr>
 </table>
 
 ---
@@ -180,6 +189,7 @@ flowchart TD
 | :---: | :--- | :---: | :---: | :--- |
 | **`01`** | [`01_DJI_Neo2_Universal_Cradle.stl`](stl/01_DJI_Neo2_Universal_Cradle.stl) | `146.3 × 43.9 × 44.7` | `PETG` / `Easy Nylon` | Universal DJI Neo 2 + Transceiver cradle with flat `Z = 0` bottom and `15 × 15 mm` square + `30 mm` centerline captive M4 hex nut pockets. |
 | **`01b`** | [`01b_DJI_Neo2_Universal_Cradle_45Deg_With_AnchorFin.stl`](stl/01b_DJI_Neo2_Universal_Cradle_45Deg_With_AnchorFin.stl) | `124.4 × 48.0 × 121.6` | `Sunlu Easy-PA` | **45° Pre-Angled Nylon Cradle:** Tilted at `47.1°` on the closed-cup heel pad with a wide-base perforated snap-off A-frame stabilization fin (`zero slicer supports needed`; maximizes hook & cup flexural strength). |
+| **`01c`** | [`01c_DJI_Neo2_72D_TPU_Cradle_For_PETG_Insert.stl`](stl/01c_DJI_Neo2_72D_TPU_Cradle_For_PETG_Insert.stl) | `146.3 × 43.9 × 44.7` | `Elegoo 72D TPU` | **72D TPU Cradle w/ Snap-In Carrier Pocket:** Features a `43.0 × 21.6 × 3.6 mm` recessed pocket with a `0.35 mm` retention lip that captures the rigid 6-nut PETG Carrier Plate (`05`). |
 | **`02a`** | [`02a_Orbea_Wild_Downtube_SideMount_LTower.stl`](stl/02a_Orbea_Wild_Downtube_SideMount_LTower.stl) | `112.0 × 58.6 × 121.0` | `ASA` / `Easy Nylon` | **Primary Downtube Mount (Angled Centering L-Tower):** Angles outward (`to Y = -34.5 mm`) with a `3.5 mm` recessed seat (`at Y = -28.0 mm`) for the `7.5 mm` TPU Isolator Puck (`04a`), so `[Tower + Puck + Cradle + Drone]` is 100% centered (`Y ∈ [-34.5, +34.0 mm]`) over the downtube and lower prop-guard saddles! |
 | **`02b`** | [`02b_Downtube_TPU_Damping_Pads.stl`](stl/02b_Downtube_TPU_Damping_Pads.stl) | `38.8 × 16.0 × 9.5` | `TPU 95A` | Pair of U-grooved TPU cushions that snap into the lower prop-guard saddles on `02a`. |
 | **`02c`** | [`02c_Integrated_Downtube_SideMount_Cradle.stl`](stl/02c_Integrated_Downtube_SideMount_Cradle.stl) | `146.3 × 58.6 × 122.0` | `PETG` / `ASA` | Optional 1-piece monolithic fusion of `02a` and sideways `01`. |
@@ -192,7 +202,8 @@ flowchart TD
 | **`03f`** | [`03f_Handlebar_35mm_Hinged_Clamshell_Direct_35mm.stl`](stl/03f_Handlebar_35mm_Hinged_Clamshell_Direct_35mm.stl) | `133.1 × 59.0 × 15.0` | `ASA` / `PETG` / `Nylon` | Swinging M4 pin-hinged clamshell clamps bored to exact `Ø35.0 mm` for bare-bar mounting without TPU sleeves. |
 | **`04a`** | [`04a_TPU_Vibration_Isolator_Puck_And_Grommets.stl`](stl/04a_TPU_Vibration_Isolator_Puck_And_Grommets.stl) | `49.0 × 38.5 × 7.5` | `TPU 95A` | `7.5 mm` thick cellular/bellows shear isolator pad + **6× flanged M4 bolt-head isolator grommets**. |
 | **`04b`** | [`04b_TPU_Gimbal_Lock_And_Sensor_Shield.stl`](stl/04b_TPU_Gimbal_Lock_And_Sensor_Shield.stl) | `31.0 × 25.6 × 12.5` | `TPU 95A` | Snap-in TPU gimbal stabilizer cushion (`Ø14.4 mm` non-contact lens dome) + downward optical/IR sensor mud shield. |
-| **`04c`** | [`04c_TPU_Heatsink_Mud_Louver.stl`](stl/04c_TPU_Heatsink_Mud_Louver.stl) | `23.0 × 25.6 × 4.6` | `TPU 95A` | Snap-in 33° louvered mud/pebble shield for the rear heatsink cutout. |
+| **`04c`** | [`04c_TPU_Heatsink_Mud_Louver.stl`](stl/04c_TPU_Heatsink_Mud_Louver.stl) | `23.0 × 25.6 × 4.6` | `TPU 90A / 95A` | Snap-in 33° louvered mud/pebble shield for the rear heatsink cutout. |
+| **`05`** | [`05_PETG_Reinforcement_Inserts_For_72D_TPU.stl`](stl/05_PETG_Reinforcement_Inserts_For_72D_TPU.stl) | `86.6 × 47.6 × 4.6` | `PETG` / `ASA` | **Rigid Fastener Insert Kit for 72D TPU:** (1) Unified 6-Nut Cradle Carrier Plate (`42.6 × 21.2 × 3.5 mm`, snaps into `01c`); (2) 2× M5 Bottle-Slot Load-Spreader Plates (`25.6 × 9.8 × 2.4 mm`, drop into `02a`); (3) 8× Press-In Flanged Hex-Collar M4 Bushings (`7.08 mm` AF hex + `Ø9.5 mm` flange, press into standard hex pockets of `01` or `02a`). |
 
 ---
 
