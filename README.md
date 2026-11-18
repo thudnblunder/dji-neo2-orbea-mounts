@@ -208,20 +208,23 @@ flowchart TD
 
 ---
 
-## 🖨️ Bambu Lab P2S (`0.4mm HF TC`) Slicer Settings
+## 🖨️ Bambu Lab P2S (`0.4mm HF TC`) Slicer Settings & Graded-Durometer Strategy
 
 > [!TIP]
-> **Why Two Different Wall Counts?** Use **`5–6 Wall Loops`** on all rigid structural mounts (`ASA`, `Easy Nylon`, `PETG`) so bolt bosses and hinge knuckles are nearly solid concentric perimeters. Use **`2–3 Wall Loops` + `15–20% Gyroid Infill`** on the **TPU** parts (`Plate 2`) so the gimbal cushion cheeks and vibration isolator bellows remain soft, plush, and compliant.
+> **Multi-Durometer ("Graded Stiffness") Vibration Damping:** Combining **`Sunlu Easy-PA`**, **`Elegoo 72D Hard TPU`**, **`90A Soft TPU`**, and **`Rigid PETG Fastener Inserts`** creates a true 3-stage progressive suspension tuned specifically for the light `160 g` DJI Neo 2:
+> 1. **Stage 1 — Structural Clamping & Retention (`Sunlu Easy-PA` or `Elegoo 72D TPU`):** Use `Sunlu Easy-PA` on the `45°` Cradle (`01b`), Stem Bridge (`03a`), and Swinging Bar Clamps (`03b`)—or print a second cradle flat at `0°` (`01c`) in **`Elegoo 72D TPU`** (`7–8 walls, 50% Gyroid`) with the snap-in **Rigid PETG 6-Nut Carrier Plate (`05`)** for unbreakable, cold-weather-proof latch hooks.
+> 2. **Stage 2 — Mid-Frequency Frame & G-Out Damping (`Elegoo 72D TPU` on Sleek `02a` L-Tower):** Printing the `41.8 cm³` twin-spar open-truss L-Tower (`02a`) in **`Elegoo 72D TPU`** (`6 walls, 45–50% Gyroid`) with the drop-in **Rigid PETG M5 Slot Plates & Flanged Hex Bushings (`05`)** lets the twin A-frame struts act as an indestructible viscoelastic leaf spring on big hits (`5–30 Hz`).
+> 3. **Stage 3 — High-Frequency Micro-Chatter Isolation (`90A TPU` on `04a`, `04b`, `02b`, `03d`):** Using softer **`90A TPU`** (`2–3 walls, 15% Gyroid`) for the bellows isolator puck (`04a`), gimbal cushion (`04b`), prop-guard saddles (`02b`), and carbon bar sleeves (`03d`) lowers the isolator cutoff frequency to filter out `30–120 Hz` trail buzz before it reaches the 2-axis gimbal bearings.
 
-| Parameter | Plate 1: Structural (`ASA` / `Easy Nylon` / `PETG`) | Plate 2: Dampers & Armor (`TPU 95A`) |
-| :--- | :--- | :--- |
-| **Nozzle** | `0.4 mm` High-Flow Tungsten Carbide (HF TC) | `0.4 mm` High-Flow Tungsten Carbide (HF TC) |
-| **Layer Height** | `0.20 mm` (`0.16 mm` optional for extra-fine fillets) | `0.20 mm` |
-| **Wall Loops** | **`5 to 6 walls`** | **`2 to 3 walls`** |
-| **Top / Bottom Shells** | `5 Top / 5 Bottom` (`1.0 mm`) | `4 Top / 4 Bottom` (`0.8 mm`) |
-| **Infill Pattern & Density** | **`35% Gyroid`** | **`15%–20% Gyroid`** |
-| **Supports** | **None** on `01` & `03b`; **Normal (Snug) — On build plate only** on `02a` & `03a` (for Fidlock recess & stem arch ceiling) | **None** (100% self-supporting flat geometry) |
-| **Brim** | `5 mm` outer brim recommended if printing `02a` in `ASA` | No brim needed |
+| Parameter | Structural Nylon (`Sunlu Easy-PA`) | Semi-Rigid Elastomer (`Elegoo 72D TPU`) | Fastener Inserts (`PETG` / `ASA`) | Soft Dampers & Armor (`90A / 95A TPU`) |
+| :--- | :--- | :--- | :--- | :--- |
+| **Target Parts** | `01b` (45° Cradle), `03a` (Stem Bridge), `03b` (Clamshells) | `02a` (Sleek Twin-Spar L-Tower), `01c` (Flat 72D Cradle) | `05` (6-Nut Carrier, M5 Slot Plates, Hex Bushings) | `04a` (Isolator Puck), `04b` (Gimbal Lock), `04c` (Louver), `02b` (Saddles), `03d` (Bar Sleeves) |
+| **Nozzle** | `0.4 mm` HF TC (`260–265°C`, dry 8h @ `75°C`) | `0.4 mm` HF TC (`235–245°C`) | `0.4 mm` HF TC (`245–255°C`) | `0.4 mm` HF TC (`225–235°C`) |
+| **Layer Height** | `0.20 mm` | `0.20 mm` | `0.20 mm` | `0.20 mm` |
+| **Wall Loops** | **`6 walls`** | **`6 to 8 walls`** | **`6 walls` (Solid)** | **`2 walls` (`04a`/`04b`) to `3 walls` (`03d`)** |
+| **Top / Bottom Shells** | `5 Top / 5 Bottom` (`1.0 mm`) | `5 Top / 5 Bottom` (`1.0 mm`) | `6 Top / 6 Bottom` | `4 Top / 4 Bottom` (`0.8 mm`) |
+| **Infill Pattern & Density** | **`35% Gyroid`** | **`45%–55% Gyroid`** | **`100% Rectilinear`** | **`15%–20% Gyroid`** |
+| **Supports** | **None** on `01b` & `03b`; **Build-plate only** on `03a` arch | **None** (Sleek `02a` & `01c` have 100% flat `Z = 0` bases!) | **None** | **None** |
 
 ---
 
