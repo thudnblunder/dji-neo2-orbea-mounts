@@ -153,13 +153,13 @@ namespace DjiNeo2OrbeaMounts
                 }
 
                 RenderViewport(bmp, g, new Rectangle(20, 92, 670, 410), "ISOMETRIC TOP-FRONT VIEW", parts,
-                    yawDeg: 42.0, pitchDeg: 26.0);
-                RenderViewport(bmp, g, new Rectangle(710, 92, 670, 410), "TOP ORTHOGRAPHIC VIEW (+Z)", parts,
+                    yawDeg: 40.0, pitchDeg: 25.0);
+                RenderViewport(bmp, g, new Rectangle(710, 92, 670, 410), "TOP / FRONT ORTHOGRAPHIC VIEW (+Z)", parts,
                     yawDeg: 0.0, pitchDeg: 89.9);
-                RenderViewport(bmp, g, new Rectangle(20, 518, 670, 410), "UNDERSIDE / MOUNTING VIEW (-Z)", parts,
+                RenderViewport(bmp, g, new Rectangle(20, 518, 670, 410), "UNDERSIDE / REAR VIEW (-Z)", parts,
                     yawDeg: 0.0, pitchDeg: -89.9);
-                RenderViewport(bmp, g, new Rectangle(710, 518, 670, 410), "ISOMETRIC REAR / UNDERSIDE VIEW", parts,
-                    yawDeg: -138.0, pitchDeg: 22.0);
+                RenderViewport(bmp, g, new Rectangle(710, 518, 670, 410), "ISOMETRIC REAR / SIDE VIEW", parts,
+                    yawDeg: -140.0, pitchDeg: 22.0);
 
                 bmp.Save(outputPath, ImageFormat.Png);
             }
@@ -346,43 +346,100 @@ namespace DjiNeo2OrbeaMounts
 
     public class Program
     {
-        private static MeshData RotateFromPrintToHandlebar(MeshData src, string newName, double offsetY)
+        public static MeshData RotateClampToHandlebar(MeshData src, string newName, double offsetY)
         {
             var m = new MeshData(newName);
-            foreach (var v in src.Vertices)
-            {
-                m.Vertices.Add(new Vec3(v.X, (v.Z - 7.5) + offsetY, v.Y));
-            }
-            foreach (var t in src.Triangles)
-            {
-                m.Triangles.Add(new TriIdx(t.V1, t.V3, t.V2));
-            }
+            foreach (var v in src.Vertices) m.Vertices.Add(new Vec3(v.X, (v.Z - 7.5) + offsetY, v.Y));
+            foreach (var t in src.Triangles) m.Triangles.Add(new TriIdx(t.V1, t.V3, t.V2));
             return m;
         }
 
-        // Rotate Universal Cradle 90 deg onto its side to mount onto the Sleek Angled-Outward Vertical L-Tower wall (Z_center = 93.00mm)
-        // With the 7.5mm TPU Isolator Puck nested 3.5mm into the Y = -28.0mm pocket, the cradle back sits at Y = -20.50mm!
-        // Mapping: (X, Y, Z) -> (X - 9.50, Z + yMountFace, -Y + zCenter) has determinant +1 (preserves outward normals!)
-        private static MeshData RotateCradleSidewaysOnTower(MeshData src, string newName, double yMountFace = -20.50, double zCenter = 93.00)
+        // Rotate 180 deg around Z: (X, Y, Z) -> (-X + dx, -Y + dy, Z + dz), determinant +1 (preserves outward normals!)
+        public static MeshData Rotate180Z(MeshData src, string newName, double dx, double dy, double dz)
         {
             var m = new MeshData(newName);
-            foreach (var v in src.Vertices)
-            {
-                m.Vertices.Add(new Vec3(v.X - 9.50, v.Z + yMountFace, -v.Y + zCenter));
-            }
+            foreach (var v in src.Vertices) m.Vertices.Add(new Vec3(-v.X + dx, -v.Y + dy, v.Z + dz));
             m.Triangles.AddRange(src.Triangles);
             return m;
         }
 
-        // Rotate TPU Isolator Pad (Z in [0, 7.5]) to sit on the L-Tower recessed pocket face (Y = -28.00 to -20.50, Z = 93.00)
-        private static MeshData RotateIsolatorSidewaysOnTower(MeshData src, string newName, double zCenter = 93.00)
+        // Transform a single Drop Arm from print space (X, Y, Z in [0..13]) to handlebar world space (saddle at Z_world = +24.5, Y_world = offsetY)
+        public static MeshData TransformDropArmToWorld(MeshData pairMesh, bool takeFirstHalf, string newName, double offsetY)
         {
+            var m = new MeshData(newName);
+            int halfV = pairMesh.Vertices.Count / 2;
+            int halfT = pairMesh.Triangles.Count / 2;
+            int vStart = takeFirstHalf ? 0 : halfV;
+            double shiftBackY = takeFirstHalf ? -22.0 : 22.0;
+            for (int i = 0; i < halfV; i++)
+            {
+                var v = pairMesh.Vertices[vStart + i];
+                double yLocal = v.Y + shiftBackY;
+                m.Vertices.Add(new Vec3(v.X, (v.Z - 6.5) + offsetY, yLocal + 24.5));
+            }
+            int tStart = takeFirstHalf ? 0 : halfT;
+            for (int i = 0; i < halfT; i++)
+            {
+                var t = pairMesh.Triangles[tStart + i];
+                m.Triangles.Add(new TriIdx(t.V1 - vStart, t.V3 - vStart, t.V2 - vStart));
+            }
+            return m;
+        }
+
+        // Transform Plate-local coordinates (X_plate = up along 64-deg plate, Y_plate = lateral, Z_plate = forward normal) to Bike World Space
+        // Anchor: (X_plate = +31.0, Z_plate = 0.0) -> (X_world = +50.0, Z_world = +12.5)
+        public static MeshData TransformPlateSpaceToWorld(MeshData src, string newName, double dXPlate = 0.0, double dYPlate = 0.0, double dZPlate = 0.0)
+        {
+            double ux = -0.438371, uz = 0.898794;
+            double nx = 0.898794,  nz = 0.438371;
             var m = new MeshData(newName);
             foreach (var v in src.Vertices)
             {
-                m.Vertices.Add(new Vec3(v.X, v.Z - 28.00, -v.Y + zCenter));
+                double xp = v.X + dXPlate;
+                double yp = v.Y + dYPlate;
+                double zp = v.Z + dZPlate;
+                double xw = 50.0 + (xp - 31.0) * ux + zp * nx;
+                double yw = yp;
+                double zw = 12.5 + (xp - 31.0) * uz + zp * nz;
+                m.Vertices.Add(new Vec3(xw, yw, zw));
             }
-            m.Triangles.AddRange(src.Triangles);
+            // Basis [u, (0,1,0), n] has determinant -1 -> swap V2 and V3
+            foreach (var t in src.Triangles) m.Triangles.Add(new TriIdx(t.V1, t.V3, t.V2));
+            return m;
+        }
+
+        // Deform the flat-printed 04e Top-Fisheye Visor Strap into its curved installed arch over the drone!
+        public static MeshData CurveTopStrapForAssemblyRender(MeshData flatStrap)
+        {
+            var m = new MeshData("Installed_Top_Fisheye_Visor");
+            foreach (var v in flatStrap.Vertices)
+            {
+                // In flatStrap: X in [-17..+12], Y in [-50..+57], Z in [0..5.4]
+                // Curve Y into an arch over the drone at X_cradle = +60.6, Y_cradle in [-23..+23], Z_cradle in [14..46]!
+                double u = Math.Max(-1.25, Math.Min(1.35, v.Y / 41.0));
+                double angle = u * (Math.PI * 0.56); // +-100 deg arch
+                double rad = 24.5 + v.Z;
+                double yc = Math.Sin(angle) * 22.8;
+                double zc = 20.5 + Math.Cos(angle) * rad;
+                double xc = 60.5 + v.X;
+                m.Vertices.Add(new Vec3(xc, yc, zc));
+            }
+            m.Triangles.AddRange(flatStrap.Triangles);
+            return m;
+        }
+
+        // Orient 04d Nose-Vault Gimbal Guard into the Closed Nose Cup (X_cradle in [-69.5, -50.5], Z_cradle in [7.2, 35.2])
+        public static MeshData PlaceNoseGuardInCradle(MeshData noseGuard)
+        {
+            var m = new MeshData("Installed_Nose_Guard");
+            foreach (var v in noseGuard.Vertices)
+            {
+                // Print space: X in [-14..+14] (height), Y in [-17.4..+17.4] (width), Z in [0..19] (depth from front nose wall)
+                // Cradle space: X_cradle = -69.5 + Z_print, Y_cradle = Y_print, Z_cradle = 21.5 + X_print
+                // Basis [(0,0,1), (0,1,0), (1,0,0)] has determinant -1 -> swap V2, V3
+                m.Vertices.Add(new Vec3(-69.5 + v.Z, v.Y, 21.5 + v.X));
+            }
+            foreach (var t in noseGuard.Triangles) m.Triangles.Add(new TriIdx(t.V1, t.V3, t.V2));
             return m;
         }
 
@@ -394,133 +451,37 @@ namespace DjiNeo2OrbeaMounts
             string threeMfDir = Path.Combine(baseDir, "3mf");
             string rendersDir = Path.Combine(baseDir, "renders");
 
+            // Clean old files so only the sleek Number-Plate & Over-Stem system remains!
+            if (Directory.Exists(stlDir)) Directory.Delete(stlDir, true);
+            if (Directory.Exists(threeMfDir)) Directory.Delete(threeMfDir, true);
             Directory.CreateDirectory(stlDir);
             Directory.CreateDirectory(threeMfDir);
             Directory.CreateDirectory(rendersDir);
 
-            Console.WriteLine("1. Loading reference DJI Neo 2 cradle shell and building Universal Cradle...");
+            Console.WriteLine("1. Building DJI Neo 2 Cradles (01 Flat, 01b 45-Deg Sunlu Easy-PA, 01c 72D TPU Pocketed)...");
             var cradleShell = PartDesigns.LoadReferenceCradleMesh(refModelXml);
             var cradleInsert = PartDesigns.BuildCradleMountingInsert(0.30);
-            var universalCradle = cradleShell.Clone("01_DJI_Neo2_Universal_Cradle");
+            var universalCradle = cradleShell.Clone("01a_DJI_Neo2_Universal_Cradle");
             universalCradle.Append(cradleInsert);
-            SaveAndReport(universalCradle, Path.Combine(stlDir, "01_DJI_Neo2_Universal_Cradle.stl"));
+            SaveAndReport(universalCradle, Path.Combine(stlDir, "01a_DJI_Neo2_Universal_Cradle.stl"));
+
+            var cradle45Only = PartDesigns.RotateCradleTo45DegPrintOrientation(universalCradle, "Cradle_45Deg");
+            var anchorFin45 = PartDesigns.BuildCradle45DegSnapOffAnchorFin(0.36);
+            var cradle45WithFin = cradle45Only.Clone("01b_DJI_Neo2_Universal_Cradle_45Deg_EasyPA");
+            cradle45WithFin.Append(anchorFin45);
+            SaveAndReport(cradle45WithFin, Path.Combine(stlDir, "01b_DJI_Neo2_Universal_Cradle_45Deg_EasyPA.stl"));
+
+            var cradle72DPocket = PartDesigns.BuildCradle72DMountingInsertForPetgCarrier(0.28);
+            var cradle72D = cradleShell.Clone("01c_DJI_Neo2_72D_TPU_Cradle_For_PETG_Insert");
+            cradle72D.Append(cradle72DPocket);
+            SaveAndReport(cradle72D, Path.Combine(stlDir, "01c_DJI_Neo2_72D_TPU_Cradle_For_PETG_Insert.stl"));
 
             MeshRenderer.RenderMultiViewSheet(
                 Path.Combine(rendersDir, "01_Cradle_And_Insert_Preview.png"),
-                "01 - DJI Neo 2 Universal Cradle (Transceiver-Compatible)",
-                "Flat Z=0 base | 15x15mm 4-Bolt Square + 30mm Centerline | Captive M4 DIN 934 Hex Nut Pockets",
+                "01a - DJI Neo 2 Universal Cradle (Transceiver-Compatible)",
+                "Flat Z=0 Base | 15x15mm 4-Bolt Square + 30mm Centerline | Captive M4 DIN 934 Hex Nut Traps",
                 universalCradle,
                 Color.FromArgb(45, 125, 230));
-
-            Console.WriteLine("2. Building Sleek Direct-Mount (Twin-Spar A-Frame / Open-Truss) Downtube L-Tower...");
-            var downtubeSideTower = PartDesigns.BuildDowntubeSleekSideMountLTower(0.40);
-            SaveAndReport(downtubeSideTower, Path.Combine(stlDir, "02a_Orbea_Wild_Downtube_SideMount_LTower.stl"));
-
-            MeshRenderer.RenderMultiViewSheet(
-                Path.Combine(rendersDir, "02_Downtube_Fidlock_Mount_Preview.png"),
-                "02a - Sleek Twin-Spar Open-Truss Downtube L-Tower (Direct 64mm M5 Mount)",
-                "55% Lighter Skeletal A-Frame | Flat Z=0 Base (Zero Supports) | Parabolic Truss Gussets | Centered Stadium Isolator Head",
-                downtubeSideTower,
-                Color.FromArgb(235, 110, 40));
-
-            Console.WriteLine("2f. Saving Archived Fidlock-Compatible Side-Mount Downtube L-Tower as 02f...");
-            var downtubeFidlockTower = PartDesigns.BuildDowntubeFidlockSideMountLTower(0.45);
-            SaveAndReport(downtubeFidlockTower, Path.Combine(stlDir, "02f_Orbea_Wild_Downtube_Fidlock_SideMount_LTower.stl"));
-
-            Console.WriteLine("3. Building Downtube Side-Mount TPU Prop-Guard Saddle Cushions (Pair)...");
-            var downtubeTpuPads = PartDesigns.BuildDowntubeTpuSaddlePads(0.25);
-            SaveAndReport(downtubeTpuPads, Path.Combine(stlDir, "02b_Downtube_TPU_Damping_Pads.stl"));
-
-            Console.WriteLine("4. Building Integrated One-Piece Side-Mount Downtube L-Tower + Sideways Cradle...");
-            var sidewaysCradleFused = RotateCradleSidewaysOnTower(universalCradle, "Sideways_Cradle_Fused", -25.00);
-            var integratedDowntube = downtubeSideTower.Clone("02c_Integrated_Downtube_SideMount_Cradle");
-            integratedDowntube.Append(sidewaysCradleFused);
-            SaveAndReport(integratedDowntube, Path.Combine(stlDir, "02c_Integrated_Downtube_SideMount_Cradle.stl"));
-
-            // Also save the flat downtube mount as 02d in case user wants both options
-            var downtubeFlat = PartDesigns.BuildDowntubeFlatFidlockMount(0.45);
-            SaveAndReport(downtubeFlat, Path.Combine(stlDir, "02d_Orbea_Wild_Downtube_Flat_Fidlock_Mount.stl"));
-
-            // Render Multi-Color Side-Mount Downtube Assembly (with Angled L-Tower + Cyan TPU Isolator Puck + Blue Sideways Cradle centered over downtube!)
-            var sidewaysCradleWithPuck = RotateCradleSidewaysOnTower(universalCradle, "Sideways_Cradle_With_Puck", -20.50);
-            var tpuIsolatorForTower = RotateIsolatorSidewaysOnTower(PartDesigns.BuildTpuVibrationIsolatorSystem(0.32, false), "Tower_Isolator");
-            MeshRenderer.RenderMultiColorSheet(
-                Path.Combine(rendersDir, "05_Downtube_Assembly_Preview.png"),
-                "Assembly 1 - Angled Centering Side-Mount Downtube L-Tower + TPU Isolator + Cradle",
-                "Angled Tower Offsets TPU Puck (-28..-20.5mm) so Mount + Puck + Cradle + Drone Center at Y=0!",
-                new List<ColoredMeshPart>
-                {
-                    new ColoredMeshPart(downtubeSideTower, Color.FromArgb(235, 110, 40)),
-                    new ColoredMeshPart(tpuIsolatorForTower, Color.FromArgb(40, 195, 210)),
-                    new ColoredMeshPart(sidewaysCradleWithPuck, Color.FromArgb(45, 125, 230))
-                });
-
-            Console.WriteLine("5. Building Over-Stem Bridge Plate for OC Mountain Control MC11 40mm Stem...");
-            var stemBridge = PartDesigns.BuildStemBridgePlate(0.38);
-            SaveAndReport(stemBridge, Path.Combine(stlDir, "03a_Orbea_MC11_Stem_Bridge_Plate.stl"));
-
-            MeshRenderer.RenderMultiViewSheet(
-                Path.Combine(rendersDir, "03a_Stem_Bridge_Plate_Preview.png"),
-                "03a - Orbea OC MC11 Over-Stem Bridge Plate",
-                "46mm Stem Faceplate Arch | 50-72mm Slotted C-Clip Channels | 0 deg / 90 deg Captive M4 Cradle Mount",
-                stemBridge,
-                Color.FromArgb(60, 185, 120));
-
-            Console.WriteLine("6. Building Swinging M4 Pin-Hinged Clamshell Handlebar Clamps (37.0mm Bore for TPU Sleeve)...");
-            var hingedClampsForTpu = PartDesigns.BuildHandlebarHingedClamshellPair(37.0, "03b_Handlebar_35mm_Hinged_Clamshell_Clamps_For_TPU", 0.34);
-            SaveAndReport(hingedClampsForTpu, Path.Combine(stlDir, "03b_Handlebar_35mm_Hinged_Clamshell_Clamps_For_TPU.stl"));
-
-            MeshRenderer.RenderMultiViewSheet(
-                Path.Combine(rendersDir, "03b_Handlebar_C_Clips_Preview.png"),
-                "03b - Swinging M4 Pin-Hinged Clamshell Handlebar Clamps (Zero Plastic Flexing!)",
-                "3-Knuckle Front M4 Bolt Hinge Swings Open 180 deg Over 35mm Bar | Rear M4 Pinch Bolt + Captive M4 Nut",
-                hingedClampsForTpu,
-                Color.FromArgb(170, 95, 235));
-
-            Console.WriteLine("7. Building Single-Bolt Hook-In Clamshell Handlebar Clamps (37.0mm Bore for TPU Sleeve)...");
-            var hookHingeClamps = PartDesigns.BuildHandlebarHookHingeClampsPair(37.0, "03c_Handlebar_35mm_HookHinge_Clamps_For_TPU", 0.34);
-            SaveAndReport(hookHingeClamps, Path.Combine(stlDir, "03c_Handlebar_35mm_HookHinge_Clamps_For_TPU.stl"));
-
-            Console.WriteLine("8. Building TPU Carbon Handlebar Grip Sleeves Pair (35.0mm ID / 37.0mm OD)...");
-            var tpuSleeves = PartDesigns.BuildHandlebarTpuSleeves(0.28);
-            SaveAndReport(tpuSleeves, Path.Combine(stlDir, "03d_Handlebar_35mm_TPU_Grip_Sleeves_Pair.stl"));
-
-            MeshRenderer.RenderMultiViewSheet(
-                Path.Combine(rendersDir, "04_TPU_Sleeves_And_Pads_Preview.png"),
-                "03d - TPU Carbon Handlebar Grip Sleeves (35mm ID / 37mm OD Flanged)",
-                "Protects OC MC10 Carbon Bar | High-Friction Rotational Grip | Damps High-Frequency Trail Vibration",
-                tpuSleeves,
-                Color.FromArgb(40, 195, 210));
-
-            Console.WriteLine("9. Building Integrated One-Piece Stem Bridge + Cradle...");
-            var integratedStem = stemBridge.Clone("03e_Integrated_Stem_Bridge_Cradle");
-            var shiftedCradleForStem = universalCradle.Clone("Cradle_Upper");
-            shiftedCradleForStem.Translate(-9.50, 0.0, 13.95);
-            integratedStem.Append(shiftedCradleForStem);
-            SaveAndReport(integratedStem, Path.Combine(stlDir, "03e_Integrated_Stem_Bridge_Cradle.stl"));
-
-            Console.WriteLine("10. Building Swinging M4 Pin-Hinged Clamshell Handlebar Clamps (35.0mm Direct Bore)...");
-            var hingedClampsDirect = PartDesigns.BuildHandlebarHingedClamshellPair(35.0, "03f_Handlebar_35mm_Hinged_Clamshell_Direct_35mm", 0.34);
-            SaveAndReport(hingedClampsDirect, Path.Combine(stlDir, "03f_Handlebar_35mm_Hinged_Clamshell_Direct_35mm.stl"));
-
-            Console.WriteLine("11. Building TPU Vibration-Isolator Sandwich Puck + 6x Flanged M4 Grommets...");
-            var tpuIsolator = PartDesigns.BuildTpuVibrationIsolatorSystem(0.26);
-            SaveAndReport(tpuIsolator, Path.Combine(stlDir, "04a_TPU_Vibration_Isolator_Puck_And_Grommets.stl"));
-
-            Console.WriteLine("12. Building TPU Gimbal Lock Cushion & Downward Sensor Shield...");
-            var tpuGimbalShield = PartDesigns.BuildTpuGimbalAndSensorShield(0.24);
-            SaveAndReport(tpuGimbalShield, Path.Combine(stlDir, "04b_TPU_Gimbal_Lock_And_Sensor_Shield.stl"));
-
-            Console.WriteLine("13. Building TPU Heatsink Window Mud-Guard Louver...");
-            var tpuLouver = PartDesigns.BuildTpuHeatsinkLouver(0.24);
-            SaveAndReport(tpuLouver, Path.Combine(stlDir, "04c_TPU_Heatsink_Mud_Louver.stl"));
-
-            Console.WriteLine("13b. Building 45-Deg Pre-Angled Sunlu Easy-PA Cradle w/ Snap-Off A-Frame Bed Anchor Fin...");
-            var cradle45Only = PartDesigns.RotateCradleTo45DegPrintOrientation(universalCradle, "Cradle_45Deg");
-            var anchorFin45 = PartDesigns.BuildCradle45DegSnapOffAnchorFin(0.36);
-            var cradle45WithFin = cradle45Only.Clone("01b_DJI_Neo2_Universal_Cradle_45Deg_With_AnchorFin");
-            cradle45WithFin.Append(anchorFin45);
-            SaveAndReport(cradle45WithFin, Path.Combine(stlDir, "01b_DJI_Neo2_Universal_Cradle_45Deg_With_AnchorFin.stl"));
 
             MeshRenderer.RenderMultiColorSheet(
                 Path.Combine(rendersDir, "09_Cradle_45Deg_EasyPA_Preview.png"),
@@ -532,128 +493,235 @@ namespace DjiNeo2OrbeaMounts
                     new ColoredMeshPart(anchorFin45, Color.FromArgb(245, 165, 35))
                 });
 
-            Console.WriteLine("13c. Building 72D TPU Cradle w/ Snap-In Pocket for Rigid PETG Multi-Nut Carrier + PETG Reinforcement Insert Kit...");
-            var cradle72DPocketInsert = PartDesigns.BuildCradle72DMountingInsertForPetgCarrier(0.28);
-            var cradle72D = cradleShell.Clone("01c_DJI_Neo2_72D_TPU_Cradle_For_PETG_Insert");
-            cradle72D.Append(cradle72DPocketInsert);
-            SaveAndReport(cradle72D, Path.Combine(stlDir, "01c_DJI_Neo2_72D_TPU_Cradle_For_PETG_Insert.stl"));
+            Console.WriteLine("2. Building Mount 1: Orbea Wild LT 'Stealth Fairing' Number-Plate Shield (02a) + Swept Drop Arms (02b)...");
+            var numberPlateShield = PartDesigns.BuildOrbeaStealthNumberPlateShield(0.40);
+            SaveAndReport(numberPlateShield, Path.Combine(stlDir, "02a_Orbea_Stealth_NumberPlate_Shield.stl"));
+
+            var numberPlateDropArms = PartDesigns.BuildOrbeaStealthNumberPlateDropArmsPair(0.34);
+            SaveAndReport(numberPlateDropArms, Path.Combine(stlDir, "02b_Orbea_Stealth_NumberPlate_Drop_Arms_Pair.stl"));
+
+            MeshRenderer.RenderMultiViewSheet(
+                Path.Combine(rendersDir, "02_NumberPlate_Shield_And_Arms_Preview.png"),
+                "02a - Orbea Wild LT 'Stealth Fairing' Number-Plate Shield & Chin Roost Fender",
+                "Faceted 45-deg Stealth Winglets | Armored Lower Gimbal/LiDAR Chin Scoop | Recessed 90A TPU Isolator Seat | Zero Supports",
+                numberPlateShield,
+                Color.FromArgb(235, 105, 35));
+
+            MeshRenderer.RenderMultiViewSheet(
+                Path.Combine(rendersDir, "02b_NumberPlate_Drop_Arms_Preview.png"),
+                "02b - Swept Out-Front Faceted Twin-Truss Handlebar Drop Arms (Pair)",
+                "64-deg Head-Tube Rake | 50mm Forward SIC Cable Tunnel Clearance | Tuned 72D TPU / Easy-PA Truss Cutouts",
+                numberPlateDropArms,
+                Color.FromArgb(75, 165, 225));
+
+            Console.WriteLine("3. Building Mount 2: Orbea Wild LT 'Stealth OC' Over-Stem Bridge (03a) + Faceted Clamshells (03b/03f)...");
+            var stemBridge = PartDesigns.BuildOrbeaStealthOverStemBridge(0.36);
+            SaveAndReport(stemBridge, Path.Combine(stlDir, "03a_Orbea_Stealth_OverStem_Bridge.stl"));
+
+            var hingedClampsForTpu = PartDesigns.BuildHandlebarHingedClamshellPair(37.0, "03b_Orbea_Stealth_35mm_Hinged_Clamshells_For_TPU", 0.34);
+            SaveAndReport(hingedClampsForTpu, Path.Combine(stlDir, "03b_Orbea_Stealth_35mm_Hinged_Clamshells_For_TPU.stl"));
+
+            var hingedClampsDirect = PartDesigns.BuildHandlebarHingedClamshellPair(35.0, "03c_Orbea_Stealth_35mm_Hinged_Clamshells_Direct_35mm", 0.34);
+            SaveAndReport(hingedClampsDirect, Path.Combine(stlDir, "03c_Orbea_Stealth_35mm_Hinged_Clamshells_Direct_35mm.stl"));
+
+            var tpuSleeves = PartDesigns.BuildHandlebarTpuSleeves(0.28);
+            SaveAndReport(tpuSleeves, Path.Combine(stlDir, "03d_Handlebar_35mm_TPU_Grip_Sleeves_Pair.stl"));
+
+            MeshRenderer.RenderMultiViewSheet(
+                Path.Combine(rendersDir, "03a_Stem_Bridge_Plate_Preview.png"),
+                "03a - Orbea Wild LT 'Stealth OC' Over-Stem Bridge w/ Front Roost Prow",
+                "Chiseled Forward Mud-Deflector Prow | Recessed 3.5mm TPU Isolator Pocket | 46mm OC MC11 Stem Arch",
+                stemBridge,
+                Color.FromArgb(55, 190, 125));
+
+            MeshRenderer.RenderMultiViewSheet(
+                Path.Combine(rendersDir, "03b_Handlebar_C_Clips_Preview.png"),
+                "03b - Faceted OC-Styled Swinging M4 Pin-Hinged 35mm Handlebar Clamps",
+                "Zero Plastic Flexing Over 35mm Carbon Bar | 3-Knuckle M4 Bolt Hinge | Shared by Both Number-Plate & Over-Stem Mounts!",
+                hingedClampsForTpu,
+                Color.FromArgb(165, 95, 235));
+
+            MeshRenderer.RenderMultiViewSheet(
+                Path.Combine(rendersDir, "04_TPU_Sleeves_And_Pads_Preview.png"),
+                "03d - Flanged 90A TPU Grip Sleeves for OC MC10 35.0mm Carbon Handlebar",
+                "35mm ID / 37mm OD w/ Retaining Lips | Protects Carbon Finish | High-Friction Anti-Slip & First-Stage Bar Damping",
+                tpuSleeves,
+                Color.FromArgb(40, 195, 210));
+
+            Console.WriteLine("4. Building 360-Deg 90A TPU Lens, Gimbal, Sensor & Vibration Armor Suite (04a - 04e) + PETG Inserts (05)...");
+            var tpuIsolator = PartDesigns.BuildTpuVibrationIsolatorSystem(0.26, true);
+            SaveAndReport(tpuIsolator, Path.Combine(stlDir, "04a_TPU_Vibration_Isolator_Puck_And_Grommets.stl"));
+
+            var tpuBellyShield = PartDesigns.BuildTpuBellySensorShield(0.24);
+            SaveAndReport(tpuBellyShield, Path.Combine(stlDir, "04b_TPU_Belly_Sensor_Shield.stl"));
+
+            var tpuHeatsinkLouver = PartDesigns.BuildTpuHeatsinkLouver(0.24);
+            SaveAndReport(tpuHeatsinkLouver, Path.Combine(stlDir, "04c_TPU_Heatsink_Mud_Louver.stl"));
+
+            var tpuNoseGuard = PartDesigns.BuildTpuNoseVaultGimbalGuard(0.26);
+            SaveAndReport(tpuNoseGuard, Path.Combine(stlDir, "04d_TPU_Nose_Vault_Gimbal_And_LiDAR_Guard.stl"));
+
+            var tpuTopVisorStrap = PartDesigns.BuildTpuTopFisheyeLensVisorStrap(0.25);
+            SaveAndReport(tpuTopVisorStrap, Path.Combine(stlDir, "04e_TPU_Top_Fisheye_Lens_Visor_Strap.stl"));
 
             var petgInsertKit = PartDesigns.BuildPetgReinforcementInsertKit(0.24);
             SaveAndReport(petgInsertKit, Path.Combine(stlDir, "05_PETG_Reinforcement_Inserts_For_72D_TPU.stl"));
 
-            MeshRenderer.RenderMultiViewSheet(
-                Path.Combine(rendersDir, "10_PETG_Inserts_For_72D_TPU_Preview.png"),
-                "05 - Rigid PETG Reinforcement Insert Kit for 72D TPU Mounts",
-                "Center: Unified 6-Nut Cradle Carrier Plate (Snaps into 01c) | Top: 2x M5 Bottle-Slot Plates (02a) | Bottom: 8x Flanged Hex-Collar M4 Bushings",
-                petgInsertKit,
-                Color.FromArgb(230, 75, 95));
-
-            // Render sheet 07: All 3 TPU Gimbal/Sensor/Vibration Protection Parts laid out together
-            var shieldForSheet = tpuGimbalShield.Clone("Shield");
-            shieldForSheet.Translate(48.0, 5.0, 0.0);
-            var louverForSheet = tpuLouver.Clone("Louver");
-            louverForSheet.Translate(-50.0, 0.0, 0.0);
+            // Render Sheet 07: Complete 5-Part 90A TPU Lens & Vibration Armor Kit laid out cleanly
+            var s04b = tpuBellyShield.Clone("b"); s04b.Translate(-52.0, 18.0, 0.0);
+            var s04c = tpuHeatsinkLouver.Clone("c"); s04c.Translate(-52.0, -18.0, 0.0);
+            var s04d = tpuNoseGuard.Clone("d"); s04d.Translate(48.0, 0.0, 0.0);
+            var s04e = tpuTopVisorStrap.Clone("e"); s04e.Translate(84.0, 0.0, 0.0);
             MeshRenderer.RenderMultiColorSheet(
                 Path.Combine(rendersDir, "07_TPU_Gimbal_And_Vibration_Protection_Preview.png"),
-                "04a, 04b, 04c - TPU Vibration Isolator + Gimbal Lock Cushion + Sensor/Heatsink Shields",
-                "Center: 04a Shear/Bellows Isolator + 6x M4 Grommets | Right: 04b Gimbal Lock & Sensor Shield | Left: 04c Heatsink Louver",
+                "04a - 04e: Complete 360-Deg 90A TPU Lens, Gimbal & Vibration Armor Suite",
+                "Cyan: 04a Shear Isolator | Gold: 04b Belly Sensor Plug | Green: 04c Louver | Orange: 04d Nose Gimbal/LiDAR Liner | Pink: 04e Top Fisheye Visor Strap",
                 new List<ColoredMeshPart>
                 {
                     new ColoredMeshPart(tpuIsolator, Color.FromArgb(40, 195, 210)),
-                    new ColoredMeshPart(shieldForSheet, Color.FromArgb(245, 165, 35)),
-                    new ColoredMeshPart(louverForSheet, Color.FromArgb(65, 205, 130))
+                    new ColoredMeshPart(s04b, Color.FromArgb(245, 175, 40)),
+                    new ColoredMeshPart(s04c, Color.FromArgb(65, 205, 130)),
+                    new ColoredMeshPart(s04d, Color.FromArgb(240, 110, 50)),
+                    new ColoredMeshPart(s04e, Color.FromArgb(225, 85, 165))
                 });
 
-            // Render sheet 08: Cradle with TPU Vibration Isolator + TPU Gimbal Lock/Sensor Shield + TPU Heatsink Louver installed!
-            var installedIsolator = PartDesigns.BuildTpuVibrationIsolatorSystem(0.30, false);
-            installedIsolator.Translate(9.50, 0.0, -7.50);
-            var installedGimbalShield = tpuGimbalShield.Clone("Installed_Shield");
-            installedGimbalShield.Translate(50.50, 0.0, -1.40);
-            var installedLouver = tpuLouver.Clone("Installed_Louver");
-            installedLouver.Translate(-31.25, 0.0, -1.40);
+            MeshRenderer.RenderMultiViewSheet(
+                Path.Combine(rendersDir, "10_PETG_Inserts_For_72D_TPU_Preview.png"),
+                "05 - Rigid PETG Fastener Reinforcement Inserts for 72D TPU Parts",
+                "Unified 6-Nut Cradle Carrier Plate (Snaps into 01c) + 8x Press-In Flanged Hex-Collar M4 Bolt Bushings",
+                petgInsertKit,
+                Color.FromArgb(230, 75, 95));
+
+            // Render Sheet 08: Universal Cradle Equipped w/ All 5 TPU Lens & Vibration Armor Pieces!
+            var padOnly = PartDesigns.BuildTpuVibrationIsolatorSystem(0.30, false);
+            var instIsolator = padOnly.Clone("InstIso"); instIsolator.Translate(9.50, 0.0, -7.50);
+            var instBelly = tpuBellyShield.Clone("InstBelly"); instBelly.Translate(50.50, 0.0, -1.60);
+            var instLouver = tpuHeatsinkLouver.Clone("InstLouver"); instLouver.Translate(-31.25, 0.0, -1.60);
+            var instNose = PlaceNoseGuardInCradle(tpuNoseGuard);
+            var instTopStrap = CurveTopStrapForAssemblyRender(tpuTopVisorStrap);
+
             MeshRenderer.RenderMultiColorSheet(
                 Path.Combine(rendersDir, "08_Cradle_With_TPU_Armor_Assembly.png"),
-                "Assembly 3 - DJI Neo 2 Cradle Equipped w/ Full TPU Gimbal, Sensor & Vibration Armor",
-                "Blue: Cradle | Cyan: 04a TPU Isolator Sandwich | Gold: 04b Snap-In Gimbal Cushion & Sensor Shield | Green: 04c Heatsink Louver",
+                "360-Deg Lens-Armored Cradle Assembly (Every Camera, LiDAR & Vision Lens Shielded)",
+                "Blue: Cradle | Orange: Nose Gimbal/LiDAR Vault | Pink: Top Fisheye Visor Strap | Gold: Belly Sensor Seal | Cyan: Shear Isolator",
                 new List<ColoredMeshPart>
                 {
                     new ColoredMeshPart(universalCradle, Color.FromArgb(45, 125, 230)),
-                    new ColoredMeshPart(installedIsolator, Color.FromArgb(40, 195, 210)),
-                    new ColoredMeshPart(installedGimbalShield, Color.FromArgb(245, 165, 35)),
-                    new ColoredMeshPart(installedLouver, Color.FromArgb(65, 205, 130))
+                    new ColoredMeshPart(instIsolator, Color.FromArgb(40, 195, 210)),
+                    new ColoredMeshPart(instBelly, Color.FromArgb(245, 175, 40)),
+                    new ColoredMeshPart(instLouver, Color.FromArgb(65, 205, 130)),
+                    new ColoredMeshPart(instNose, Color.FromArgb(240, 110, 50)),
+                    new ColoredMeshPart(instTopStrap, Color.FromArgb(225, 85, 165))
                 });
 
-            // Build Multi-Color 3D Stem Assembly Render using Closed Hinged Clamshell
-            var closedClampUnit = PartDesigns.BuildHandlebarHingedClamshellSingle(37.0, assembledClosed: true, step: 0.38);
-            var clampAssyL = RotateFromPrintToHandlebar(closedClampUnit, "Clamp_L", -30.5);
-            var clampAssyR = RotateFromPrintToHandlebar(closedClampUnit, "Clamp_R", +30.5);
-            var bridgeAssy = stemBridge.Clone("Bridge_Assy");
-            bridgeAssy.Translate(0, 0, 24.5);
-            var cradleAssy = universalCradle.Clone("Cradle_Assy");
-            cradleAssy.Translate(-9.50, 0.0, 24.5 + 14.0);
+            // Render Sheet 05: Complete Assembly 1 - Orbea Stealth Number-Plate Mount on Handlebar Clamps!
+            var closedClamp = PartDesigns.BuildHandlebarHingedClamshellSingle(37.0, assembledClosed: true, step: 0.38);
+            var npClampL = RotateClampToHandlebar(closedClamp, "NP_Clamp_L", -31.5);
+            var npClampR = RotateClampToHandlebar(closedClamp, "NP_Clamp_R", +31.5);
+            var npArmL = TransformDropArmToWorld(numberPlateDropArms, true, "NP_Arm_L", -31.5);
+            var npArmR = TransformDropArmToWorld(numberPlateDropArms, false, "NP_Arm_R", +31.5);
+            var npShieldWorld = TransformPlateSpaceToWorld(numberPlateShield, "NP_Shield");
+            var npIsoWorld = TransformPlateSpaceToWorld(padOnly, "NP_Iso", 9.50, 0.0, 6.0);
+            var npCradleWorld = TransformPlateSpaceToWorld(universalCradle, "NP_Cradle", 0.0, 0.0, 13.5);
+            var npNoseWorld = TransformPlateSpaceToWorld(instNose, "NP_Nose", 0.0, 0.0, 13.5);
+            var npStrapWorld = TransformPlateSpaceToWorld(instTopStrap, "NP_Strap", 0.0, 0.0, 13.5);
 
             MeshRenderer.RenderMultiColorSheet(
-                Path.Combine(rendersDir, "06_Stem_Assembly_Preview.png"),
-                "Assembly 2 - Over-Stem Handlebar Mount w/ Swinging Pin-Hinged Clamshell Clamps",
-                "Purple: Hinged Clamshell 35mm Clamps (Zero Flexing!) | Green: Stem Bridge | Blue: DJI Neo 2 Cradle",
+                Path.Combine(rendersDir, "05_NumberPlate_Assembly_Preview.png"),
+                "Assembly 1 - Orbea Wild LT 'Stealth Fairing' Out-Front Number-Plate Mount",
+                "64-deg Head-Tube Rake | Armored Lower Chin Roost Fender + Side Winglets | Dual-Stage 72D + 90A Damping | Full SIC Cable Clearance",
                 new List<ColoredMeshPart>
                 {
-                    new ColoredMeshPart(clampAssyL, Color.FromArgb(170, 95, 235)),
-                    new ColoredMeshPart(clampAssyR, Color.FromArgb(170, 95, 235)),
-                    new ColoredMeshPart(bridgeAssy, Color.FromArgb(60, 185, 120)),
-                    new ColoredMeshPart(cradleAssy, Color.FromArgb(45, 125, 230))
+                    new ColoredMeshPart(npClampL, Color.FromArgb(165, 95, 235)),
+                    new ColoredMeshPart(npClampR, Color.FromArgb(165, 95, 235)),
+                    new ColoredMeshPart(npArmL, Color.FromArgb(75, 165, 225)),
+                    new ColoredMeshPart(npArmR, Color.FromArgb(75, 165, 225)),
+                    new ColoredMeshPart(npShieldWorld, Color.FromArgb(235, 105, 35)),
+                    new ColoredMeshPart(npIsoWorld, Color.FromArgb(40, 195, 210)),
+                    new ColoredMeshPart(npCradleWorld, Color.FromArgb(45, 125, 230)),
+                    new ColoredMeshPart(npNoseWorld, Color.FromArgb(240, 110, 50)),
+                    new ColoredMeshPart(npStrapWorld, Color.FromArgb(225, 85, 165))
                 });
 
-            Console.WriteLine("14. Packaging ready-to-slice Bambu Studio .3mf project files...");
+            // Render Sheet 06: Complete Assembly 2 - Restyled Orbea Stealth Over-Stem Mount (Oriented Nose-Forward over the Front Roost Prow!)
+            var osClampL = RotateClampToHandlebar(closedClamp, "OS_Clamp_L", -30.5);
+            var osClampR = RotateClampToHandlebar(closedClamp, "OS_Clamp_R", +30.5);
+            var osBridge = stemBridge.Clone("OS_Bridge"); osBridge.Translate(0, 0, 24.5);
+            var osIso = padOnly.Clone("OS_Iso"); osIso.Translate(0, 0, 24.5 + 10.5);
+            var osCradle = Rotate180Z(universalCradle, "OS_Cradle", +9.50, 0.0, 24.5 + 18.0);
+            var osNose = Rotate180Z(instNose, "OS_Nose", +9.50, 0.0, 24.5 + 18.0);
+            var osStrap = Rotate180Z(instTopStrap, "OS_Strap", +9.50, 0.0, 24.5 + 18.0);
+
+            MeshRenderer.RenderMultiColorSheet(
+                Path.Combine(rendersDir, "06_OverStem_Assembly_Preview.png"),
+                "Assembly 2 - Orbea Wild LT 'Stealth OC' Over-Stem Cockpit Mount",
+                "Nose-Forward Over Chiseled Roost Prow | Recessed 90A TPU Shear Isolator | Zero-Flex Clamshells + 360-Deg Lens Armor",
+                new List<ColoredMeshPart>
+                {
+                    new ColoredMeshPart(osClampL, Color.FromArgb(165, 95, 235)),
+                    new ColoredMeshPart(osClampR, Color.FromArgb(165, 95, 235)),
+                    new ColoredMeshPart(osBridge, Color.FromArgb(55, 190, 125)),
+                    new ColoredMeshPart(osIso, Color.FromArgb(40, 195, 210)),
+                    new ColoredMeshPart(osCradle, Color.FromArgb(45, 125, 230)),
+                    new ColoredMeshPart(osNose, Color.FromArgb(240, 110, 50)),
+                    new ColoredMeshPart(osStrap, Color.FromArgb(225, 85, 165))
+                });
+
+            Console.WriteLine("5. Packaging Bambu Studio .3mf build plates for Bambu Lab P2S...");
+            // Plate 1: Number-Plate Shield + Swept Drop Arms (Elegoo 72D TPU or Sunlu Easy-PA / ASA) - ZERO SUPPORTS!
             ThreeMfWriter.Save3mf(
-                Path.Combine(threeMfDir, "Plate1_Structural_Mounts_ASA_PETG_Nylon.3mf"),
-                "DJI Neo 2 - Orbea Wild LT Structural Mounts (ASA / Easy Nylon / PETG)",
+                Path.Combine(threeMfDir, "Plate1_NumberPlate_Stealth_Mount_72D_Or_EasyPA.3mf"),
+                "Orbea Wild LT - Stealth Number-Plate Shield & Swept Drop Arms (Zero Supports)",
                 new List<PlateItem>
                 {
-                    new PlateItem(universalCradle, -5.0, 74.0, 0.0),
-                    new PlateItem(downtubeSideTower, -58.0, -25.0, 0.0),
-                    new PlateItem(stemBridge, 58.0, -5.0, 0.0),
-                    new PlateItem(hingedClampsForTpu, 52.0, -76.0, 0.0)
+                    new PlateItem(numberPlateShield, -35.0, 0.0, 0.0),
+                    new PlateItem(numberPlateDropArms, 58.0, 0.0, 0.0)
                 });
 
+            // Plate 2: Over-Stem Stealth Bridge + Hinged 35mm Handlebar Clamshells (Sunlu Easy-PA / ASA / PETG)
             ThreeMfWriter.Save3mf(
-                Path.Combine(threeMfDir, "Plate2_Flexible_Dampers_TPU.3mf"),
-                "DJI Neo 2 - Orbea Wild LT Complete TPU Protection & Vibration Isolation Suite (TPU 95A)",
+                Path.Combine(threeMfDir, "Plate2_OverStem_Stealth_Bridge_And_Clamps.3mf"),
+                "Orbea Wild LT - Stealth OC Over-Stem Bridge & 35mm Hinged Clamshells",
                 new List<PlateItem>
                 {
-                    new PlateItem(tpuSleeves, -45.0, 42.0, 0.0),
-                    new PlateItem(downtubeTpuPads, 45.0, 42.0, 0.0),
-                    new PlateItem(tpuIsolator, -40.0, -22.0, 0.0),
-                    new PlateItem(tpuGimbalShield, 28.0, -18.0, 0.0),
-                    new PlateItem(tpuLouver, 72.0, -18.0, 0.0)
+                    new PlateItem(stemBridge, 0.0, 48.0, 0.0),
+                    new PlateItem(hingedClampsForTpu, 0.0, -32.0, 0.0)
                 });
 
+            // Plate 3: Complete 90A TPU 360-Deg Lens, Gimbal & Vibration Armor Suite (All 6 TPU Parts on 1 Plate!)
             ThreeMfWriter.Save3mf(
-                Path.Combine(threeMfDir, "Plate3_Integrated_OnePiece_Variants.3mf"),
-                "DJI Neo 2 - Orbea Wild LT Integrated One-Piece Mounts",
+                Path.Combine(threeMfDir, "Plate3_90A_TPU_Lens_Gimbal_And_Vibration_Armor.3mf"),
+                "DJI Neo 2 - Complete 90A TPU Lens, Gimbal & Vibration Armor Suite",
                 new List<PlateItem>
                 {
-                    new PlateItem(integratedDowntube, 0.0, -48.0, 0.0),
-                    new PlateItem(integratedStem, 0.0, 52.0, 0.0)
+                    new PlateItem(tpuSleeves, -52.0, 48.0, 0.0),
+                    new PlateItem(tpuIsolator, -45.0, -18.0, 0.0),
+                    new PlateItem(tpuBellyShield, 15.0, 48.0, 0.0),
+                    new PlateItem(tpuHeatsinkLouver, 15.0, 12.0, 0.0),
+                    new PlateItem(tpuNoseGuard, 18.0, -32.0, 0.0),
+                    new PlateItem(tpuTopVisorStrap, 66.0, 0.0, 0.0)
                 });
 
+            // Plate 4: 45-Deg Sunlu Easy-PA Cradle w/ Snap-Off A-Frame Anchor Fin (+ Flat 72D Cradle Option)
             ThreeMfWriter.Save3mf(
-                Path.Combine(threeMfDir, "Plate4_Cradle_45Deg_Sunlu_EasyPA.3mf"),
-                "DJI Neo 2 - 45-Deg Sunlu Easy-PA Cradle w/ Snap-Off A-Frame Anchor Fin",
+                Path.Combine(threeMfDir, "Plate4_Cradles_45Deg_EasyPA_And_Flat_72D.3mf"),
+                "DJI Neo 2 - 45-Deg Easy-PA Cradle & Flat 72D TPU Cradle",
                 new List<PlateItem>
                 {
-                    new PlateItem(cradle45WithFin, 0.0, 0.0, 0.0)
+                    new PlateItem(cradle45WithFin, 0.0, -38.0, 0.0),
+                    new PlateItem(cradle72D, 0.0, 42.0, 0.0)
                 });
 
+            // Plate 5: Rigid PETG Fastener Reinforcement Inserts for 72D TPU Parts
             ThreeMfWriter.Save3mf(
                 Path.Combine(threeMfDir, "Plate5_PETG_Inserts_For_72D_TPU.3mf"),
-                "DJI Neo 2 - Rigid PETG Fastener Reinforcement Inserts for 72D TPU Mounts",
+                "DJI Neo 2 - Rigid PETG Fastener Reinforcement Inserts",
                 new List<PlateItem>
                 {
                     new PlateItem(petgInsertKit, 0.0, 0.0, 0.0)
                 });
 
-            Console.WriteLine("ALL UPDATED STL, 3MF, AND RENDER FILES GENERATED SUCCESSFULLY.");
+            Console.WriteLine("ALL STEALTH NUMBER-PLATE & OVER-STEM FILES GENERATED SUCCESSFULLY.");
         }
 
         private static void SaveAndReport(MeshData m, string path)

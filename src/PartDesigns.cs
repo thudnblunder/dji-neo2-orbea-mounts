@@ -56,29 +56,16 @@ namespace DjiNeo2OrbeaMounts
             return Math.Min(dHole, dHex3D);
         }
 
-        // Slotted M4 hole + captive hex nut along Z (for vertical tower fine height adjustment!)
-        // Bore axis is Y (from yMin to yMax), slot along Z centered at (hx, hz) with +-slotHalfZ
-        private static double M4SlotYAndHexNutSdf(double x, double y, double z, double hx, double hz, double slotHalfZ, double yNutMin, double yNutMax)
-        {
-            double dx = x - hx;
-            double cz = Math.Max(hz - slotHalfZ, Math.Min(hz + slotHalfZ, z));
-            double dz = z - cz;
-            double dBore = Math.Sqrt(dx * dx + dz * dz) - 2.15;
-            // Pointed-top hex nut channel along Z so it prints horizontally with zero overhang!
-            double dHex2D = SdfMesher.Hexagon2D(dz, dx, 7.20);
-            double dHexY = Math.Max(yNutMin - y, y - yNutMax);
-            double dHex3D = Math.Max(dHex2D, dHexY);
-            return Math.Min(dBore, dHex3D);
-        }
-
-        // 1. Structural Mounting Insert for the DJI Neo 2 Cradle
+        // =========================================================================
+        // 01. UNIVERSAL CRADLE INSERT, 45-DEG EASY-PA CRADLE, & 72D POCKETED CRADLE
+        // =========================================================================
         public static MeshData BuildCradleMountingInsert(double step = 0.30)
         {
             Func<double, double, double, double> sdf = (x, y, z) =>
             {
                 double w1 = SdfMesher.RoundedBox3D(x - (-4.125), y, z - 1.425, 10.075, 11.50, 1.425, 0.8);
                 double w2 = SdfMesher.RoundedBox3D(x - 23.00, y, z - 1.425, 9.95, 11.50, 1.425, 0.8);
-                double deck = SdfMesher.RoundedBox3D(x - 9.50, y, z - 4.125, 25.00, 13.20, 1.425, 2.0);
+                double deck = SdfMesher.StealthBlock3D(x - 9.50, y, z - 4.125, 25.00, 13.20, 1.425, 3.0, 0.6);
                 double body = Math.Min(Math.Min(w1, w2), deck);
 
                 double holes = 1e9;
@@ -92,765 +79,9 @@ namespace DjiNeo2OrbeaMounts
                 return Math.Max(body, -holes);
             };
 
-            return SdfMesher.ExtractMesh(
-                "Cradle_Mounting_Insert",
-                sdf,
-                new Vec3(-17.0, -15.0, -0.5),
-                new Vec3(36.0, 15.0, 6.2),
-                step);
+            return SdfMesher.ExtractMesh("Cradle_Mounting_Insert", sdf, new Vec3(-17.0, -15.0, -0.5), new Vec3(36.0, 15.0, 6.2), step);
         }
 
-        // 2a. NEW SLEEK DIRECT-MOUNT L-TOWER: Sculpted Twin-Spar A-Frame & Open-Truss Parabolic Gusset Design (No Fidlock Bulk!)
-        // - 100% flat Z=0.00mm bottom face (zero underside supports!)
-        // - Slim 6.8mm base plate with scalloped hourglass waist & open center window
-        // - Lowers drone by 7.0mm (Z_center = 93.0mm instead of 100.0mm) for extra top-tube clearance and higher stiffness
-        // - Twin-spar swept legs with large central cathedral arch cutout + hollow open-truss parabolic gussets
-        // - Contoured 53 x 31mm stadium upper head that tightly hugs the 48 x 26mm TPU Vibration Isolator Puck at Y = -28.0mm
-        //   so [Sleek Tower + 7.5mm TPU Puck + Cradle + Drone] is 100% CENTERED at Y = 0.0mm!
-        public static MeshData BuildDowntubeSleekSideMountLTower(double step = 0.42)
-        {
-            Func<double, double, double, double> sdf = (x, y, z) =>
-            {
-                double ax = Math.Abs(x);
-                double ay = Math.Abs(y);
-
-                // 1) Sleek Scalloped Base Plate (Z in [0.0, 6.8mm]):
-                // Central 64mm M5 mounting spine: X in [-46.5, +46.5], width Y tapers smoothly to a narrow waist at X=0
-                double spineHalfY = 10.5 - 2.2 * Math.Exp(-(x * x) / (18.0 * 18.0));
-                double dSpine2D = SdfMesher.Box2D(x, y, 46.5, spineHalfY, 8.0);
-                double baseSpine3D = Math.Max(dSpine2D, Math.Max(0.0 - z, z - 6.8));
-
-                // 2) Streamlined Outrigger Pods for Lower Prop-Guard Saddles at ax = 38.0, Y = +6.8, Z in [0.0, 14.2]
-                // Blended smoothly into the central spine at ax in [28..46]
-                double dPod2D = SdfMesher.Box2D(ax - 38.0, y - 4.0, 8.8, 12.2, 5.5);
-                double pod3D = Math.Max(dPod2D, Math.Max(0.0 - z, z - 14.2));
-
-                // 3) Twin-Spar Swept A-Frame Struts connecting Base (Z = 0..6.8, Y_center = -13.5) to Stadium Head (Z = 75..93, Y_center = -29.25)
-                double tAngle = Math.Max(0.0, Math.Min(1.0, (z - 6.8) / 68.0));
-                double tSmooth = tAngle * tAngle * (3.0 - 2.0 * tAngle);
-                double towerCenterY = -13.5 - 15.75 * tSmooth; // sweeps from Y = -13.5 at base out to Y = -29.25 at Z >= 74.8!
-
-                // Each of the two twin-spar legs is centered at ax_leg(z): from ax = 20.0 at base to ax = 18.0 at head, width hx = 5.2mm, hy = 4.6mm
-                double legCenterX = 20.5 - 2.0 * tSmooth;
-                double dLeg2D = SdfMesher.Box2D(ax - legCenterX, y - towerCenterY, 5.4, 4.6, 2.2);
-                double legs3D = Math.Max(dLeg2D, Math.Max(0.0 - z, z - 86.0));
-
-                // Base lateral tie bar connecting the bottom roots of the two twin-spar legs to the central M5 spine at ax in [14..26], Y in [-18..0], Z in [0..6.8]
-                double dRootTie2D = SdfMesher.Box2D(ax - 20.5, y + 6.5, 6.5, 11.5, 3.0);
-                double rootTie3D = Math.Max(dRootTie2D, Math.Max(0.0 - z, z - 6.8));
-
-                // 4) Contoured Stadium Upper Head (centered at X = 0, Z = 93.0, Y = -29.25 -> Y in [-34.0, -24.5], 9.5mm thick)
-                // Hugs the 48 x 26mm TPU Vibration Isolator Puck with a sleek 53.0 x 31.0mm rounded stadium capsule (hx = 26.5, hz = 15.5, r = 8.0)!
-                double dHeadXZ = SdfMesher.Box2D(x, z - 93.0, 26.5, 15.5, 8.0);
-                double dHeadY = Math.Abs(y - (-29.25)) - 4.75;
-                double head3D = Math.Max(dHeadXZ, dHeadY);
-
-                // 5) Parabolic Open-Truss Gusset Ribs at ax = 20.5 (thickness 5.2mm in X: hx = 2.6mm)
-                // Braces from (Y = +6.5, Z = 6.8) up to (Y = -25.0, Z = 78.0) with a concave parabolic front profile!
-                double dGussetX = Math.Abs(ax - legCenterX) - 2.6;
-                double uG = Math.Max(0.0, Math.Min(1.0, (z - 6.8) / 71.2));
-                // Parabolic front chord of gusset: curves inward gracefully!
-                double yFrontChord = 6.5 * (1.0 - uG) + (-25.0) * uG - 6.5 * uG * (1.0 - uG);
-                double dGussetFront = y - yFrontChord;
-                double dGussetBack = (towerCenterY - 3.0) - y;
-                double gussetSolid3D = Math.Max(Math.Max(dGussetX, Math.Max(dGussetFront, dGussetBack)), Math.Max(0.0 - z, z - 78.0));
-
-                // Carve an open triangular truss window out of the interior of each gusset (leaving sturdy 4.8mm outer tension/compression chords!)
-                double dTrussFront = (yFrontChord - 4.8) - y;
-                double dTrussBack = y - (towerCenterY + 4.2);
-                double dTrussBot = 12.5 - z;
-                double dTrussTop = z - 58.0;
-                double gussetWindow = Math.Max(Math.Max(dTrussFront, dTrussBack), Math.Max(dTrussBot, dTrussTop));
-                double gusset3D = Math.Max(gussetSolid3D, -gussetWindow);
-
-                // Smoothly blend the skeletal structure together
-                double body = SdfMesher.SmoothMin(baseSpine3D, pod3D, 2.5);
-                body = SdfMesher.SmoothMin(body, rootTie3D, 2.5);
-                body = SdfMesher.SmoothMin(body, legs3D, 2.5);
-                body = SdfMesher.SmoothMin(body, head3D, 3.0);
-                body = SdfMesher.SmoothMin(body, gusset3D, 1.8);
-                body = Math.Max(body, 0.0 - z);
-
-                // Subtract features:
-                double cut = 1e9;
-
-                // (A) Concave U-Trough in Lower Prop-Guard Saddles (centered at ax = 38.0, Y = +6.8, Z = 15.0)
-                // Drops the prop-guard resting height by 7.0mm to match Z_center = 93.0mm!
-                double dySaddle = y - 6.8;
-                double dzSaddle = z - 15.0;
-                double dTrough = Math.Max(Math.Sqrt(dySaddle * dySaddle + dzSaddle * dzSaddle * 1.4) - 8.2, Math.Abs(ax - 38.0) - 7.6);
-                double dSaddlePin = Math.Max(Math.Sqrt((ax - 38.0) * (ax - 38.0) + (y - 6.8) * (y - 6.8)) - 2.15, Math.Max(3.5 - z, z - 11.0));
-                cut = Math.Min(cut, Math.Min(dTrough, dSaddlePin));
-
-                // (B) Recessed 3.5mm Deep Anti-Rotation Pocket on Stadium Head (Y in [-28.0, -24.0], centered at X = 0, Z = 93.0)
-                // Captures the 48.0 x 26.0 x 7.5mm TPU Vibration Isolator Puck (04a)
-                double dPuckPocket2D = SdfMesher.Box2D(x, z - 93.0, 24.3, 13.3, 4.1);
-                double dPuckPocket3D = Math.Max(dPuckPocket2D, -28.0 - y);
-                cut = Math.Min(cut, dPuckPocket3D);
-
-                // (C) Standard 64.0mm M5 Bottle Cage Boss Slots (X in [-39, -25] and [+25, +39], Y = 0)
-                // Through-slot width = 5.40mm (Z in [0, 6.8]); Top counterbore channel (Z in [3.8, 7.5]) width = 10.20mm (accepts M5 washers or 05b PETG slot plates!)
-                double dSlotM5 = SdfMesher.SlotX2D(ax, y, 25.0, 39.0, 0.0, 2.70);
-                double dCboreM5 = Math.Max(SdfMesher.SlotX2D(ax, y, 25.0, 39.0, 0.0, 5.10), 3.8 - z);
-                cut = Math.Min(cut, Math.Min(dSlotM5, dCboreM5));
-
-                // (D) Oval Lightening Window in Center of Base Spine between the two M5 slots (X in [-10.5, +10.5], Y in [-3.8, +3.8])
-                double dBaseWin = SdfMesher.Box2D(x, y, 10.5, 3.8, 3.8);
-                cut = Math.Min(cut, dBaseWin);
-
-                // (E) Sideways Cradle + TPU Isolator Mounting Pattern on Stadium Head (Y in [-34.0, -28.0], centered at X = 0.0, Z = 93.0mm)
-                // 4-bolt 15.0 x 15.0 mm square (X = +-7.50, Z = 93.0 +- 7.50 = {85.5, 100.5}) + 2-bolt 30.0mm centerline (X = +-15.0, Z = 93.0)
-                // Captive M4 hex nut channels on back face (Y in [-34.5, -30.5], leaving a 2.5mm solid clamping wall at Y in [-30.5, -28.0]!)
-                cut = Math.Min(cut, M4SlotYAndHexNutSdf(ax, y, z, 7.50, 85.50, 1.0, -34.5, -30.5));
-                cut = Math.Min(cut, M4SlotYAndHexNutSdf(ax, y, z, 7.50, 100.50, 1.0, -34.5, -30.5));
-                cut = Math.Min(cut, M4SlotYAndHexNutSdf(ax, y, z, 15.00, 93.00, 1.0, -34.5, -30.5));
-
-                return Math.Max(body, -cut);
-            };
-
-            return SdfMesher.ExtractMesh(
-                "Orbea_Wild_Downtube_Sleek_SideMount_LTower",
-                sdf,
-                new Vec3(-48.5, -35.5, -0.6),
-                new Vec3(48.5, 18.0, 110.0),
-                step);
-        }
-
-        // 2f. Archived Fidlock-Compatible Side-Mount Downtube L-Tower (kept as optional 02f variant)
-        public static MeshData BuildDowntubeFidlockSideMountLTower(double step = 0.45)
-        {
-            Func<double, double, double, double> sdf = (x, y, z) =>
-            {
-                double ax = Math.Abs(x);
-                double ay = Math.Abs(y);
-
-                // 1) Horizontal Downtube Base: X in [-56, +56], Y in [-24, +23], Z in [0, 14]
-                double basePlate = SdfMesher.RoundedBox3D(x, y + 0.5, z - 7.0, 56.0, 23.5, 7.0, 5.0);
-
-                // 2) Angled-Outward L-Tower Wall:
-                // At base (Z <= 14): centered at Y = -19.0 (Y in [-24.0, -14.0]).
-                // From Z = 14 to Z = 68: angles outward smoothly to Y_center = -29.5 (Y in [-34.5, -24.5], 10.0mm thick structural head!).
-                // Above Z = 68 (the cradle + TPU isolator mounting zone Z in [68, 120]): vertical at Y in [-34.5, -24.5]!
-                double tAngle = Math.Max(0.0, Math.Min(1.0, (z - 14.0) / 54.0));
-                // Smooth cubic hermite blend for extra-clean print transitions
-                double tSmooth = tAngle * tAngle * (3.0 - 2.0 * tAngle);
-                double towerCenterY = -19.0 - 10.5 * tSmooth; // goes from -19.0 at Z=14 out to -29.5 at Z>=68!
-
-                double zClamped = Math.Max(14.0, Math.Min(68.0, z));
-                double towerHalfX = 42.0 - (zClamped - 14.0) * (16.5 / 54.0); // tapers from 42mm to 25.5mm at Z>=68
-                double tower2D = SdfMesher.Box2D(x, y - towerCenterY, towerHalfX, 5.0, 2.5);
-                double tower3D = Math.Max(tower2D, Math.Max(0.0 - z, z - 121.0));
-                if (z > 113.0 && ax > 17.5)
-                {
-                    double rx = ax - 17.5;
-                    double rz = z - 113.0;
-                    double dCorner = Math.Sqrt(rx * rx + rz * rz) - 8.0;
-                    tower3D = Math.Max(tower3D, dCorner);
-                }
-
-                // 3) Twin Structural Gusset Ribs at ax in [17.5, 23.5] (bracing the angled tower to the base, completely clear of the Y=0 M5 bottle slots!)
-                double dGussetX = Math.Abs(ax - 20.5) - 3.0;
-                // Inner edge of gusset sweeps from (Y = +16, Z = 14) to (Y = -24.5, Z = 76)
-                double dGussetDiag = (62.0 * (y + 24.5) + 40.5 * (z - 76.0)) / Math.Sqrt(62.0 * 62.0 + 40.5 * 40.5);
-                double dGussetBack = (towerCenterY - 4.5) - y;
-                double gusset3D = Math.Max(Math.Max(dGussetX, Math.Max(dGussetDiag, dGussetBack)), Math.Max(2.0 - z, z - 80.0));
-
-                // 4) Dual Lower Prop-Guard Saddle Rests at ax in [28.0, 48.0], centered at Y = +6.8mm (exact prop-guard centerline when 7.5mm TPU puck is used!)
-                double saddleBlock = SdfMesher.RoundedBox3D(ax - 38.0, y - 6.8, z - 15.0, 9.5, 13.0, 6.0, 3.0);
-
-                double body = SdfMesher.SmoothMin(basePlate, tower3D, 2.5);
-                body = SdfMesher.SmoothMin(body, gusset3D, 1.8);
-                body = SdfMesher.SmoothMin(body, saddleBlock, 2.0);
-                body = Math.Max(body, 0.0 - z);
-
-                // Subtract features:
-                double cut = 1e9;
-
-                // (A) Concave U-Trough in the Lower Prop-Guard Saddles (centered at Y = +6.8, Z = 22.0)
-                double dySaddle = y - 6.8;
-                double dzSaddle = z - 22.0;
-                double dTrough = Math.Max(Math.Sqrt(dySaddle * dySaddle + dzSaddle * dzSaddle * 1.4) - 8.2, Math.Abs(ax - 38.0) - 7.6);
-                double dSaddlePin = Math.Max(Math.Sqrt((ax - 38.0) * (ax - 38.0) + (y - 6.8) * (y - 6.8)) - 2.15, Math.Max(10.5 - z, z - 18.0));
-                cut = Math.Min(cut, Math.Min(dTrough, dSaddlePin));
-
-                // (B) Recessed 3.5mm Deep Pocket on the Upper Tower Face (Y in [-28.0, -24.0], X in [-24.3, +24.3], Z in [86.7, 113.3])
-                // Captures the 48 x 26 x 7.5mm TPU Vibration Isolator Puck (04a) so 3.5mm nests inside the tower and 4.0mm floats the cradle at Y = -20.5mm!
-                double dPuckPocket2D = SdfMesher.Box2D(x, z - 100.0, 24.3, 13.3, 4.1);
-                double dPuckPocket3D = Math.Max(dPuckPocket2D, -28.0 - y);
-                cut = Math.Min(cut, dPuckPocket3D);
-
-                // (C) Underside Fidlock TWIST Bike Base Saddle Channel: X in [-54, +54], Y in [-12.9, +12.9], Z in [-1, 3.2]
-                double saddle2D = SdfMesher.Box2D(x, y, 54.0, 12.9, 2.0);
-                double snapRib = Math.Max(Math.Max(ax - 12.0, 12.35 - ay), Math.Abs(z - 1.4) - 0.8);
-                double saddleCut = Math.Max(saddle2D, z - 3.2);
-                saddleCut = Math.Max(saddleCut, -snapRib);
-                cut = Math.Min(cut, saddleCut);
-
-                // (D) Twin Fidlock TWIST Undercut Keyhole Sockets at X = -32.0 and X = +32.0
-                for (int sign = -1; sign <= 1; sign += 2)
-                {
-                    double sx0 = sign * 32.0, sy0 = 0.0;
-                    double sx1 = sign * 30.7, sy1 = -sign * 8.8;
-                    double ux = sx1 - sx0, uy = sy1 - sy0;
-                    double ut = Math.Max(0.0, Math.Min(1.0, ((x - sx0) * ux + (y - sy0) * uy) / (ux * ux + uy * uy)));
-                    double kx = sx0 + ut * ux;
-                    double ky = sy0 + ut * uy;
-                    double distArc = Math.Sqrt((x - kx) * (x - kx) + (y - ky) * (y - ky));
-
-                    double dEntry2D = Math.Sqrt((x - sx1) * (x - sx1) + (y - sy1) * (y - sy1)) - 7.1;
-                    double dEntry3D = Math.Max(dEntry2D, Math.Max(2.8 - z, z - 7.6));
-                    double dUpperKey = Math.Max(distArc - 7.1, Math.Max(5.2 - z, z - 7.6));
-                    double dLowerNeck = Math.Max(distArc - 5.0, Math.Max(2.8 - z, z - 5.3));
-
-                    cut = Math.Min(cut, Math.Min(dEntry3D, Math.Min(dUpperKey, dLowerNeck)));
-                }
-
-                // (E) Neodymium Magnet Press-Fit Pockets (d = 10.25mm, Z in [3.0, 6.2]) at X = +-19.5mm, Y = 0
-                double dMag2D = Math.Sqrt((ax - 19.5) * (ax - 19.5) + y * y) - 5.125;
-                double dMag3D = Math.Max(dMag2D, Math.Max(3.0 - z, z - 6.2));
-                cut = Math.Min(cut, dMag3D);
-
-                // (F) Standard 64.0mm M5 Bottle Cage Boss Slots (X in [-40, -24] and [+24, +40], Y = 0)
-                double dSlotM5 = SdfMesher.SlotX2D(ax, y, 24.0, 40.0, 0.0, 2.70);
-                double dCboreM5 = Math.Max(SdfMesher.SlotX2D(ax, y, 24.0, 40.0, 0.0, 5.10), 8.5 - z);
-                cut = Math.Min(cut, Math.Min(dSlotM5, dCboreM5));
-
-                // (G) Sideways Cradle + TPU Isolator Mounting Pattern on Upper Vertical Tower Head (Y in [-34.5, -28.0], centered at X = 0.0, Z = 100.0mm)
-                // Captive M4 hex nut channels on back face (Y in [-35.5, -30.8], leaving a 2.8mm solid clamping wall at Y in [-30.8, -28.0]!)
-                cut = Math.Min(cut, M4SlotYAndHexNutSdf(ax, y, z, 7.50, 92.50, 1.2, -35.5, -30.8));
-                cut = Math.Min(cut, M4SlotYAndHexNutSdf(ax, y, z, 7.50, 107.50, 1.2, -35.5, -30.8));
-                cut = Math.Min(cut, M4SlotYAndHexNutSdf(ax, y, z, 15.00, 100.00, 1.2, -35.5, -30.8));
-                cut = Math.Min(cut, M4SlotYAndHexNutSdf(x, y, z, 0.00, 85.00, 1.0, -35.5, -30.8));
-                cut = Math.Min(cut, M4SlotYAndHexNutSdf(x, y, z, 0.00, 115.00, 1.0, -35.5, -30.8));
-
-                // (H) Weight-saving rounded window through the angled lower-mid tower wall (X in [-10.5, +10.5], Z in [28, 66])
-                double dTowerWin = Math.Max(SdfMesher.Box2D(x, z - 47.0, 10.5, 17.5, 5.0), Math.Abs(y - towerCenterY) - 8.0);
-                cut = Math.Min(cut, dTowerWin);
-
-                return Math.Max(body, -cut);
-            };
-
-            return SdfMesher.ExtractMesh(
-                "Orbea_Wild_Downtube_SideMount_LTower",
-                sdf,
-                new Vec3(-58.0, -36.0, -0.8),
-                new Vec3(58.0, 24.5, 122.5),
-                step);
-        }
-
-        // 2b. TPU Lower Prop-Guard Saddle Cushions (Pair) for the Side-Mount Downtube L-Tower
-        public static MeshData BuildDowntubeTpuSaddlePads(double step = 0.25)
-        {
-            Func<double, double, double, double> singleSaddlePadSdf = (x, y, z) =>
-            {
-                // Fits into the U-trough at (ax=38, y=6): 14.8mm wide in X, 15.8mm curved width in Y, Z in [2.5, 9.5]
-                double outerCyl = Math.Max(Math.Sqrt(y * y + (z - 9.5) * (z - 9.5) * 1.4) - 8.0, Math.Abs(x) - 7.4);
-                outerCyl = Math.Max(outerCyl, z - 9.5);
-                // Inner U-groove where the DJI Neo 2 prop guard ring sits (r = 5.2mm)
-                double innerGroove = Math.Sqrt(y * y + (z - 9.8) * (z - 9.8)) - 5.2;
-                double padBody = Math.Max(outerCyl, -innerGroove);
-                // Bottom locator pin (r = 2.05mm, Z in [0.0, 4.0])
-                double pin = Math.Max(Math.Sqrt(x * x + y * y) - 2.05, Math.Max(0.0 - z, z - 4.0));
-                return Math.Min(padBody, pin);
-            };
-
-            var single = SdfMesher.ExtractMesh("Single_Saddle_TPU_Pad", singleSaddlePadSdf, new Vec3(-9, -9, -0.5), new Vec3(9, 9, 10.2), step);
-            var pairMesh = new MeshData("Downtube_SideMount_TPU_PropGuard_Cushions_Pair");
-            var p1 = single.Clone("Pad_Front"); p1.Translate(-12.0, 0, 0);
-            var p2 = single.Clone("Pad_Rear");  p2.Translate(12.0, 0, 0);
-            pairMesh.Append(p1);
-            pairMesh.Append(p2);
-            return pairMesh;
-        }
-
-        // 2d. Original Flat Downtube Mount (kept as optional extra)
-        public static MeshData BuildDowntubeFlatFidlockMount(double step = 0.45)
-        {
-            Func<double, double, double, double> sdf = (x, y, z) =>
-            {
-                double ax = Math.Abs(x);
-                double ay = Math.Abs(y);
-                double spine = SdfMesher.RoundedBox3D(x, y, z - 7.0, 56.0, 20.0, 7.0, 6.0);
-                double p0x = 18.0, p0y = 12.0, p1x = 38.0, p1y = 44.0;
-                double vx = p1x - p0x, vy = p1y - p0y;
-                double t = Math.Max(0.0, Math.Min(1.0, ((ax - p0x) * vx + (ay - p0y) * vy) / (vx * vx + vy * vy)));
-                double cx = p0x + t * vx, cy = p0y + t * vy;
-                double dWing2D = Math.Sqrt((ax - cx) * (ax - cx) + (ay - cy) * (ay - cy)) - (8.5 + 2.5 * t);
-                double wing3D = Math.Max(dWing2D, Math.Max(0.0 - z, z - 14.0));
-                double body = Math.Max(SdfMesher.SmoothMin(spine, wing3D, 3.0), Math.Max(0.0 - z, z - 14.0));
-
-                double cut = 1e9;
-                double saddle2D = SdfMesher.Box2D(x, y, 54.0, 12.9, 2.0);
-                double snapRib = Math.Max(Math.Max(ax - 12.0, 12.35 - ay), Math.Abs(z - 1.4) - 0.8);
-                cut = Math.Min(cut, Math.Max(Math.Max(saddle2D, z - 3.2), -snapRib));
-
-                for (int sign = -1; sign <= 1; sign += 2)
-                {
-                    double sx0 = sign * 32.0, sy0 = 0.0, sx1 = sign * 30.7, sy1 = -sign * 8.8;
-                    double ux = sx1 - sx0, uy = sy1 - sy0;
-                    double ut = Math.Max(0.0, Math.Min(1.0, ((x - sx0) * ux + (y - sy0) * uy) / (ux * ux + uy * uy)));
-                    double kx = sx0 + ut * ux, ky = sy0 + ut * uy;
-                    double distArc = Math.Sqrt((x - kx) * (x - kx) + (y - ky) * (y - ky));
-                    double dEntry3D = Math.Max(Math.Sqrt((x - sx1) * (x - sx1) + (y - sy1) * (y - sy1)) - 7.1, Math.Max(2.8 - z, z - 7.6));
-                    double dUpperKey = Math.Max(distArc - 7.1, Math.Max(5.2 - z, z - 7.6));
-                    double dLowerNeck = Math.Max(distArc - 5.0, Math.Max(2.8 - z, z - 5.3));
-                    cut = Math.Min(cut, Math.Min(dEntry3D, Math.Min(dUpperKey, dLowerNeck)));
-                }
-
-                cut = Math.Min(cut, Math.Max(Math.Sqrt((ax - 19.5) * (ax - 19.5) + y * y) - 5.125, Math.Max(3.0 - z, z - 6.2)));
-                cut = Math.Min(cut, Math.Min(SdfMesher.SlotX2D(ax, y, 24.0, 40.0, 0.0, 2.70), Math.Max(SdfMesher.SlotX2D(ax, y, 24.0, 40.0, 0.0, 5.10), 8.5 - z)));
-                cut = Math.Min(cut, Math.Min(M4HoleAndHexNutSdf(ax, ay, z, 7.50, 7.50, 3.0, 8.5), Math.Max(Math.Sqrt((ax - 7.50) * (ax - 7.50) + (ay - 7.50) * (ay - 7.50)) - 4.15, z - 3.1)));
-                cut = Math.Min(cut, M4HoleAndHexNutSdf(ax, y, z, 15.00, 0.00, 3.0, 8.5));
-                cut = Math.Min(cut, M4HoleAndHexNutSdf(x, ay, z, 0.00, 15.00, 0.0, 5.5));
-                cut = Math.Min(cut, Math.Sqrt((ax - 28.0) * (ax - 28.0) + (ay - 27.5) * (ay - 27.5)) - 4.2);
-
-                return Math.Max(body, -cut);
-            };
-
-            return SdfMesher.ExtractMesh("Orbea_Wild_Downtube_Flat_Fidlock_Mount", sdf, new Vec3(-58, -56, -0.8), new Vec3(58, 56, 14.8), step);
-        }
-
-        // 3a. Over-Stem Bridge Plate for 2027 Orbea Wild LT M-Team (OC MC11 40mm Stem)
-        public static MeshData BuildStemBridgePlate(double step = 0.40)
-        {
-            Func<double, double, double, double> sdf = (x, y, z) =>
-            {
-                double ax = Math.Abs(x);
-                double ay = Math.Abs(y);
-
-                double halfX = ay <= 21.0 ? 27.0 : Math.Max(16.0, 27.0 - (ay - 21.0) * 0.55);
-                double d2D = SdfMesher.Box2D(x, y, halfX, 41.0, 5.0);
-
-                double zTop = ay <= 20.0 ? 14.0 : (ay >= 24.0 ? 8.5 : 14.0 - (ay - 20.0) * (5.5 / 4.0));
-                double zBot = ay >= 23.0 ? 0.0 : (ay <= 19.0 ? 6.0 : 6.0 * (23.0 - ay) / 4.0);
-
-                double body = Math.Max(d2D, Math.Max(zBot - z, z - zTop));
-
-                double cut = 1e9;
-                double dWingSlot = SdfMesher.SlotY2D(ax, ay, 9.0, 25.0, 36.0, 2.15);
-                double dWingCbore = Math.Max(SdfMesher.SlotY2D(ax, ay, 9.0, 25.0, 36.0, 4.15), 4.5 - z);
-                cut = Math.Min(cut, Math.Min(dWingSlot, dWingCbore));
-
-                cut = Math.Min(cut, M4HoleAndHexNutSdf(ax, ay, z, 7.50, 7.50, 5.5, 9.6));
-                cut = Math.Min(cut, M4HoleAndHexNutSdf(ax, y, z, 15.00, 0.00, 5.5, 9.6));
-                cut = Math.Min(cut, M4HoleAndHexNutSdf(x, ay, z, 0.00, 15.00, 5.5, 9.6));
-
-                return Math.Max(body, -cut);
-            };
-
-            return SdfMesher.ExtractMesh(
-                "Orbea_MC11_Stem_Bridge_Plate",
-                sdf,
-                new Vec3(-29.0, -43.0, -0.6),
-                new Vec3(29.0, 43.0, 14.6),
-                step);
-        }
-
-        // 3b. NEW: Swinging M4 Pin-Hinged Clamshell Handlebar Clamps (ZERO Plastic Bending to Clear 35mm Bar!)
-        // Consists of:
-        //   - Upper Saddle Half (180 deg top arch + top bridge deck with side-entry captive M4 nuts + Front Double-Knuckle Hinge Fork + Rear Upper Pinch Lug)
-        //   - Lower Swinging Jaw Half (180 deg bottom arch + Front Center Hinge Tongue + Rear Lower Pinch Lug)
-        // Joined at the front by a permanent M4x20mm Hinge Bolt + Captive M4 Hex Nut so the lower jaw swings open 180 deg with ZERO flexing!
-        // Closed at the rear by a single M4x20mm Pinch Bolt + Captive M4 Hex Nut!
-        public static MeshData BuildHandlebarHingedClamshellSingle(double boreDiameter, bool assembledClosed, double step = 0.34)
-        {
-            double rIn = boreDiameter * 0.5;
-            double rOut = rIn + 5.5;
-            double ySaddleTop = rIn + 6.0;
-            double pivotX = -(rIn + 5.2); // Front hinge barrel center X
-            double pivotY = 0.0;          // Front hinge barrel center Y
-            double pinchX = +(rIn + 6.5); // Rear pinch bolt center X
-
-            // Upper Half SDF
-            Func<double, double, double, double> upperHalfSdf = (x, y, z) =>
-            {
-                double r = Math.Sqrt(x * x + y * y);
-                double dRing2D = Math.Max(rIn - r, r - rOut);
-
-                // Top flat bridge saddle: X in [-14.5, +14.5], Y in [0, ySaddleTop]
-                double dSaddle2D = SdfMesher.Box2D(x, y - (ySaddleTop * 0.5 + 3.0), 14.5, ySaddleTop * 0.5 - 3.0, 2.5);
-                dSaddle2D = Math.Max(dSaddle2D, rIn - r);
-
-                // Front hinge boss around (pivotX, 0) with radius 5.2mm, connected to upper arch
-                double dHingeCyl2D = Math.Sqrt((x - pivotX) * (x - pivotX) + (y - pivotY) * (y - pivotY)) - 5.2;
-                double dHingeWeb2D = Math.Max(SdfMesher.Box2D(x - (pivotX * 0.5 - 4.0), y - 2.5, 6.0, 4.5, 1.5), rIn - r);
-                double dFront2D = SdfMesher.SmoothMin(dHingeCyl2D, dHingeWeb2D, 1.5);
-
-                // Rear upper pinch lug: X in [rIn, pinchX + 5.5], Y in [0.7, 9.5]
-                double dRearLug2D = Math.Max(SdfMesher.Box2D(x - (rIn + 5.2), y - 5.1, 6.5, 4.4, 1.8), rIn - r);
-
-                // Upper arch body (Y >= 0.6mm everywhere except front hinge barrel which goes down to Y = -5.2mm)
-                double upperMain2D = Math.Max(SdfMesher.SmoothMin(Math.Min(dRing2D, dSaddle2D), dRearLug2D, 1.8), 0.6 - y);
-                double profile2D = Math.Min(upperMain2D, dFront2D);
-                profile2D = Math.Max(profile2D, rIn - r);
-
-                double body3D = Math.Max(profile2D, Math.Max(0.0 - z, z - 15.0));
-
-                double cut = 1e9;
-                // (1) Cut central knuckle slot out of front hinge barrel (Z in [4.75, 10.25], X < -rIn + 0.5, Y < 5.5) so Lower Jaw's center tongue fits inside!
-                double dKnuckleSlot = Math.Max(Math.Max(x - (-rIn + 0.5), y - 5.5), Math.Abs(z - 7.5) - 2.75);
-                cut = Math.Min(cut, dKnuckleSlot);
-
-                // (2) Front Hinge Pin M4 Bore (at pivotX, pivotY, through Z in [-1, 16]) + Captive M4 Hex Nut Pocket in outer knuckle (Z in [12.0, 15.5])
-                double dHingePinBore = Math.Sqrt((x - pivotX) * (x - pivotX) + (y - pivotY) * (y - pivotY)) - 2.15;
-                double dHingeNut = Math.Max(SdfMesher.Hexagon2D(x - pivotX, y - pivotY, 7.18), 12.0 - z);
-                cut = Math.Min(cut, Math.Min(dHingePinBore, dHingeNut));
-
-                // (3) Top Saddle Bridge Mounting Holes (X = +-9.0, Z = 7.5) + Side-Entry Captive M4 Hex Nut Slots
-                for (int sx = -1; sx <= 1; sx += 2)
-                {
-                    double bx = sx * 9.0;
-                    double dTopBore = Math.Max(Math.Sqrt((x - bx) * (x - bx) + (z - 7.5) * (z - 7.5)) - 2.15, Math.Max((rIn - 1.0) - y, y - (ySaddleTop + 1.0)));
-                    double dNutSlot = Math.Max(Math.Max(Math.Abs(x - bx) - 3.60, Math.Abs(y - (ySaddleTop - 4.45)) - 1.75), z - 11.1);
-                    cut = Math.Min(cut, Math.Min(dTopBore, dNutSlot));
-                }
-
-                // (4) Rear Pinch Bolt Bore (at X = pinchX, Z = 7.5, along Y) + Captive M4 Hex Nut Pocket on top of rear lug (Y in [5.2, 10.5])
-                double dPinchBore = Math.Sqrt((x - pinchX) * (x - pinchX) + (z - 7.5) * (z - 7.5)) - 2.15;
-                double dPinchHex = Math.Max(SdfMesher.Hexagon2D(x - pinchX, z - 7.5, 7.18), 5.2 - y);
-                cut = Math.Min(cut, Math.Min(dPinchBore, dPinchHex));
-
-                return Math.Max(body3D, -cut);
-            };
-
-            // Lower Swinging Jaw Half SDF
-            Func<double, double, double, double> lowerHalfSdf = (x, y, z) =>
-            {
-                double r = Math.Sqrt(x * x + y * y);
-                double dRing2D = Math.Max(rIn - r, r - rOut);
-
-                // Front hinge barrel around (pivotX, 0) with radius 5.2mm
-                double dHingeCyl2D = Math.Sqrt((x - pivotX) * (x - pivotX) + (y - pivotY) * (y - pivotY)) - 5.2;
-                double dHingeWeb2D = Math.Max(SdfMesher.Box2D(x - (pivotX * 0.5 - 4.0), y + 2.5, 6.0, 4.5, 1.5), rIn - r);
-                double dFront2D = SdfMesher.SmoothMin(dHingeCyl2D, dHingeWeb2D, 1.5);
-
-                // Rear lower pinch lug: X in [rIn, pinchX + 5.5], Y in [-9.5, -0.7]
-                double dRearLug2D = Math.Max(SdfMesher.Box2D(x - (rIn + 5.2), y + 5.1, 6.5, 4.4, 1.8), rIn - r);
-
-                // Lower arch body (Y <= -0.6mm everywhere except front center hinge tongue)
-                double lowerMain2D = Math.Max(SdfMesher.SmoothMin(dRing2D, dRearLug2D, 1.8), y - (-0.6));
-                double lowerMain3D = Math.Max(lowerMain2D, Math.Max(0.0 - z, z - 15.0));
-
-                // Front center hinge tongue only exists for Z in [5.05, 9.95] (4.9mm wide, fits inside the 5.5mm slot of Upper Half!)
-                double dTongue3D = Math.Max(Math.Max(dFront2D, rIn - r), Math.Abs(z - 7.5) - 2.45);
-                // Outside Z in [5.05, 9.95], trim the front of the lower jaw at X >= pivotX + 5.5 so it clears the upper outer knuckles when swinging!
-                lowerMain3D = Math.Max(lowerMain3D, (pivotX + 5.5) - x);
-
-                double body3D = Math.Min(lowerMain3D, dTongue3D);
-
-                double cut = 1e9;
-                // (1) Front Hinge Pin M4 Bore at (pivotX, pivotY)
-                double dHingePinBore = Math.Sqrt((x - pivotX) * (x - pivotX) + (y - pivotY) * (y - pivotY)) - 2.15;
-                cut = Math.Min(cut, dHingePinBore);
-
-                // (2) Rear Pinch Bolt Bore at (pinchX, Z = 7.5) + Socket Head Seat on bottom of rear lug (Y <= -5.2)
-                double dPinchBore = Math.Sqrt((x - pinchX) * (x - pinchX) + (z - 7.5) * (z - 7.5)) - 2.15;
-                double dPinchHead = Math.Max(Math.Sqrt((x - pinchX) * (x - pinchX) + (z - 7.5) * (z - 7.5)) - 4.15, y - (-5.2));
-                cut = Math.Min(cut, Math.Min(dPinchBore, dPinchHead));
-
-                return Math.Max(body3D, -cut);
-            };
-
-            var upperMesh = SdfMesher.ExtractMesh("Upper_Saddle", upperHalfSdf,
-                new Vec3(pivotX - 6.0, -6.0, -0.5), new Vec3(pinchX + 6.5, ySaddleTop + 1.0, 15.5), step);
-            var lowerMesh = SdfMesher.ExtractMesh("Lower_Swinging_Jaw", lowerHalfSdf,
-                new Vec3(pivotX - 6.0, -(rOut + 1.5), -0.5), new Vec3(pinchX + 6.5, 6.0, 15.5), step);
-
-            if (!assembledClosed)
-            {
-                // Offset the lower jaw downward by 12.5mm on the print bed so the center hinge tongue is completely clear of the upper knuckles!
-                lowerMesh.Translate(0.0, -12.5, 0.0);
-            }
-
-            var combined = new MeshData("Hinged_Clamshell_Unit");
-            combined.Append(upperMesh);
-            combined.Append(lowerMesh);
-            return combined;
-        }
-
-        public static MeshData BuildHandlebarHingedClamshellPair(double boreDiameter, string meshName, double step = 0.34)
-        {
-            var single = BuildHandlebarHingedClamshellSingle(boreDiameter, assembledClosed: false, step: step);
-            var pair = new MeshData(meshName);
-            var left = single.Clone(meshName + "_L");
-            left.Translate(-38.0, 0, 0);
-            var right = single.Clone(meshName + "_R");
-            right.Translate(38.0, 0, 0);
-            pair.Append(left);
-            pair.Append(right);
-            return pair;
-        }
-
-        // 3c. NEW: Single-Bolt Hook-In Clamshell Handlebar Clamps (Front Interlocking Hook + 1 Rear M4 Pinch Bolt, Zero Flexing!)
-        public static MeshData BuildHandlebarHookHingeClampsPair(double boreDiameter, string meshName, double step = 0.34)
-        {
-            double rIn = boreDiameter * 0.5;
-            double rOut = rIn + 5.5;
-            double ySaddleTop = rIn + 6.0;
-            double hookX = -(rIn + 4.8);
-            double hookY = 1.5;
-            double pinchX = +(rIn + 6.5);
-
-            // Upper Half with Front Downward-Facing C-Hook Receiver
-            Func<double, double, double, double> upperHookSdf = (x, y, z) =>
-            {
-                double r = Math.Sqrt(x * x + y * y);
-                double dRing2D = Math.Max(rIn - r, r - rOut);
-                double dSaddle2D = Math.Max(SdfMesher.Box2D(x, y - (ySaddleTop * 0.5 + 3.0), 14.5, ySaddleTop * 0.5 - 3.0, 2.5), rIn - r);
-                double dRearLug2D = Math.Max(SdfMesher.Box2D(x - (rIn + 5.2), y - 5.1, 6.5, 4.4, 1.8), rIn - r);
-
-                // Front C-hook receiver around (hookX, hookY): outer r = 6.2mm, inner socket r = 3.3mm, open throat at bottom-inner so lower hook drops in at 45 deg
-                double dHookOuter = Math.Sqrt((x - hookX) * (x - hookX) + (y - hookY) * (y - hookY)) - 6.2;
-                double dHookSocket = Math.Sqrt((x - hookX) * (x - hookX) + (y - hookY) * (y - hookY)) - 3.35;
-                // Trim bottom of hook outer at y < hookY - 2.2 so lower jaw hooks in from underneath
-                dHookOuter = Math.Max(dHookOuter, (hookY - 2.2) - y);
-
-                double upperMain2D = Math.Max(SdfMesher.SmoothMin(Math.Min(dRing2D, dSaddle2D), dRearLug2D, 1.8), 0.6 - y);
-                double profile2D = Math.Max(SdfMesher.SmoothMin(upperMain2D, dHookOuter, 1.5), -dHookSocket);
-                profile2D = Math.Max(profile2D, rIn - r);
-
-                double body3D = Math.Max(profile2D, Math.Max(0.0 - z, z - 15.0));
-
-                double cut = 1e9;
-                for (int sx = -1; sx <= 1; sx += 2)
-                {
-                    double bx = sx * 9.0;
-                    double dTopBore = Math.Max(Math.Sqrt((x - bx) * (x - bx) + (z - 7.5) * (z - 7.5)) - 2.15, Math.Max((rIn - 1.0) - y, y - (ySaddleTop + 1.0)));
-                    double dNutSlot = Math.Max(Math.Max(Math.Abs(x - bx) - 3.60, Math.Abs(y - (ySaddleTop - 4.45)) - 1.75), z - 11.1);
-                    cut = Math.Min(cut, Math.Min(dTopBore, dNutSlot));
-                }
-                double dPinchBore = Math.Sqrt((x - pinchX) * (x - pinchX) + (z - 7.5) * (z - 7.5)) - 2.15;
-                double dPinchHex = Math.Max(SdfMesher.Hexagon2D(x - pinchX, z - 7.5, 7.18), 5.2 - y);
-                cut = Math.Min(cut, Math.Min(dPinchBore, dPinchHex));
-
-                return Math.Max(body3D, -cut);
-            };
-
-            // Lower Jaw with Front Cylindrical Hook Pin (r = 3.0mm at hookX, hookY)
-            Func<double, double, double, double> lowerHookSdf = (x, y, z) =>
-            {
-                double r = Math.Sqrt(x * x + y * y);
-                double dRing2D = Math.Max(rIn - r, r - rOut);
-                double dRearLug2D = Math.Max(SdfMesher.Box2D(x - (rIn + 5.2), y + 5.1, 6.5, 4.4, 1.8), rIn - r);
-                double lowerMain2D = Math.Max(SdfMesher.SmoothMin(dRing2D, dRearLug2D, 1.8), y - (-0.6));
-
-                // Front hook neck + cylindrical pin (r = 3.0mm at hookX, hookY)
-                double dPin = Math.Sqrt((x - hookX) * (x - hookX) + (y - hookY) * (y - hookY)) - 3.0;
-                double dNeck = SdfMesher.Box2D(x - (hookX + 1.8), y - (hookY - 3.5), 2.4, 3.5, 0.8);
-                double profile2D = Math.Max(Math.Min(lowerMain2D, Math.Min(dPin, dNeck)), rIn - r);
-
-                double body3D = Math.Max(profile2D, Math.Max(0.0 - z, z - 15.0));
-
-                double dPinchBore = Math.Sqrt((x - pinchX) * (x - pinchX) + (z - 7.5) * (z - 7.5)) - 2.15;
-                double dPinchHead = Math.Max(Math.Sqrt((x - pinchX) * (x - pinchX) + (z - 7.5) * (z - 7.5)) - 4.15, y - (-5.2));
-                return Math.Max(body3D, -Math.Min(dPinchBore, dPinchHead));
-            };
-
-            var upper = SdfMesher.ExtractMesh("Upper_Hook_Saddle", upperHookSdf,
-                new Vec3(hookX - 7.0, -3.5, -0.5), new Vec3(pinchX + 6.5, ySaddleTop + 1.0, 15.5), step);
-            var lower = SdfMesher.ExtractMesh("Lower_Hook_Jaw", lowerHookSdf,
-                new Vec3(hookX - 4.0, -(rOut + 1.5), -0.5), new Vec3(pinchX + 6.5, hookY + 4.0, 15.5), step);
-            lower.Translate(0.0, -8.0, 0.0); // separate on print bed
-
-            var single = new MeshData("HookHinge_Unit");
-            single.Append(upper);
-            single.Append(lower);
-
-            var pair = new MeshData(meshName);
-            var left = single.Clone(meshName + "_L"); left.Translate(-33.0, 0, 0);
-            var right = single.Clone(meshName + "_R"); right.Translate(33.0, 0, 0);
-            pair.Append(left);
-            pair.Append(right);
-            return pair;
-        }
-
-        // 3d. TPU Split Grip Sleeves Pair for OC MC10 35.0mm Carbon Handlebar
-        public static MeshData BuildHandlebarTpuSleeves(double step = 0.28)
-        {
-            Func<double, double, double, double> singleSleeveSdf = (x, y, z) =>
-            {
-                double r = Math.Sqrt(x * x + y * y);
-                bool isFlange = (z <= 1.0 || z >= 16.0);
-                double rOuter = isFlange ? 19.5 : 18.5;
-                double dRing = Math.Max(17.5 - r, r - rOuter);
-                double dSplit = Math.Max(Math.Abs(x) - 2.5, y);
-                double d2D = Math.Max(dRing, -dSplit);
-                return Math.Max(d2D, Math.Max(0.0 - z, z - 17.0));
-            };
-
-            var single = SdfMesher.ExtractMesh(
-                "TPU_Sleeve_Single",
-                singleSleeveSdf,
-                new Vec3(-20.5, -20.5, -0.5),
-                new Vec3(20.5, 20.5, 17.5),
-                step);
-
-            var pair = new MeshData("Handlebar_35mm_TPU_Grip_Sleeves_Pair");
-            var left = single.Clone("Sleeve_L");
-            left.Translate(-22.0, 0, 0);
-            var right = single.Clone("Sleeve_R");
-            right.Translate(22.0, 0, 0);
-            pair.Append(left);
-            pair.Append(right);
-            return pair;
-        }
-
-        // 4a. TPU Vibration-Isolator Sandwich Block + 6x Flanged M4 Bolt Isolating Grommets
-        // Fits between 01_DJI_Neo2_Universal_Cradle and either 02a (Downtube L-Tower) or 03a (Stem Bridge)
-        // Decouples high-frequency trail shock (15-100Hz) with cellular shear ribs + elastomer bolt grommets
-        public static MeshData BuildTpuVibrationIsolatorSystem(double step = 0.26, bool includeLooseGrommetsOnPlate = true)
-        {
-            Func<double, double, double, double> isolatorPadSdf = (x, y, z) =>
-            {
-                double ax = Math.Abs(x);
-                double ay = Math.Abs(y);
-
-                // Main pad footprint: 48.0 x 26.0 x 7.5 mm (Z in [0.0, 7.5]), corner radius 4.0mm
-                double body = SdfMesher.RoundedBox3D(x, y, z - 3.75, 24.0, 13.0, 3.75, 4.0);
-
-                // Peripheral compliant bellows groove around mid-height (Z = 3.75mm, depth = 2.0mm) so the pad shears & compresses smoothly!
-                double dOuterPerim = SdfMesher.Box2D(x, y, 24.0, 13.0, 4.0);
-                double dBellows = Math.Max(-dOuterPerim - 1.8, Math.Abs(z - 3.75) - 1.35);
-                // Keep solid bosses around the 6 M4 bolt locations so bolt preload is controlled
-                double dBoltBosses = 1e9;
-                dBoltBosses = Math.Min(dBoltBosses, Math.Sqrt((ax - 7.5) * (ax - 7.5) + (ay - 7.5) * (ay - 7.5)) - 4.5);
-                dBoltBosses = Math.Min(dBoltBosses, Math.Sqrt((ax - 15.0) * (ax - 15.0) + y * y) - 4.5);
-                dBoltBosses = Math.Min(dBoltBosses, Math.Sqrt(x * x + (ay - 15.0) * (ay - 15.0)) - 4.5);
-                dBellows = Math.Max(dBellows, -dBoltBosses);
-
-                double cut = dBellows;
-
-                // Internal vibration-damping honeycomb/shear cells at center & corners
-                double dCellCenter = Math.Max(Math.Sqrt(x * x + y * y) - 3.8, Math.Abs(z - 3.75) - 2.6);
-                double dCellMidX = Math.Max(Math.Sqrt((ax - 19.5) * (ax - 19.5) + (ay - 6.8) * (ay - 6.8)) - 2.6, Math.Abs(z - 3.75) - 2.6);
-                cut = Math.Min(cut, Math.Min(dCellCenter, dCellMidX));
-
-                // 6 x M4 Bolt Through-Holes (r = 2.15mm)
-                double dHoles = 1e9;
-                dHoles = Math.Min(dHoles, Math.Sqrt((ax - 7.5) * (ax - 7.5) + (ay - 7.5) * (ay - 7.5)) - 2.15);
-                dHoles = Math.Min(dHoles, Math.Sqrt((ax - 15.0) * (ax - 15.0) + y * y) - 2.15);
-                cut = Math.Min(cut, dHoles);
-
-                // Top & bottom micro-ribbed contact faces (0.5mm deep concentric/linear compliance ribs)
-                double dTopRibs = Math.Max(Math.Abs(Math.Sin(x * 1.3)) - 0.5, Math.Min(z - 0.45, 7.05 - z));
-                dTopRibs = Math.Max(dTopRibs, -dBoltBosses);
-                cut = Math.Min(cut, dTopRibs);
-
-                return Math.Max(body, -cut);
-            };
-
-            // Flanged TPU Bolt-Head Isolator Grommet (isolates metal M4 bolt head from rigid plastic!)
-            // ID = 4.2mm (r = 2.1mm), sleeve OD = 6.8mm (r = 3.4mm, fits inside 7.18mm hex pocket!), flange OD = 9.2mm (r = 4.6mm, h = 1.6mm), total height = 4.2mm
-            Func<double, double, double, double> grommetSdf = (x, y, z) =>
-            {
-                double r = Math.Sqrt(x * x + y * y);
-                double rOut = z <= 1.6 ? 4.5 : 3.35;
-                double dRing = Math.Max(2.08 - r, r - rOut);
-                return Math.Max(dRing, Math.Max(0.0 - z, z - 4.2));
-            };
-
-            var mainPad = SdfMesher.ExtractMesh("TPU_Isolator_Pad", isolatorPadSdf, new Vec3(-25.5, -14.5, -0.5), new Vec3(25.5, 14.5, 8.0), step);
-            var singleGrommet = SdfMesher.ExtractMesh("TPU_Bolt_Grommet", grommetSdf, new Vec3(-5.2, -5.2, -0.4), new Vec3(5.2, 5.2, 4.6), 0.22);
-
-            var systemMesh = new MeshData("04a_TPU_Vibration_Isolator_Puck_And_Grommets");
-            systemMesh.Append(mainPad);
-            if (includeLooseGrommetsOnPlate)
-            {
-                for (int i = 0; i < 6; i++)
-                {
-                    var g = singleGrommet.Clone("Grommet_" + i);
-                    g.Translate(-20.0 + i * 8.0, -21.0, 0.0);
-                    systemMesh.Append(g);
-                }
-            }
-            return systemMesh;
-        }
-
-        // 4b. TPU Gimbal Lock Cushion & Downward Sensor Shield
-        // Snaps directly into the 20.0 x 22.6 mm front window of 01_DJI_Neo2_Universal_Cradle (X in [+40.5, +60.5], Y in [-11.3, +11.3])
-        // and extends forward (X in [+60.5, +70.0]) with soft compliant gimbal side-cheeks and a recessed non-contact lens dome!
-        public static MeshData BuildTpuGimbalAndSensorShield(double step = 0.24)
-        {
-            Func<double, double, double, double> sdf = (x, y, z) =>
-            {
-                double ay = Math.Abs(y);
-
-                // 1) Lower outer sealing flange (Z in [0.0, 1.4], X in [-12.0, +19.0], Y in [-12.8, +12.8])
-                double flange = SdfMesher.RoundedBox3D(x - 3.5, y, z - 0.7, 15.5, 12.8, 0.7, 2.5);
-
-                // 2) Snap-in window plug (Z in [1.4, 4.6], X in [-10.0, +10.0] -> 20.0mm long, Y in [-11.3, +11.3] -> 22.6mm wide)
-                // With a 0.6mm peripheral retention bead at Z = 4.2mm so it clicks into the 2.78mm thick cradle window and stays captive!
-                double bead = (z >= 3.2 && z <= 4.4) ? 0.55 : 0.0;
-                double plug = SdfMesher.RoundedBox3D(x, y, z - 3.0, 9.95 + bead, 11.25 + bead, 1.6, 1.5);
-
-                // 3) Upper Gimbal Stabilizer Cradle (X in [+2.0, +18.5], Y in [-11.0, +11.0], Z in [2.8, 12.5])
-                // Soft TPU side cheeks that gently hug the outer barrel of the 2-axis gimbal to prevent end-stop hammering!
-                double gimbalPillow = SdfMesher.RoundedBox3D(x - 10.2, y, z - 7.6, 8.2, 10.8, 4.9, 3.0);
-
-                double body = Math.Min(Math.Min(flange, plug), gimbalPillow);
-
-                // Subtract features:
-                double cut = 1e9;
-
-                // (A) Non-Contact Recessed Camera Lens Dome at (X = +10.2, Y = 0.0, Z in [5.0, 13.5], r = 7.2mm)
-                // Guarantees nothing ever touches the glass lens while the soft TPU rim (r = 7.2..10.8mm) cushions the gimbal housing!
-                double dLensDome = Math.Max(Math.Sqrt((x - 10.2) * (x - 10.2) + y * y) - 7.2, 5.2 - z);
-                cut = Math.Min(cut, dLensDome);
-
-                // (B) Recessed Non-Contact Pocket over the Downward Optical/IR Sensors at (X = -3.8, Y in [-6.5, +6.5], Z in [3.0, 6.0])
-                double dSensorPocket = Math.Max(SdfMesher.Box2D(x - (-3.8), y, 4.2, 6.8, 1.5), 3.0 - z);
-                cut = Math.Min(cut, dSensorPocket);
-
-                // (C) Compliant flex slots in the gimbal side cheeks so they compress effortlessly when clipping the drone in
-                double dFlexSlot = Math.Max(Math.Abs(x - 10.2) - 1.2, Math.Max(8.2 - ay, 6.5 - z));
-                cut = Math.Min(cut, dFlexSlot);
-
-                return Math.Max(body, -cut);
-            };
-
-            return SdfMesher.ExtractMesh(
-                "04b_TPU_Gimbal_Lock_And_Sensor_Shield",
-                sdf,
-                new Vec3(-13.5, -14.0, -0.5),
-                new Vec3(20.0, 14.0, 13.5),
-                step);
-        }
-
-        // 4c. TPU Heatsink Window Mud-Guard Louver
-        // Snaps into the 19.5 x 22.6 mm rear window (X in [-41.0, -21.5], Y in [-11.3, +11.3]) to block pebbles/mud while venting heat
-        public static MeshData BuildTpuHeatsinkLouver(double step = 0.24)
-        {
-            Func<double, double, double, double> sdf = (x, y, z) =>
-            {
-                // Outer lower flange (23.0 x 25.6 x 1.4mm, Z in [0, 1.4])
-                double flange = SdfMesher.RoundedBox3D(x, y, z - 0.7, 11.5, 12.8, 0.7, 2.5);
-                // Snap-in window plug (19.4 x 22.5 x 3.2mm, Z in [1.4, 4.6]) with peripheral snap bead
-                double bead = (z >= 3.2 && z <= 4.4) ? 0.55 : 0.0;
-                double plug = SdfMesher.RoundedBox3D(x, y, z - 3.0, 9.70 + bead, 11.25 + bead, 1.6, 1.5);
-                double body = Math.Min(flange, plug);
-
-                // Angled ventilation slots (blocks direct mud/rock spray along Z while allowing airflow at 45 deg)
-                double cut = 1e9;
-                for (int i = -2; i <= 2; i++)
-                {
-                    double sx = i * 3.4;
-                    double shiftedX = x - sx - (z - 2.3) * 0.65; // 33-deg angled louver slot!
-                    double dSlot = Math.Max(Math.Abs(shiftedX) - 0.85, Math.Abs(y) - 8.2);
-                    cut = Math.Min(cut, dSlot);
-                }
-                return Math.Max(body, -cut);
-            };
-
-            return SdfMesher.ExtractMesh(
-                "04c_TPU_Heatsink_Mud_Louver",
-                sdf,
-                new Vec3(-13.0, -14.0, -0.5),
-                new Vec3(13.0, 14.0, 5.2),
-                step);
-        }
-
-        // 01b. Rotate Universal Cradle to its native 47.08-deg self-supporting angle (cos=0.680983722, sin=0.732298553)
-        // where the built-in 19.6 x 31.0mm flat pad on the closed cup sits dead-flat at Z = 0.00mm!
         public static MeshData RotateCradleTo45DegPrintOrientation(MeshData flatCradle, string newName)
         {
             double c = 0.680983722;
@@ -867,96 +98,56 @@ namespace DjiNeo2OrbeaMounts
                 if (zr < minZ) minZ = zr;
                 tempVerts.Add(new Vec3(xr, yr, zr));
             }
-            foreach (var v in tempVerts)
-            {
-                rotated.Vertices.Add(new Vec3(v.X, v.Y, v.Z - minZ));
-            }
+            foreach (var v in tempVerts) rotated.Vertices.Add(new Vec3(v.X, v.Y, v.Z - minZ));
             rotated.Triangles.AddRange(flatCradle.Triangles);
             return rotated;
         }
 
-        // Build the Snap-Off A-Frame Bed-Anchor Stabilization Foot for 45/47-deg Sunlu Easy-PA Printing
-        // Connects to the rising outer spine rails (Y = +-15.5mm) via 0.48mm perforated snap-off score tabs!
         public static MeshData BuildCradle45DegSnapOffAnchorFin(double step = 0.38)
         {
-            // In rotated coordinates (with minZ shifted to 0):
-            // The flat back spine plane is z_spine(x) = 1.075354 * (x + 23.410) for x >= -23.41
             Func<double, double, double, double> sdf = (x, y, z) =>
             {
                 double ay = Math.Abs(y);
                 double zSpine = 1.075354 * (x + 23.410);
-
-                // 1) Wide Bed Anchor Base Pad at Z in [0.0, 1.4], X in [-19.5, +28.0], Y in [-24.0, +24.0]
-                // Leaves X < -19.5 completely clear of the cradle's own flat heel pad at X in [-43.0, -23.4]!
-                double basePad = SdfMesher.RoundedBox3D(x - 4.25, y, z - 0.7, 23.75, 24.0, 0.7, 4.0);
-                // Cut central weight-saving window out of base pad (Y in [-11.5, +11.5], X in [-12.0, +18.0])
-                double baseCut = SdfMesher.Box2D(x - 3.0, y, 14.0, 11.5, 2.5);
+                double basePad = SdfMesher.StealthBlock3D(x - 4.25, y, z - 0.7, 23.75, 24.0, 0.7, 5.0, 0.0);
+                double baseCut = SdfMesher.ChamferBox2D(x - 3.0, y, 14.0, 11.5, 3.0);
                 basePad = Math.Max(basePad, -baseCut);
 
-                // 2) Twin A-Frame Triangular Support Fins under the solid side rails (ay in [14.2, 16.8] -> 2.6mm thick walls, tapering to 0.50mm score tabs at zSpine!)
                 double distToSpine = zSpine - z;
-                // Above zSpine + 0.05 (inside the cradle spine), do not exist!
-                // Within 1.8mm of zSpine, thin the wall from 1.3mm half-thickness down to 0.32mm half-thickness (0.64mm breakaway tab!)
                 double halfThickY = distToSpine < 2.2 ? Math.Max(0.32, 0.32 + (distToSpine / 2.2) * 0.98) : 1.30;
                 double dFinY = Math.Abs(ay - 15.5) - halfThickY;
                 double dFinX = Math.Max(-18.5 - x, x - 25.0);
-                // Slanted back edge of fin from (x = -18.5, z = 0) to (x = +25.0, z = zSpine(25))
-                // And keep distToSpine >= -0.05 so it just kisses the flat spine at Z = zSpine!
                 double dFinZ = Math.Max(0.0 - z, -0.05 - distToSpine);
                 double fins = Math.Max(Math.Max(dFinY, dFinX), dFinZ);
 
-                // 3) Diagonal Cross-Brace Strut connecting Left and Right fins at X in [+14.0, +24.0], Z in [0.0, 22.0] for lateral torsional rigidity!
-                double dCrossX = Math.Abs(x - 19.0) - 2.0;
-                double dCrossY = ay - 16.0;
-                double dCrossZ = Math.Max(0.0 - z, z - 20.0);
-                double crossBrace = Math.Max(Math.Max(dCrossX, dCrossY), dCrossZ);
+                double dCross = Math.Max(Math.Max(Math.Abs(x - 19.0) - 2.0, ay - 16.0), Math.Max(0.0 - z, z - 20.0));
+                double body = Math.Min(Math.Min(basePad, fins), dCross);
 
-                double body = Math.Min(Math.Min(basePad, fins), crossBrace);
-
-                // 4) Perforation windows along the snap-off seam (every 8.5mm along X, right below zSpine: distToSpine in [0.0, 2.4])
-                // Creates 4 discrete 4mm-long breakaway tabs per side so the anchor snaps off effortlessly by hand!
                 double cut = 1e9;
                 for (int i = -1; i <= 2; i++)
                 {
                     double cx = -7.0 + i * 9.5;
-                    double dPerfX = Math.Abs(x - cx) - 2.4;
-                    double dPerfSpine = Math.Abs(distToSpine - 1.1) - 1.3;
-                    cut = Math.Min(cut, Math.Max(dPerfX, dPerfSpine));
+                    cut = Math.Min(cut, Math.Max(Math.Abs(x - cx) - 2.4, Math.Abs(distToSpine - 1.1) - 1.3));
                 }
-
-                // Also add triangular lightening hole in the middle of each side fin
-                double dTriHole = Math.Max(Math.Abs(x - 9.0) - 6.5, Math.Max(5.0 - z, (zSpine - 6.0) - z));
-                cut = Math.Min(cut, dTriHole);
-
+                cut = Math.Min(cut, Math.Max(Math.Abs(x - 9.0) - 6.5, Math.Max(5.0 - z, (zSpine - 6.0) - z)));
                 return Math.Max(body, -cut);
             };
-
-            return SdfMesher.ExtractMesh(
-                "SnapOff_45Deg_Anchor_Fin",
-                sdf,
-                new Vec3(-21.0, -25.5, -0.5),
-                new Vec3(29.5, 25.5, 56.0),
-                step);
+            return SdfMesher.ExtractMesh("SnapOff_45Deg_Anchor_Fin", sdf, new Vec3(-21.0, -25.5, -0.5), new Vec3(29.5, 25.5, 56.0), step);
         }
 
-        // 01c. Mounting Insert for 72D TPU Cradle with Recessed Snap-In Pocket for the Rigid PETG Multi-Nut Carrier Plate (05a)
         public static MeshData BuildCradle72DMountingInsertForPetgCarrier(double step = 0.28)
         {
             Func<double, double, double, double> sdf = (x, y, z) =>
             {
                 double w1 = SdfMesher.RoundedBox3D(x - (-4.125), y, z - 1.425, 10.075, 11.50, 1.425, 0.8);
                 double w2 = SdfMesher.RoundedBox3D(x - 23.00, y, z - 1.425, 9.95, 11.50, 1.425, 0.8);
-                double deck = SdfMesher.RoundedBox3D(x - 9.50, y, z - 4.125, 25.00, 13.20, 1.425, 2.0);
+                double deck = SdfMesher.StealthBlock3D(x - 9.50, y, z - 4.125, 25.00, 13.20, 1.425, 3.0, 0.6);
                 double body = Math.Min(Math.Min(w1, w2), deck);
 
-                // Subtract:
-                // (1) Recessed pocket in upper deck (Z in [1.95, 6.00], X in [-12.0, +31.0] -> hx=21.5 centered at 9.5, Y in [-10.8, +10.8] -> hy=10.8)
-                // With a subtle 0.35mm top snap-retention lip at Z in [5.0, 5.55] so the 3.5mm thick PETG carrier plate snaps in and stays captive!
                 double snapLip = (z >= 4.95 && z <= 5.55) ? -0.35 : 0.0;
                 double dCarrierPocket2D = SdfMesher.Box2D(x - 9.50, y, 21.50 + snapLip, 10.80 + snapLip, 3.0);
                 double dCarrierPocket3D = Math.Max(dCarrierPocket2D, 1.95 - z);
 
-                // (2) 6 x M4 Bolt Through-Bores (r = 2.15mm) through the bottom 1.95mm floor
                 double holes = 1e9;
                 holes = Math.Min(holes, Math.Sqrt((x - 2.00) * (x - 2.00) + (y + 7.50) * (y + 7.50)) - 2.15);
                 holes = Math.Min(holes, Math.Sqrt((x - 2.00) * (x - 2.00) + (y - 7.50) * (y - 7.50)) - 2.15);
@@ -967,81 +158,649 @@ namespace DjiNeo2OrbeaMounts
 
                 return Math.Max(body, -Math.Min(dCarrierPocket3D, holes));
             };
+            return SdfMesher.ExtractMesh("Cradle_72D_Pocket_Insert", sdf, new Vec3(-17.0, -15.0, -0.5), new Vec3(36.0, 15.0, 6.2), step);
+        }
+
+        // =========================================================================
+        // 02. MOUNT 1: ORBEA WILD LT "STEALTH FAIRING" NUMBER-PLATE MOUNT SYSTEM
+        // =========================================================================
+        // 02a: Faceted Stealth Number-Plate Shield + Armored Lower Chin Roost Fender
+        // Prints 100% FLAT on its back (Z = 0.00mm) on the build plate with ZERO supports!
+        // Coordinate system in print space:
+        //   - X in [-80.0, +76.0]: Vertical axis along the plate (-X = bottom Chin Roost Fender over Nose/Gimbal, +X = top near Transceiver)
+        //   - Y in [-58.0, +58.0]: Lateral width across front of head tube (116mm wide with faceted Orbea stealth winglets!)
+        //   - Z in [0.0, +28.0]: Thickness (+Z faces forward toward the drone cradle; Z=0 faces rearward toward the head tube/cable tunnel)
+        //   - Cradle + 90A TPU Vibration Isolator Puck center at (X = +9.50mm, Y = 0.00mm), so Nose Cup (X_cradle = -73..-45) nests right inside the Lower Chin Fender!
+        public static MeshData BuildOrbeaStealthNumberPlateShield(double step = 0.42)
+        {
+            Func<double, double, double, double> sdf = (x, y, z) =>
+            {
+                double ay = Math.Abs(y);
+
+                // 1) Central Structural Spine & Isolator Housing: X in [-79.0, +72.0], Y in [-25.5, +25.5], Z in [0.0, 9.5]
+                // Chiseled octagonal Orbea stealth silhouette with 12mm corner chamfers and 1.8mm top bevels
+                double dSpine = SdfMesher.StealthBlock3D(x + 3.5, y, z - 4.75, 75.5, 25.5, 4.75, 11.0, 1.5);
+
+                // 2) Swept Faceted Orbea Side Roost Winglets: Y in [20.0, 57.0], X in [-56.0, +54.0]
+                // Tapered trapezoidal wings (narrowing in X as |Y| increases, rising slightly forward in Z from Z=0..5.8mm to Z=2.2..7.5mm at outer tips!)
+                double wingU = Math.Max(0.0, Math.Min(1.0, (ay - 20.0) / 37.0));
+                double wingHalfX = 55.0 - 20.0 * wingU; // tapers from 110mm tall at spine to 70mm tall at wingtips!
+                double wingShiftX = 4.0 * wingU;        // slight aggressive upward sweep like an ODI/Orbea number plate!
+                double dWing2D = Math.Max(Math.Max(20.0 - ay, ay - 57.0), Math.Abs(x - wingShiftX) - wingHalfX);
+                // Crisp 45-deg corner cuts on wingtips
+                double dWingCorner = (Math.Abs(x - wingShiftX) + (ay - 20.0) - (wingHalfX + 37.0 - 14.0)) * 0.70710678;
+                dWing2D = Math.Max(dWing2D, dWingCorner);
+                // Keep Z = 0 flat on bed at inner wing root, beveling outer wing face at Z_top = 6.2mm with 2.0mm stealth facet!
+                double dWingZ = Math.Max(0.0 - z, z - 6.2);
+                double dWingBevel = (dWing2D + (z - 6.2) + 2.2) * 0.70710678;
+                double wings3D = Math.Max(Math.Max(dWing2D, dWingZ), dWingBevel);
+
+                // 3) Strut-Arm Bolting Bosses on Upper Wings: centered at Y = +-31.5mm, X in [+14.0, +48.0], Z in [0.0, 9.5mm]
+                // Gives solid 9.5mm thickness for captive M4 hex nuts where the 02b Swept Handlebar Drop Arms bolt on!
+                double strutPad = SdfMesher.StealthBlock3D(x - 31.0, ay - 31.5, z - 4.75, 17.5, 8.5, 4.75, 4.0, 1.2);
+
+                // 4) Armored Faceted Lower Chin Roost Fender / Nose Vault Scoop: X in [-80.5, -46.0], Y in [-27.5, +27.5], Z in [0.0, 27.5]
+                // Wraps around the bottom AND left/right sides of the DJI Neo 2's Closed Nose Cup (protecting 2-axis Gimbal + Forward LiDAR from tire roost!)
+                // Outer faceted shell with aggressive 45-deg prow chamfers (self-supporting from Z=0 up to Z=27.5!)
+                double dChin2D = SdfMesher.ChamferBox2D(x - (-63.5), y, 17.0, 27.5, 9.5);
+                // Slant the front-bottom prow at 45 deg so rocks glance off and it prints cleanly from Z=0!
+                double dChinProw = ((-79.5 - x) + (z - 9.5)) * 0.70710678;
+                double chinOuter = Math.Max(Math.Max(dChin2D, Math.Max(0.0 - z, z - 27.5)), dChinProw);
+                // Hollow out interior pocket of Chin Vault (X > -74.5, |Y| < 23.2, Z > 9.5) so the Universal Cradle's Closed Nose Cup drops cleanly inside!
+                double chinCavity = Math.Max(SdfMesher.ChamferBox2D(x - (-56.0), y, 18.8, 23.2, 5.0), 9.5 - z);
+                double chinFender = Math.Max(chinOuter, -chinCavity);
+
+                double body = Math.Min(Math.Min(dSpine, wings3D), Math.Min(strutPad, chinFender));
+                body = Math.Max(body, 0.0 - z);
+
+                // Subtract features:
+                double cut = 1e9;
+
+                // (A) Recessed 3.5mm Deep Stadium Pocket on Front Face (Z in [6.0, 10.0], centered at X = +9.50, Y = 0.00)
+                // Captures the 48.0 x 26.0 x 7.5mm 90A TPU Vibration Isolator Puck (04a)!
+                double dPuckPocket = Math.Max(SdfMesher.Box2D(x - 9.50, y, 24.3, 13.3, 4.1), 6.0 - z);
+                cut = Math.Min(cut, dPuckPocket);
+
+                // (B) 6 x Cradle + TPU Isolator M4 Mounting Holes + Rear Captive M4 Hex Nut Pockets (Z in [-0.5, 3.6], leaving 2.4mm solid clamping wall at Z in [3.6, 6.0]!)
+                cut = Math.Min(cut, M4HoleAndHexNutSdf(x, y, z, 2.00, -7.50, -0.5, 3.6));
+                cut = Math.Min(cut, M4HoleAndHexNutSdf(x, y, z, 2.00,  7.50, -0.5, 3.6));
+                cut = Math.Min(cut, M4HoleAndHexNutSdf(x, y, z, 17.00, -7.50, -0.5, 3.6));
+                cut = Math.Min(cut, M4HoleAndHexNutSdf(x, y, z, 17.00,  7.50, -0.5, 3.6));
+                cut = Math.Min(cut, M4HoleAndHexNutSdf(x, y, z, -5.50, 0.00, -0.5, 3.6));
+                cut = Math.Min(cut, M4HoleAndHexNutSdf(x, y, z, 24.50, 0.00, -0.5, 3.6));
+
+                // (C) Twin Out-Front Drop-Arm Mounting Slots at Y = +-31.5mm (2 slotted M4 mounts per side: X in [20..26] and X in [36..42])
+                // Gives +-3.0mm vertical height adjustment, with front recessed M4 hex nut pockets (Z in [6.0, 10.0]) so bolts enter cleanly from the rear arms!
+                for (int sIdx = 0; sIdx < 2; sIdx++)
+                {
+                    double sx0 = sIdx == 0 ? 20.0 : 36.0;
+                    double sx1 = sx0 + 6.0;
+                    double dArmSlot = SdfMesher.SlotX2D(x, ay, sx0, sx1, 31.5, 2.15);
+                    // Hex-width anti-rotation nut channel on front face (width in Y = 7.18mm -> ry = 3.59mm, Z in [6.0, 10.0])!
+                    double dNutTrack2D = Math.Max(Math.Max((sx0 - 3.6) - x, x - (sx1 + 3.6)), Math.Abs(ay - 31.5) - 3.59);
+                    double dNutTrack3D = Math.Max(dNutTrack2D, 6.0 - z);
+                    cut = Math.Min(cut, Math.Min(dArmSlot, dNutTrack3D));
+                }
+
+                // (D) Orbea-Styled Angular Stealth Aero Slashes in Side Winglets (at Y = +-44.5mm, X in [-32, +2])
+                double slashX = x + 15.0 - (ay - 44.5) * 0.7;
+                double dSlash = SdfMesher.ChamferBox2D(slashX, ay - 45.0, 14.0, 3.2, 2.0);
+                cut = Math.Min(cut, dSlash);
+
+                // (E) Weight-saving hexagonal/stealth relief windows under the solid cradle zones (at X = +52.0, Y = 0 and X = -31.0, Y = 0)
+                // Wait: at X = -31.0 (heatsink) we keep a louvered/angled mud deflector rather than an open hole so tire spray NEVER hits the drone!
+                // At top X = +53.0 (behind the sealed belly sensor plug), add a recessed stealth pocket on the back (Z in [-0.5, 4.5]) to save weight while keeping 100% mud seal!
+                double dRearRelief1 = Math.Max(SdfMesher.ChamferBox2D(x - 51.0, y, 11.0, 12.0, 4.0), z - 4.5);
+                double dRearRelief2 = Math.Max(SdfMesher.ChamferBox2D(x + 31.0, y, 10.0, 12.0, 4.0), z - 4.5);
+                cut = Math.Min(cut, Math.Min(dRearRelief1, dRearRelief2));
+
+                return Math.Max(body, -cut);
+            };
 
             return SdfMesher.ExtractMesh(
-                "Cradle_72D_Pocket_Insert",
+                "02a_Orbea_Stealth_NumberPlate_Shield",
                 sdf,
-                new Vec3(-17.0, -15.0, -0.5),
-                new Vec3(36.0, 15.0, 6.2),
+                new Vec3(-82.0, -59.0, -0.6),
+                new Vec3(74.0, 59.0, 28.5),
                 step);
         }
 
-        // 05. Complete PETG Rigid Fastener Reinforcement Insert Kit for 72D TPU Prints:
-        //   (A) 05a: Unified 6-Nut Rigid PETG Carrier Plate (42.6 x 21.2 x 3.5 mm) that snaps into 01c (72D TPU Cradle)
-        //   (B) 05b: Pair of Rigid PETG M5 Bottle-Boss Slot Load-Spreader Plates (25.6 x 9.8 x 2.4 mm) that drop into 02a's M5 counterbore slots
-        //   (C) 05c: Set of 8 Press-In Flanged PETG Hex-Collar M4 Bushings (7.10mm AF hex outer collar + 9.2mm top washer flange + 4.25mm M4 bore)
-        //            that press directly into the standard M4 hex pockets of 01 (72D Cradle) or 02a (72D L-Tower)!
+        // 02b: Swept Out-Front Faceted Twin-Truss Handlebar Drop Arms (Pair)
+        // Printed FLAT on their sides (Z in [0.0, 13.0mm] is lateral arm thickness!) with ZERO supports and 100% continuous perimeter strength!
+        // In side-view print plane (X, Y):
+        //   - Top Handlebar Clamp Pad sits horizontally on top of the 03b Clamshell Saddle: X in [-15.0, +15.0] (bolts at X = -9.0 and +9.0), Y in [0.0, +7.5]
+        //   - Arm sweeps forward (+X to +54mm, creating a 38mm+ open SIC cable tunnel!) and angles down at 64 deg (matching the 2027 Orbea Wild LT head-tube angle!)
+        //   - Front Plate Mounting Flange tilts at 64 deg from horizontal (26 deg from vertical) so the Number Plate sits parallel to the head tube!
+        public static MeshData BuildOrbeaStealthNumberPlateDropArmsPair(double step = 0.34)
+        {
+            // Unit vector along the 64-deg raked number plate (tilted back 26 deg from vertical):
+            // Down-and-back along headtube: (-sin 26, -cos 26) = (-0.43837, -0.89879)
+            // Forward outward normal of plate: (+cos 26, +sin 26) = (+0.89879, +0.43837)
+            double ux = 0.438371, uy = 0.898794;   // along plate upward (+X_plate)
+            double nx = 0.898794, ny = -0.438371;  // forward normal (+Z_plate, pointing forward and slightly down? Wait: if top tilts back toward rider (-X), forward normal tilts UP (+Y)!)
+            // Let's verify! On a bike with a 64-deg head tube:
+            // Going UP the head tube moves UP (+Y) and BACKWARD toward the rider (-X)!
+            // Yes! Upward along the head tube is (-cos 64, +sin 64) = (-0.43837, +0.89879)!
+            // And FORWARD perpendicular to the head tube is (+sin 64, +cos 64) = (+0.89879, +0.43837)!
+            ux = -0.438371; uy = 0.898794;
+            nx = 0.898794;  ny = 0.438371;
+
+            // Let's place the center of the two plate-bolting holes (X_plate = +31.0) at (px0 = +50.0, py0 = -12.0) relative to the top clamp saddle (0, 0)!
+            // Wait: at X_plate = +31.0 -> (50.0, -12.0), where is X_plate = 0 (plate center)?
+            // Plate center = (50, -12) - 31 * (-0.438, +0.899) = (+63.6, -39.9mm)!
+            // And where is the bottom of the Chin Fender (X_plate = -80.5)?
+            // (50, -12) - 111.5 * (-0.438, +0.899) = (+98.8, -112.2mm below saddle = only ~136mm below bar center -> >60mm ABOVE Fox 38 fork crown bottom!)
+            // And at X_plate = +31.0, (px0 = +50.0) is 50mm forward of the handlebar axis -> massive 35mm+ clearance for SIC headset cables and stem faceplate!
+            double px0 = 50.0, py0 = -12.0;
+
+            Func<double, double, double, double> singleArmSdf = (x, y, z) =>
+            {
+                // 1) Top Saddle Mounting Pad: X in [-15.5, +16.0], Y in [0.0, 7.5]
+                double dTopPad2D = SdfMesher.ChamferBox2D(x - 0.25, y - 3.75, 15.75, 3.75, 2.0);
+
+                // 2) Front Raked Plate Flange: centered at (px0, py0), length +-18.5mm along (ux, uy), thickness 7.5mm behind plate backplane (along -nx, -ny)
+                double dxp = x - px0, dyp = y - py0;
+                double sAlong = dxp * ux + dyp * uy;      // coordinate along plate [-18.5, +18.5]
+                double sNormal = dxp * nx + dyp * ny;     // coordinate along plate normal [-7.5, 0.0] (0.0 mates flush against Z_plate = 0!)
+                double dFlange2D = SdfMesher.ChamferBox2D(sAlong, sNormal + 3.75, 18.5, 3.75, 2.0);
+
+                // 3) Swept Dual-Chord Truss Strut connecting Top Pad (X = +10, Y = +3.75) to Upper Flange (sAlong = +12) and Lower Flange (sAlong = -12)
+                // Upper tension chord: from (8.0, 4.2) to (px0 + 12*ux - 4*nx, py0 + 12*uy - 4*ny)
+                double u1x = px0 + 11.0 * ux - 3.8 * nx, u1y = py0 + 11.0 * uy - 3.8 * ny;
+                double dChordTop = Capsule2D(x, y, 8.0, 4.2, u1x, u1y, 3.8);
+
+                // Lower compression arch chord: from (-6.0, 2.5) -> mid-arch (22.0, -6.0) -> lower flange (px0 - 11*ux - 3.8*nx, py0 - 11*uy - 3.8*ny)
+                double l1x = px0 - 11.0 * ux - 3.8 * nx, l1y = py0 - 11.0 * uy - 3.8 * ny;
+                double dChordBotA = Capsule2D(x, y, -4.0, 3.2, 23.0, -5.0, 3.8);
+                double dChordBotB = Capsule2D(x, y, 23.0, -5.0, l1x, l1y, 3.8);
+
+                // Web fill between chords (trimmed by an angular stealth truss cutout in the middle!)
+                double dWeb = Triangle2D(x, y, 6.0, 4.2, u1x, u1y, l1x, l1y);
+                double profile2D = SdfMesher.SmoothMin(Math.Min(dTopPad2D, dFlange2D), Math.Min(dChordTop, Math.Min(dChordBotA, dChordBotB)), 2.2);
+                profile2D = Math.Min(profile2D, dWeb);
+
+                // Trim flush against top of C-clip saddle (Y >= 0 for X < 15.5) and flush against back of Number Plate (sNormal <= 0.0)!
+                if (x < 14.5 && y < 0.0) profile2D = Math.Max(profile2D, 0.0 - y);
+                profile2D = Math.Max(profile2D, sNormal);
+
+                // Extrude Z in [0.0, 13.0mm] with crisp 1.4mm 45-deg Orbea stealth side bevels!
+                double dz = Math.Abs(z - 6.5) - 6.5;
+                double dBevel = (profile2D + dz + 1.4) * 0.70710678;
+                double body3D = Math.Max(Math.Max(profile2D, dz), dBevel);
+
+                // Subtract features:
+                double cut = 1e9;
+
+                // (A) Angular Stealth Truss Window through the arm web (leaves crisp triangulated struts for 72D TPU damping!)
+                double wx = 29.5, wy = -2.5;
+                double dTrussHole = SdfMesher.ChamferBox2D((x - wx) * 0.88 - (y - wy) * 0.47, (x - wx) * 0.47 + (y - wy) * 0.88, 9.5, 3.4, 2.2);
+                cut = Math.Min(cut, dTrussHole);
+
+                // (B) Top Saddle M4 Bolt Holes (at X = -9.0 and X = +9.0, running along Y, centered at Z = 6.5mm, slotted +-2.0mm in Z for lateral fine-tuning!)
+                for (int sx = -1; sx <= 1; sx += 2)
+                {
+                    double bx = sx * 9.0;
+                    double dBore = Math.Max(SdfMesher.SlotY2D(x, z, bx, 5.0, 8.0, 2.15), Math.Max(-1.0 - y, y - 9.0));
+                    double dCbore = Math.Max(SdfMesher.SlotY2D(x, z, bx, 5.0, 8.0, 4.15), Math.Max(3.8 - y, y - 9.0));
+                    cut = Math.Min(cut, Math.Min(dBore, dCbore));
+                }
+
+                // (C) Front Plate Mounting M4 Bolt Holes (at sAlong = -8.0 and +8.0 -> matching the 16mm spacing between X_plate = 23 and 39!)
+                for (int ss = -1; ss <= 1; ss += 2)
+                {
+                    double sa = ss * 8.0;
+                    double dRad = Math.Sqrt((sAlong - sa) * (sAlong - sa) + (z - 6.5) * (z - 6.5));
+                    double dPlateBore = Math.Max(dRad - 2.15, Math.Max(-9.0 - sNormal, sNormal - 1.0));
+                    double dPlateCbore = Math.Max(dRad - 4.15, Math.Max(-9.0 - sNormal, sNormal - (-3.8)));
+                    cut = Math.Min(cut, Math.Min(dPlateBore, dPlateCbore));
+                }
+
+                return Math.Max(body3D, -cut);
+            };
+
+            var single = SdfMesher.ExtractMesh("Stealth_Drop_Arm", singleArmSdf,
+                new Vec3(-17.0, -32.0, -0.6), new Vec3(62.0, 9.0, 13.6), step);
+
+            var pair = new MeshData("02b_Orbea_Stealth_NumberPlate_Drop_Arms_Pair");
+            var armL = single.Clone("Drop_Arm_L"); armL.Translate(0.0, 22.0, 0.0);
+            var armR = single.Clone("Drop_Arm_R"); armR.Translate(0.0, -22.0, 0.0);
+            pair.Append(armL);
+            pair.Append(armR);
+            return pair;
+        }
+
+        private static double Capsule2D(double px, double py, double ax, double ay, double bx, double by, double r)
+        {
+            double vx = bx - ax, vy = by - ay;
+            double wx = px - ax, wy = py - ay;
+            double t = Math.Max(0.0, Math.Min(1.0, (wx * vx + wy * vy) / Math.Max(1e-9, vx * vx + vy * vy)));
+            double dx = px - (ax + t * vx), dy = py - (ay + t * vy);
+            return Math.Sqrt(dx * dx + dy * dy) - r;
+        }
+
+        private static double Triangle2D(double px, double py, double x0, double y0, double x1, double y1, double x2, double y2)
+        {
+            // Signed distance to CCW/CW triangle via half-planes
+            double area = (x1 - x0) * (y2 - y0) - (x2 - x0) * (y1 - y0);
+            double s = area >= 0 ? 1.0 : -1.0;
+            double e0 = s * ((px - x0) * (y1 - y0) - (py - y0) * (x1 - x0)) / Math.Sqrt((x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0));
+            double e1 = s * ((px - x1) * (y2 - y1) - (py - y1) * (x2 - x1)) / Math.Sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
+            double e2 = s * ((px - x2) * (y0 - y2) - (py - y2) * (x0 - x2)) / Math.Sqrt((x0 - x2) * (x0 - x2) + (y0 - y2) * (y0 - y2));
+            return Math.Max(e0, Math.Max(e1, e2));
+        }
+
+        // =========================================================================
+        // 03. MOUNT 2: ORBEA WILD LT "STEALTH OC" OVER-STEM BRIDGE & CLAMSHELLS
+        // =========================================================================
+        // Restyled in angular Orbea Wild LT / OC MC11 stealth facets with:
+        //   - Recessed 3.5mm top pocket for the 04a 90A TPU Vibration Isolator Puck (lowering stack height & hiding the puck!)
+        //   - Integrated Front Chiseled Aero Roost Deflector Prow (X in [+25, +43mm]) to shield the cradle from upward tire spray!
+        public static MeshData BuildOrbeaStealthOverStemBridge(double step = 0.38)
+        {
+            Func<double, double, double, double> sdf = (x, y, z) =>
+            {
+                double ax = Math.Abs(x);
+                double ay = Math.Abs(y);
+
+                // Octagonal stealth wing footprint: X in [-27, +27] at center, tapering crisply at wings Y in [-42, +42]
+                double halfX = ay <= 21.0 ? 27.5 : Math.Max(15.5, 27.5 - (ay - 21.0) * 0.58);
+                double dMain2D = SdfMesher.ChamferBox2D(x, y, halfX, 41.5, 7.5);
+
+                // Top profile with sharp angular step from center isolator bezel (Z = 14.0) down to faceted clamp wings (Z = 8.5)
+                double zTop = ay <= 20.5 ? 14.0 : (ay >= 24.5 ? 8.5 : 14.0 - (ay - 20.5) * (5.5 / 4.0));
+                // Bottom profile: 46mm wide central arch (Z = 6.0) clearing the OC MC11 stem faceplate
+                double zBot = ay >= 23.0 ? 0.0 : (ay <= 19.5 ? 6.0 : 6.0 * (23.0 - ay) / 3.5);
+
+                double dMainZ = Math.Max(zBot - z, z - zTop);
+                double dMainBevel = (dMain2D + (z - zTop) + 1.6) * 0.70710678;
+                double mainBody = Math.Max(Math.Max(dMain2D, dMainZ), dMainBevel);
+
+                // Integrated Front Stealth Roost Deflector Prow (X in [+22.0, +42.0], Y in [-21.0, +21.0], sweeping up to Z = 16.5mm!)
+                // Echoes the sharp angular prow of the 2027 Orbea Wild LT head tube and shields the front nose/sensors from upward fork spray!
+                double prowU = Math.Max(0.0, Math.Min(1.0, (x - 22.0) / 20.0));
+                double prowHalfY = 21.0 - 7.5 * prowU;
+                double dProw2D = Math.Max(Math.Max(22.0 - x, x - 42.0), ay - prowHalfY);
+                double zProwBot = 6.0 + 6.5 * prowU;
+                double zProwTop = 14.0 + 2.5 * prowU - 0.18 * ay; // V-creased stealth top ridge!
+                double prow3D = Math.Max(dProw2D, Math.Max(zProwBot - z, z - zProwTop));
+
+                double body = Math.Min(mainBody, prow3D);
+
+                double cut = 1e9;
+
+                // (A) Recessed 3.5mm Deep Stadium Pocket on Top Deck (Z in [10.5, 15.0]) for the 04a 90A TPU Vibration Isolator Puck!
+                double dPuckPocket = Math.Max(SdfMesher.Box2D(x, y, 24.3, 13.3, 4.1), 10.5 - z);
+                cut = Math.Min(cut, dPuckPocket);
+
+                // (B) Slotted Lateral M4 Mounting Channels on Left & Right Wings (X = +-9.0, Y in [25.0..36.0] -> 50 to 72mm span!)
+                double dWingSlot = SdfMesher.SlotY2D(ax, ay, 9.0, 25.0, 36.0, 2.15);
+                double dWingCbore = Math.Max(SdfMesher.SlotY2D(ax, ay, 9.0, 25.0, 36.0, 4.15), 4.5 - z);
+                cut = Math.Min(cut, Math.Min(dWingSlot, dWingCbore));
+
+                // (C) Center Cradle + TPU Isolator M4 Mounting Holes + Underside Arch Captive M4 Hex Nut Pockets (Z in [5.5, 8.6], leaving 1.9mm solid bridge below Z=10.5!)
+                cut = Math.Min(cut, M4HoleAndHexNutSdf(ax, ay, z, 7.50, 7.50, 5.5, 8.6));
+                cut = Math.Min(cut, M4HoleAndHexNutSdf(ax, y, z, 15.00, 0.00, 5.5, 8.6));
+
+                return Math.Max(body, -cut);
+            };
+
+            return SdfMesher.ExtractMesh("03a_Orbea_Stealth_OverStem_Bridge", sdf, new Vec3(-29.0, -43.0, -0.6), new Vec3(43.5, 43.0, 17.5), step);
+        }
+
+        // 03b & 03f: Restyled Faceted "Orbea OC" Swinging M4 Pin-Hinged Clamshell Handlebar Clamps (Zero Plastic Flexing!)
+        public static MeshData BuildHandlebarHingedClamshellSingle(double boreDiameter, bool assembledClosed, double step = 0.34)
+        {
+            double rIn = boreDiameter * 0.5;
+            double rOut = rIn + 5.6;
+            double ySaddleTop = rIn + 6.0;
+            double pivotX = -(rIn + 5.2);
+            double pivotY = 0.0;
+            double pinchX = +(rIn + 6.5);
+
+            Func<double, double, double, double> upperHalfSdf = (x, y, z) =>
+            {
+                double r = Math.Sqrt(x * x + y * y);
+                // Octagonal/faceted outer profile blended onto ring for crisp OC MC11 CNC aesthetic!
+                double dOct = SdfMesher.ChamferBox2D(x, y, rOut, rOut, rOut * 0.52);
+                double dRing2D = Math.Max(rIn - r, Math.Max(r - (rOut + 0.6), dOct));
+
+                double dSaddle2D = SdfMesher.ChamferBox2D(x, y - (ySaddleTop * 0.5 + 3.0), 14.8, ySaddleTop * 0.5 - 3.0, 3.2);
+                dSaddle2D = Math.Max(dSaddle2D, rIn - r);
+
+                double dHingeCyl2D = Math.Sqrt((x - pivotX) * (x - pivotX) + (y - pivotY) * (y - pivotY)) - 5.2;
+                double dHingeWeb2D = Math.Max(SdfMesher.ChamferBox2D(x - (pivotX * 0.5 - 4.0), y - 2.5, 6.0, 4.5, 1.8), rIn - r);
+                double dFront2D = SdfMesher.SmoothMin(dHingeCyl2D, dHingeWeb2D, 1.2);
+
+                double dRearLug2D = Math.Max(SdfMesher.ChamferBox2D(x - (rIn + 5.2), y - 5.1, 6.5, 4.4, 2.2), rIn - r);
+
+                double upperMain2D = Math.Max(SdfMesher.SmoothMin(Math.Min(dRing2D, dSaddle2D), dRearLug2D, 1.4), 0.6 - y);
+                double profile2D = Math.Max(Math.Min(upperMain2D, dFront2D), rIn - r);
+
+                double dz = Math.Abs(z - 7.5) - 7.5;
+                double dSideBevel = (profile2D + dz + 1.0) * 0.70710678;
+                double body3D = Math.Max(Math.Max(profile2D, dz), dSideBevel);
+
+                double cut = 1e9;
+                double dKnuckleSlot = Math.Max(Math.Max(x - (-rIn + 0.5), y - 5.5), Math.Abs(z - 7.5) - 2.75);
+                cut = Math.Min(cut, dKnuckleSlot);
+
+                double dHingePinBore = Math.Sqrt((x - pivotX) * (x - pivotX) + (y - pivotY) * (y - pivotY)) - 2.15;
+                double dHingeNut = Math.Max(SdfMesher.Hexagon2D(x - pivotX, y - pivotY, 7.18), 12.0 - z);
+                cut = Math.Min(cut, Math.Min(dHingePinBore, dHingeNut));
+
+                for (int sx = -1; sx <= 1; sx += 2)
+                {
+                    double bx = sx * 9.0;
+                    double dTopBore = Math.Max(Math.Sqrt((x - bx) * (x - bx) + (z - 7.5) * (z - 7.5)) - 2.15, Math.Max((rIn - 1.0) - y, y - (ySaddleTop + 1.0)));
+                    double dNutSlot = Math.Max(Math.Max(Math.Abs(x - bx) - 3.60, Math.Abs(y - (ySaddleTop - 4.45)) - 1.75), z - 11.1);
+                    cut = Math.Min(cut, Math.Min(dTopBore, dNutSlot));
+                }
+
+                double dPinchBore = Math.Sqrt((x - pinchX) * (x - pinchX) + (z - 7.5) * (z - 7.5)) - 2.15;
+                double dPinchHex = Math.Max(SdfMesher.Hexagon2D(x - pinchX, z - 7.5, 7.18), 5.2 - y);
+                cut = Math.Min(cut, Math.Min(dPinchBore, dPinchHex));
+
+                return Math.Max(body3D, -cut);
+            };
+
+            Func<double, double, double, double> lowerHalfSdf = (x, y, z) =>
+            {
+                double r = Math.Sqrt(x * x + y * y);
+                double dOct = SdfMesher.ChamferBox2D(x, y, rOut, rOut, rOut * 0.52);
+                double dRing2D = Math.Max(rIn - r, Math.Max(r - (rOut + 0.6), dOct));
+
+                double dHingeCyl2D = Math.Sqrt((x - pivotX) * (x - pivotX) + (y - pivotY) * (y - pivotY)) - 5.2;
+                double dHingeWeb2D = Math.Max(SdfMesher.ChamferBox2D(x - (pivotX * 0.5 - 4.0), y + 2.5, 6.0, 4.5, 1.8), rIn - r);
+                double dFront2D = SdfMesher.SmoothMin(dHingeCyl2D, dHingeWeb2D, 1.2);
+
+                double dRearLug2D = Math.Max(SdfMesher.ChamferBox2D(x - (rIn + 5.2), y + 5.1, 6.5, 4.4, 2.2), rIn - r);
+
+                double lowerMain2D = Math.Max(SdfMesher.SmoothMin(dRing2D, dRearLug2D, 1.4), y - (-0.6));
+                double dz = Math.Abs(z - 7.5) - 7.5;
+                double lowerMain3D = Math.Max(Math.Max(lowerMain2D, dz), (lowerMain2D + dz + 1.0) * 0.70710678);
+
+                double dTongue3D = Math.Max(Math.Max(dFront2D, rIn - r), Math.Abs(z - 7.5) - 2.45);
+                lowerMain3D = Math.Max(lowerMain3D, (pivotX + 5.5) - x);
+
+                double body3D = Math.Min(lowerMain3D, dTongue3D);
+
+                double cut = 1e9;
+                double dHingePinBore = Math.Sqrt((x - pivotX) * (x - pivotX) + (y - pivotY) * (y - pivotY)) - 2.15;
+                cut = Math.Min(cut, dHingePinBore);
+
+                double dPinchBore = Math.Sqrt((x - pinchX) * (x - pinchX) + (z - 7.5) * (z - 7.5)) - 2.15;
+                double dPinchHead = Math.Max(Math.Sqrt((x - pinchX) * (x - pinchX) + (z - 7.5) * (z - 7.5)) - 4.15, y - (-5.2));
+                cut = Math.Min(cut, Math.Min(dPinchBore, dPinchHead));
+
+                return Math.Max(body3D, -cut);
+            };
+
+            var upperMesh = SdfMesher.ExtractMesh("Upper_Saddle", upperHalfSdf,
+                new Vec3(pivotX - 6.0, -6.0, -0.5), new Vec3(pinchX + 6.5, ySaddleTop + 1.0, 15.5), step);
+            var lowerMesh = SdfMesher.ExtractMesh("Lower_Swinging_Jaw", lowerHalfSdf,
+                new Vec3(pivotX - 6.0, -(rOut + 1.5), -0.5), new Vec3(pinchX + 6.5, 6.0, 15.5), step);
+
+            if (!assembledClosed) lowerMesh.Translate(0.0, -12.5, 0.0);
+
+            var combined = new MeshData("Hinged_Clamshell_Unit");
+            combined.Append(upperMesh);
+            combined.Append(lowerMesh);
+            return combined;
+        }
+
+        public static MeshData BuildHandlebarHingedClamshellPair(double boreDiameter, string meshName, double step = 0.34)
+        {
+            var single = BuildHandlebarHingedClamshellSingle(boreDiameter, assembledClosed: false, step: step);
+            var pair = new MeshData(meshName);
+            var left = single.Clone(meshName + "_L"); left.Translate(-38.0, 0, 0);
+            var right = single.Clone(meshName + "_R"); right.Translate(38.0, 0, 0);
+            pair.Append(left);
+            pair.Append(right);
+            return pair;
+        }
+
+        public static MeshData BuildHandlebarTpuSleeves(double step = 0.28)
+        {
+            Func<double, double, double, double> singleSleeveSdf = (x, y, z) =>
+            {
+                double r = Math.Sqrt(x * x + y * y);
+                bool isFlange = (z <= 1.0 || z >= 16.0);
+                double rOuter = isFlange ? 19.5 : 18.5;
+                double dRing = Math.Max(17.5 - r, r - rOuter);
+                double dSplit = Math.Max(Math.Abs(x) - 2.5, y);
+                return Math.Max(Math.Max(dRing, -dSplit), Math.Max(0.0 - z, z - 17.0));
+            };
+
+            var single = SdfMesher.ExtractMesh("TPU_Sleeve_Single", singleSleeveSdf, new Vec3(-20.5, -20.5, -0.5), new Vec3(20.5, 20.5, 17.5), step);
+            var pair = new MeshData("03d_Handlebar_35mm_TPU_Grip_Sleeves_Pair");
+            var left = single.Clone("Sleeve_L"); left.Translate(-22.0, 0, 0);
+            var right = single.Clone("Sleeve_R"); right.Translate(22.0, 0, 0);
+            pair.Append(left);
+            pair.Append(right);
+            return pair;
+        }
+
+        // =========================================================================
+        // 04. 360-DEG TPU LENS, GIMBAL, SENSOR & VIBRATION ARMOR SUITE (90A TPU)
+        // =========================================================================
+        // 04a: Shear/Bellows Vibration Isolator Puck + 6x Flanged M4 Bolt Grommets
+        public static MeshData BuildTpuVibrationIsolatorSystem(double step = 0.26, bool includeLooseGrommetsOnPlate = true)
+        {
+            Func<double, double, double, double> isolatorPadSdf = (x, y, z) =>
+            {
+                double ax = Math.Abs(x);
+                double ay = Math.Abs(y);
+                double body = SdfMesher.RoundedBox3D(x, y, z - 3.75, 24.0, 13.0, 3.75, 4.0);
+
+                double dOuterPerim = SdfMesher.Box2D(x, y, 24.0, 13.0, 4.0);
+                double dBellows = Math.Max(-dOuterPerim - 1.8, Math.Abs(z - 3.75) - 1.35);
+                double dBoltBosses = 1e9;
+                dBoltBosses = Math.Min(dBoltBosses, Math.Sqrt((ax - 7.5) * (ax - 7.5) + (ay - 7.5) * (ay - 7.5)) - 4.5);
+                dBoltBosses = Math.Min(dBoltBosses, Math.Sqrt((ax - 15.0) * (ax - 15.0) + y * y) - 4.5);
+                dBellows = Math.Max(dBellows, -dBoltBosses);
+
+                double cut = dBellows;
+                double dCellCenter = Math.Max(Math.Sqrt(x * x + y * y) - 3.8, Math.Abs(z - 3.75) - 2.6);
+                double dCellMidX = Math.Max(Math.Sqrt((ax - 19.5) * (ax - 19.5) + (ay - 6.8) * (ay - 6.8)) - 2.6, Math.Abs(z - 3.75) - 2.6);
+                cut = Math.Min(cut, Math.Min(dCellCenter, dCellMidX));
+
+                double dHoles = Math.Min(
+                    Math.Sqrt((ax - 7.5) * (ax - 7.5) + (ay - 7.5) * (ay - 7.5)) - 2.15,
+                    Math.Sqrt((ax - 15.0) * (ax - 15.0) + y * y) - 2.15);
+                cut = Math.Min(cut, dHoles);
+
+                double dTopRibs = Math.Max(Math.Abs(Math.Sin(x * 1.3)) - 0.5, Math.Min(z - 0.45, 7.05 - z));
+                dTopRibs = Math.Max(dTopRibs, -dBoltBosses);
+                cut = Math.Min(cut, dTopRibs);
+
+                return Math.Max(body, -cut);
+            };
+
+            Func<double, double, double, double> grommetSdf = (x, y, z) =>
+            {
+                double r = Math.Sqrt(x * x + y * y);
+                double rOut = z <= 1.6 ? 4.5 : 3.35;
+                return Math.Max(Math.Max(2.08 - r, r - rOut), Math.Max(0.0 - z, z - 4.2));
+            };
+
+            var mainPad = SdfMesher.ExtractMesh("TPU_Isolator_Pad", isolatorPadSdf, new Vec3(-25.5, -14.5, -0.5), new Vec3(25.5, 14.5, 8.0), step);
+            var systemMesh = new MeshData("04a_TPU_Vibration_Isolator_Puck_And_Grommets");
+            systemMesh.Append(mainPad);
+
+            if (includeLooseGrommetsOnPlate)
+            {
+                var singleGrommet = SdfMesher.ExtractMesh("TPU_Bolt_Grommet", grommetSdf, new Vec3(-5.2, -5.2, -0.4), new Vec3(5.2, 5.2, 4.6), 0.22);
+                for (int i = 0; i < 6; i++)
+                {
+                    var g = singleGrommet.Clone("Grommet_" + i);
+                    g.Translate(-20.0 + i * 8.0, -21.0, 0.0);
+                    systemMesh.Append(g);
+                }
+            }
+            return systemMesh;
+        }
+
+        // 04b: Snap-In 90A TPU Belly Downward Vision & IR Sensor Mud Shield
+        // Seals the 20.0 x 22.6mm rear belly cutout (X in [+40.5, +60.5], Y in [-11.3, +11.3]) with a non-contact recessed optical dome!
+        public static MeshData BuildTpuBellySensorShield(double step = 0.24)
+        {
+            Func<double, double, double, double> sdf = (x, y, z) =>
+            {
+                double flange = SdfMesher.StealthBlock3D(x, y, z - 0.8, 12.2, 13.0, 0.8, 3.0, 0.0);
+                double bead = (z >= 3.2 && z <= 4.4) ? 0.55 : 0.0;
+                double plug = SdfMesher.RoundedBox3D(x, y, z - 3.1, 9.95 + bead, 11.25 + bead, 1.6, 1.5);
+                double body = Math.Min(flange, plug);
+
+                // Recessed non-contact optical dome (Z in [2.6, 5.5]) so nothing ever touches the downward fisheye lens or IR ToF window!
+                double dOpticalDome = Math.Max(SdfMesher.Box2D(x, y, 7.6, 8.4, 3.0), 2.5 - z);
+                return Math.Max(body, -dOpticalDome);
+            };
+            return SdfMesher.ExtractMesh("04b_TPU_Belly_Sensor_Shield", sdf, new Vec3(-13.5, -14.2, -0.5), new Vec3(13.5, 14.2, 5.5), step);
+        }
+
+        // 04c: Snap-In 90A TPU Heatsink Mud-Guard Louver (X in [-41.0, -21.5])
+        public static MeshData BuildTpuHeatsinkLouver(double step = 0.24)
+        {
+            Func<double, double, double, double> sdf = (x, y, z) =>
+            {
+                double flange = SdfMesher.StealthBlock3D(x, y, z - 0.8, 11.8, 13.0, 0.8, 3.0, 0.0);
+                double bead = (z >= 3.2 && z <= 4.4) ? 0.55 : 0.0;
+                double plug = SdfMesher.RoundedBox3D(x, y, z - 3.1, 9.70 + bead, 11.25 + bead, 1.6, 1.5);
+                double body = Math.Min(flange, plug);
+
+                double cut = 1e9;
+                for (int i = -2; i <= 2; i++)
+                {
+                    double shiftedX = x - i * 3.4 - (z - 2.3) * 0.65;
+                    cut = Math.Min(cut, Math.Max(Math.Abs(shiftedX) - 0.85, Math.Abs(y) - 8.2));
+                }
+                return Math.Max(body, -cut);
+            };
+            return SdfMesher.ExtractMesh("04c_TPU_Heatsink_Mud_Louver", sdf, new Vec3(-13.0, -14.2, -0.5), new Vec3(13.0, 14.2, 5.5), step);
+        }
+
+        // 04d (NEW!): 90A TPU Nose-Vault Gimbal Cushion, Forward LiDAR Dome & Side-Skirt Mud Seal
+        // Press-fits inside the Closed Nose Cup (X_cradle in [-69.5, -47.5], Y in [-17.5, +17.5], Z_cradle in [6.8, 36.5])!
+        //   - Gently cradles the outer barrel of the 2-Axis Mechanical Gimbal so it cannot hammer its end-stops
+        //   - Deep non-contact optical cavities over BOTH the Main Camera Lens and Forward LiDAR / Vision Window
+        //   - Wrap-around TPU side-skirts seal the open left/right flanks of the cradle's nose cup against mud & grit!
+        // Printed flat on its front nose face (Z_print = 0..21mm) for zero-support printing!
+        public static MeshData BuildTpuNoseVaultGimbalGuard(double step = 0.26)
+        {
+            // In print orientation:
+            //   - Z in [0.0, 19.5]: depth into the nose cup (Z=0 is front wall inside nose cup, Z=19.5 extends back into cradle)
+            //   - Y in [-17.4, +17.4]: width across inside of nose cup (34.8mm wide, snug friction fit inside 35.4mm cup walls!)
+            //   - X in [-14.0, +14.0]: height inside nose cup (28.0mm tall, fitting between Z_cradle = 7.2mm floor and Z_cradle = 35.2mm roof!)
+            Func<double, double, double, double> sdf = (x, y, z) =>
+            {
+                double ay = Math.Abs(y);
+
+                // Outer U-shell matching interior of Closed Nose Cup: 28.0mm (X) x 34.8mm (Y) x 19.0mm (Z)
+                double outer2D = SdfMesher.ChamferBox2D(x, y, 14.0, 17.4, 5.0);
+                double body3D = Math.Max(outer2D, Math.Max(0.0 - z, z - 19.0));
+
+                // Carve interior drone-nose cavity (Z > 3.2mm):
+                // Soft gimbal-hugging side cheeks at |Y| in [9.5..14.0] hold the outer gimbal frame while leaving a deep Ø16.4mm non-contact optical dome in the center!
+                double dDroneNose = Math.Max(SdfMesher.ChamferBox2D(x, y, 11.2, 14.4, 3.5), 5.5 - z);
+
+                // Deep non-contact optical dome for Main 2-Axis Gimbal Lens + Forward LiDAR (Z in [2.0, 20.0], X in [-9.5, +9.5], |Y| <= 8.4mm)
+                double dLensAndLidarDome = Math.Max(SdfMesher.Box2D(x, y, 9.5, 8.4, 4.5), 2.0 - z);
+
+                // Compliant flex ribs on gimbal side-cheeks (at |Y| in [8.4..14.4], Z in [3.5..12.0]) so cheeks compress like plush foam pillows!
+                double dFlexGroove = Math.Max(Math.Abs(x) - 1.5, Math.Max(9.5 - ay, Math.Abs(z - 8.5) - 2.2));
+
+                return Math.Max(body3D, -Math.Min(dDroneNose, Math.Min(dLensAndLidarDome, dFlexGroove)));
+            };
+
+            return SdfMesher.ExtractMesh("04d_TPU_Nose_Vault_Gimbal_And_LiDAR_Guard", sdf,
+                new Vec3(-15.0, -18.5, -0.5), new Vec3(15.0, 18.5, 20.0), step);
+        }
+
+        // 04e (NEW!): Orbea-Styled Faceted 90A TPU Top-Rear Fisheye Lens Visor & Fail-Safe Retention Strap
+        // Anchors onto the cradle's built-in Ø10.5mm cylindrical side bosses (at X_cradle = +60.6, Z_cradle = +19.2, Y = +-21.95)
+        // Stretches over the top-rear deck of the DJI Neo 2 right ahead of the Digital Transceiver, placing a Ø16.0mm non-contact
+        // stealth dome shield directly over the exposed Top-Rear Omnidirectional Fisheye Lens!
+        // Printed FLAT on the bed (Z in [0, 5.2mm], Y in [-52, +58mm]) for 100% continuous perimeter tensile strength & zero supports!
+        public static MeshData BuildTpuTopFisheyeLensVisorStrap(double step = 0.25)
+        {
+            Func<double, double, double, double> sdf = (x, y, z) =>
+            {
+                // Strap spans along Y from Left Pivot Eyelet (Y = -41.0) through Center Faceted Lens Shield (Y = 0.0) to Right Quick-Clip Eyelet + Pull Tab (Y = +41.0..+55.0)
+                // 1) Flexible Strap Band: Y in [-41.0, +41.0], X in [-6.5, +6.5], Z in [0.0, 2.2mm]
+                double dBand = Math.Max(SdfMesher.Box2D(x, y, 6.5, 41.0, 2.0), Math.Max(0.0 - z, z - 2.2));
+
+                // 2) Center Faceted "Orbea Stealth" Fisheye Lens Armor Visor: Y in [-15.0, +15.0], X in [-13.5, +13.5], Z in [0.0, 5.4mm]
+                // Offset forward in -X (X_center = -3.5mm) so when strapped across the X=+60.6 bosses, the dome sits directly over the top fisheye lens at X=+49..56!
+                double dVisor = SdfMesher.StealthBlock3D(x + 3.0, y, z - 2.7, 13.0, 14.5, 2.7, 4.5, 1.4);
+
+                // 3) Left Permanent Eyelet Ring at (X = 0, Y = -41.0): outer r = 8.5mm, inner hole r = 5.30mm (snaps over Ø10.51mm cradle side boss!)
+                double rL = Math.Sqrt(x * x + (y + 41.0) * (y + 41.0));
+                double dEyeL = Math.Max(rL - 8.5, Math.Max(0.0 - z, z - 2.8));
+
+                // 4) Right Quick-Release C-Hook Eyelet + Angular Glove Pull-Tab at (X = 0, Y = +41.0..+56.0)
+                double rR = Math.Sqrt(x * x + (y - 41.0) * (y - 41.0));
+                double dEyeR = Math.Max(rR - 8.5, Math.Max(0.0 - z, z - 2.8));
+                // Faceted Orbea-style glove pull tab extending to Y = +56.5mm with grip ridges!
+                double dTab = SdfMesher.StealthBlock3D(x, y - 50.5, z - 1.8, 6.8, 6.5, 1.8, 2.5, 0.6);
+
+                double body = Math.Min(Math.Min(dBand, dVisor), Math.Min(dEyeL, Math.Min(dEyeR, dTab)));
+
+                // Subtract features:
+                double cut = 1e9;
+                // Left closed eyelet bore (r = 5.30mm)
+                cut = Math.Min(cut, rL - 5.30);
+                // Right quick-clip eyelet bore (r = 5.25mm) + angled side entry throat (width 7.6mm so it clicks over the Ø10.5mm boss with one finger!)
+                double dQuickThroat = Math.Max(Math.Abs(y - 41.0) - 3.8, x - 0.0); // opens on +X side so tension pulls against solid -X arc!
+                // Wait: tension pulls inward toward Y = 0 (-Y), so opening at +X (sideways) cannot unhook under strap tension!
+                cut = Math.Min(cut, Math.Min(rR - 5.25, Math.Max(dQuickThroat, rR - 9.0)));
+
+                // Non-Contact Recessed Optical Dome underneath the Center Visor (Z in [-0.5, 3.2], r = 8.2mm -> Ø16.4mm dome so nothing touches the fisheye glass!)
+                double dFisheyeDome = Math.Max(Math.Sqrt((x + 3.0) * (x + 3.0) + y * y) - 8.2, z - 3.2);
+                cut = Math.Min(cut, dFisheyeDome);
+
+                return Math.Max(body, -cut);
+            };
+
+            return SdfMesher.ExtractMesh("04e_TPU_Top_Fisheye_Lens_Visor_Strap", sdf,
+                new Vec3(-17.5, -51.0, -0.5), new Vec3(12.0, 58.0, 6.0), step);
+        }
+
+        // =========================================================================
+        // 05. RIGID PETG FASTENER REINFORCEMENT INSERT KIT FOR 72D TPU PRINTS
+        // =========================================================================
         public static MeshData BuildPetgReinforcementInsertKit(double step = 0.24)
         {
-            // (A) Unified 6-Nut PETG Cradle Carrier Plate (centered at X = 0, Y = 0, Z in [0.0, 3.5])
             Func<double, double, double, double> carrierPlateSdf = (x, y, z) =>
             {
                 double ax = Math.Abs(x);
                 double ay = Math.Abs(y);
                 double body = SdfMesher.RoundedBox3D(x, y, z - 1.75, 21.30, 10.60, 1.75, 2.8);
-                // Subtract 6 x M4 holes + captive M4 hex nut pockets (Z in [1.10, 3.60] -> 2.4mm deep hex trap + 1.1mm solid PETG floor!)
-                double holes = 1e9;
-                holes = Math.Min(holes, M4HoleAndHexNutSdf(ax, ay, z, 7.50, 7.50, 1.10, 3.80));
-                holes = Math.Min(holes, M4HoleAndHexNutSdf(ax, y, z, 15.00, 0.00, 1.10, 3.80));
+                double holes = Math.Min(
+                    M4HoleAndHexNutSdf(ax, ay, z, 7.50, 7.50, 1.10, 3.80),
+                    M4HoleAndHexNutSdf(ax, y, z, 15.00, 0.00, 1.10, 3.80));
                 return Math.Max(body, -holes);
             };
 
-            // (B) Rigid PETG M5 Bottle-Cage Slot Load-Spreader Insert (fits 02a's 10.2mm wide x 26.2mm long M5 counterbore track!)
-            // Length = 25.6mm (capsule from x=-7.9 to +7.9 with r=4.9mm -> 25.6 x 9.8mm), thickness Z in [0.0, 2.4mm], inner M5 slot width = 5.30mm (r=2.65mm)
-            Func<double, double, double, double> m5SlotInsertSdf = (x, y, z) =>
-            {
-                double dOuter = SdfMesher.SlotX2D(x, y, -7.9, 7.9, 0.0, 4.90);
-                double dInner = SdfMesher.SlotX2D(x, y, -7.9, 7.9, 0.0, 2.65);
-                double d2D = Math.Max(dOuter, -dInner);
-                return Math.Max(d2D, Math.Max(0.0 - z, z - 2.40));
-            };
-
-            // (C) Press-In Flanged PETG Hex-Collar M4 Bolt Bushing (presses into any standard 7.18mm AF hex pocket in 01 or 02a!)
-            // Lower Hex Collar: 7.08mm across flats, Z in [0.0, 3.2]
-            // Upper Load-Spreading Flange: d = 9.6mm (r = 4.8mm), Z in [3.2, 4.6]
-            // Through-Bore: d = 4.25mm (r = 2.125mm) for M4 bolt
             Func<double, double, double, double> hexBushingSdf = (x, y, z) =>
             {
                 double r = Math.Sqrt(x * x + y * y);
                 double dOuter = z <= 3.2 ? SdfMesher.Hexagon2D(x, y, 7.08) : (r - 4.75);
-                double d2D = Math.Max(dOuter, 2.125 - r);
-                return Math.Max(d2D, Math.Max(0.0 - z, z - 4.60));
+                return Math.Max(Math.Max(dOuter, 2.125 - r), Math.Max(0.0 - z, z - 4.60));
             };
 
             var carrierMesh = SdfMesher.ExtractMesh("05a_PETG_Cradle_6Nut_Carrier_Plate", carrierPlateSdf,
                 new Vec3(-22.5, -12.0, -0.4), new Vec3(22.5, 12.0, 4.0), step);
-            var m5SlotMesh = SdfMesher.ExtractMesh("05b_PETG_M5_Slot_Washer", m5SlotInsertSdf,
-                new Vec3(-14.0, -6.0, -0.4), new Vec3(14.0, 6.0, 2.9), 0.22);
-            var hexBushMesh = SdfMesher.ExtractMesh("05c_PETG_Hex_Collar_M4_Bushing", hexBushingSdf,
+            var hexBushMesh = SdfMesher.ExtractMesh("05b_PETG_Hex_Collar_M4_Bushing", hexBushingSdf,
                 new Vec3(-5.5, -5.5, -0.4), new Vec3(5.5, 5.5, 5.0), 0.20);
 
             var kitMesh = new MeshData("05_PETG_Reinforcement_Inserts_For_72D_TPU");
             kitMesh.Append(carrierMesh);
-
-            // Add 2 x M5 Bottle-Slot Load-Spreader Plates above the carrier plate
-            var m5L = m5SlotMesh.Clone("M5_Slot_1"); m5L.Translate(-15.0, 19.0, 0.0);
-            var m5R = m5SlotMesh.Clone("M5_Slot_2"); m5R.Translate(15.0, 19.0, 0.0);
-            kitMesh.Append(m5L);
-            kitMesh.Append(m5R);
-
-            // Add 8 x Press-In Flanged Hex-Collar M4 Bushings below the carrier plate
             for (int i = 0; i < 8; i++)
             {
                 var b = hexBushMesh.Clone("Hex_Bush_" + i);
-                b.Translate(-38.5 + i * 11.0, -19.0, 0.0);
+                b.Translate(-38.5 + i * 11.0, -18.5, 0.0);
                 kitMesh.Append(b);
             }
-
             return kitMesh;
         }
     }

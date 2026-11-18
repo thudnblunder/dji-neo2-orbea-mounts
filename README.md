@@ -1,30 +1,30 @@
 <div align="center">
 
 # DJI Neo 2 (w/ Transceiver) × 2027 Orbea Wild LT M-Team
-### Custom 3D-Printable Enduro e-MTB Mount System & TPU Gimbal Armor Suite
+### Orbea Stealth Cockpit Mount Suite: Out-Front Number-Plate Fairing, Over-Stem OC Bridge & 360° TPU Lens Armor
 
 ![Drone](https://img.shields.io/badge/Drone-DJI_Neo_2_+_Transceiver-0070d1?style=for-the-badge)
 ![Bike](https://img.shields.io/badge/Bike-2027_Orbea_Wild_LT_M--Team_(Size_L)-ff6600?style=for-the-badge)
 ![Printer](https://img.shields.io/badge/Printer-Bambu_Lab_P2S_(0.4mm_HF_TC)-00ae42?style=for-the-badge)
-![Materials](https://img.shields.io/badge/Filaments-ASA_%7C_Easy_Nylon_%7C_PETG_%7C_TPU-9b59b6?style=for-the-badge)
-![Hardware](https://img.shields.io/badge/Hardware-Captive_M4_Hex_Nuts_(Zero_Melt_Inserts)-2ecc71?style=for-the-badge)
+![Materials](https://img.shields.io/badge/Filaments-Easy--PA_%7C_72D_TPU_%7C_90A_TPU_%7C_PETG-9b59b6?style=for-the-badge)
+![Optics](https://img.shields.io/badge/Protection-360°_Lens_&_Gimbal_Shielded-2ecc71?style=for-the-badge)
 
 <br/>
 
 ![Hero Banner Showcase](renders/00_Hero_Banner_Showcase.png)
 
 <p align="center">
-  <b>Two dedicated trail-ready mounting systems</b> to carry a <b>DJI Neo 2 with Digital Transceiver</b> (<code>167 × 171 × 54 mm</code>) on a <b>2027 Orbea Wild LT M-Team (Size Large)</b>:<br/>
-  <b>(1) Side-Mount Downtube L-Tower</b> (<code>64 mm</code> Bottle Cage Bosses + Integrated <b>Fidlock TWIST</b> Receiver) &nbsp;|&nbsp;
-  <b>(2) Over-Stem Swinging Clamshell Mount</b> (<code>OC MC11 40mm Stem</code> + <code>OC MC10 Ø35.0mm Carbon Bar</code>) &nbsp;|&nbsp;
-  <b>(3) Full TPU Gimbal, Sensor & Vibration Armor</b>
+  <b>Two dedicated 100% knee-free cockpit mounting systems</b> sculpted in the angular stealth design language of the <b>2027 Orbea Wild LT M-Team (Size Large)</b>:<br/>
+  <b>(1) Out-Front "Stealth Fairing" Number-Plate Mount</b> (<code>64°</code> Head-Tube Rake + Armored Chin Roost Fender) &nbsp;|&nbsp;
+  <b>(2) "Stealth OC" Over-Stem Bridge Mount</b> (Forward Roost Prow + Recessed Shear Isolator) &nbsp;|&nbsp;
+  <b>(3) 360° 90A TPU Lens, LiDAR & Gimbal Armor</b>
 </p>
 
 [Quick Download (.3MF Plates)](#-one-click-bambu-studio-build-plates-3mf) •
+[360° Lens & Vibration Engineering](#-360-lens-protection--multi-durometer-vibration-damping) •
 [Visual Gallery](#-3d-assembly--component-gallery) •
-[Engineering Architecture](#-engineering-highlights--problem-solving) •
 [STL Catalog](#-individual-stl-part-catalog) •
-[Bambu P2S Print Settings](#-bambu-lab-p2s-04mm-hf-tc-slicer-settings) •
+[Graded-Durometer Print Matrix](#-bambu-lab-p2s-04mm-hf-tc-graded-durometer-slicer-matrix) •
 [Hardware BOM & Assembly](#-hardware-bill-of-materials--assembly-guide)
 
 </div>
@@ -33,34 +33,34 @@
 
 ## ⚡ One-Click Bambu Studio Build Plates (`.3mf`)
 
-All parts are pre-oriented on `256 × 256 mm` build plates for the **Bambu Lab P2S** to maximize perimeter strength along load paths and minimize or eliminate supports:
+All parts are pre-oriented on `256 × 256 mm` build plates for the **Bambu Lab P2S** for **zero-support printing** (except the small underside arch ceiling of `03a`) and optimal continuous-perimeter fiber strength:
 
-| Build Plate | Filament | Contents | Download |
+| Build Plate | Recommended Filament | Contents | Download |
 | :--- | :--- | :--- | :---: |
-| **Plate 1 — Structural Mounts** | `ASA` / `Easy Nylon` / `PETG` | Universal Cradle (`01`) + Side-Mount Downtube L-Tower (`02a`) + Over-Stem Bridge Plate (`03a`) + Swinging Pin-Hinged 35mm Handlebar Clamshells (`03b`) | [**Download Plate 1 (.3mf)**](3mf/Plate1_Structural_Mounts_ASA_PETG_Nylon.3mf) |
-| **Plate 2 — TPU Protection & Isolator Suite** | `TPU 95A` | Ø35mm Carbon Bar Grip Sleeves (`03d`) + Prop-Guard Saddle Cushions (`02b`) + Shear Vibration Isolator Puck & 6× M4 Grommets (`04a`) + Gimbal Lock & Sensor Shield (`04b`) + Heatsink Mud Louver (`04c`) | [**Download Plate 2 (.3mf)**](3mf/Plate2_Flexible_Dampers_TPU.3mf) |
-| **Plate 3 — Monolithic 1-Piece Variants** | `ASA` / `Easy Nylon` / `PETG` | Optional 1-Piece Fused Side-Mount Downtube+Cradle (`02c`) + 1-Piece Fused StemBridge+Cradle (`03e`) | [**Download Plate 3 (.3mf)**](3mf/Plate3_Integrated_OnePiece_Variants.3mf) |
-| **Plate 4 — 45° Sunlu Easy-PA Cradle w/ Snap-Off Anchor Fin** | `Sunlu Easy-PA` (Nylon) | Pre-angled `47.1°` Universal Cradle (`01b`) with integrated perforated snap-off A-frame stabilization foot for maximum hook & cup fiber strength with zero slicer supports | [**Download Plate 4 (.3mf)**](3mf/Plate4_Cradle_45Deg_Sunlu_EasyPA.3mf) |
-| **Plate 5 — Rigid PETG Fastener Inserts for 72D TPU Mounts** | `PETG` / `ASA` / `Easy-PA` | Unified 6-Nut Cradle Carrier Plate (snaps into `01c`) + 2× M5 Bottle-Slot Load-Spreader Plates (for `02a`) + 8× Press-In Flanged Hex-Collar M4 Bolt Bushings (for `01` & `02a`) | [**Download Plate 5 (.3mf)**](3mf/Plate5_PETG_Inserts_For_72D_TPU.3mf) |
+| **Plate 1 — Stealth Number-Plate Mount** | `Elegoo 72D TPU` or `Sunlu Easy-PA` | Faceted Number-Plate Shield w/ Chin Roost Fender (`02a`) + Swept Twin-Truss Handlebar Drop Arms (`02b`) — **Zero Supports!** | [**Download Plate 1 (.3mf)**](3mf/Plate1_NumberPlate_Stealth_Mount_72D_Or_EasyPA.3mf) |
+| **Plate 2 — Stealth OC Over-Stem Mount** | `Sunlu Easy-PA` or `ASA` | Chiseled Over-Stem Bridge w/ Front Roost Prow (`03a`) + Faceted Swinging M4 Pin-Hinged 35mm Handlebar Clamps (`03b`) | [**Download Plate 2 (.3mf)**](3mf/Plate2_OverStem_Stealth_Bridge_And_Clamps.3mf) |
+| **Plate 3 — 360° 90A TPU Lens & Vibration Armor** | `90A TPU` *(or `95A TPU`)* | Carbon Bar Sleeves (`03d`) + Shear Isolator Puck & Grommets (`04a`) + Belly Sensor Seal (`04b`) + Heatsink Louver (`04c`) + Nose Gimbal/LiDAR Vault (`04d`) + Top Fisheye Visor Strap (`04e`) | [**Download Plate 3 (.3mf)**](3mf/Plate3_90A_TPU_Lens_Gimbal_And_Vibration_Armor.3mf) |
+| **Plate 4 — Easy-PA (45°) & 72D TPU (Flat) Cradles** | `Sunlu Easy-PA` / `Elegoo 72D TPU` | 45° Pre-Angled Cradle w/ Snap-Off A-Frame Anchor Fin (`01b`) + Flat Pocketed 72D TPU Cradle (`01c`) | [**Download Plate 4 (.3mf)**](3mf/Plate4_Cradles_45Deg_EasyPA_And_Flat_72D.3mf) |
+| **Plate 5 — Rigid PETG Fastener Inserts** | `PETG` / `ASA` | Unified 6-Nut Cradle Carrier Plate (snaps into `01c`) + 8× Flanged Hex-Collar M4 Bolt Bushings | [**Download Plate 5 (.3mf)**](3mf/Plate5_PETG_Inserts_For_72D_TPU.3mf) |
 
 ---
 
-## 🛠️ Engineering Highlights & Problem-Solving
+## 🛡️ 360° Lens Protection & Multi-Durometer Vibration Damping
 
 <table>
   <tr>
     <td width="42%" align="center">
       <img src="renders/photo_dji_neo2_cradle_closeup.png" alt="DJI Neo 2 Clipped into Reference Cradle" width="100%"/>
       <br/>
-      <sub><b>Reference Holster Fitment:</b> DJI Neo 2 with Digital Transceiver clipped into the base cradle shell.</sub>
+      <sub><b>Reference Holster Fitment:</b> Notice the exposed top-rear omnidirectional fisheye lens right ahead of the Digital Transceiver—now completely covered by our <code>04e</code> Faceted TPU Visor Strap!</sub>
     </td>
     <td width="58%">
-      <h3>Why This System Was Engineered</h3>
+      <h3>Every Optical Element Shielded from Trail Roost</h3>
       <ul>
-        <li><b>Zero Knee Interference on the Downtube (<code>55.4 mm</code> Width):</b> Mounting a <code>171 mm</code> wide DJI Neo 2 flat on the downtube sticks out <code>85.5 mm</code> per side into the rider's pedaling envelope. Our <b>Side-Mount 90° L-Tower (<code>02a</code>)</b> stands the drone <b>on its side inside the front triangle</b> between the top tube and downtube—narrower than a standard <code>74 mm</code> water bottle and narrower than the Orbea Wild LT downtube itself.</li>
-        <li><b>Zero Plastic Flexing Over the Ø35.0 mm Carbon Bar:</b> Pulling a rigid 1-piece plastic C-ring open by <code>35 mm</code> to clear a mountain bike handlebar causes brittle fracture or permanent yield. Our <b>Swinging M4 Pin-Hinged Clamshell Clamps (<code>03b</code>)</b> use a 3-knuckle barrel hinge pinned by an M4 bolt so the lower jaw swings open <code>180°</code> with <b>0% bending strain</b>.</li>
-        <li><b>2-Axis Gimbal & Optical Sensor Protection:</b> Unpowered 2-axis gimbals hammer against their end-stops under trail chatter. Our <b>TPU Vibration Isolator Puck (<code>04a</code>)</b> decouples high-frequency shock, while the snap-in <b>TPU Gimbal Lock Cushion & Sensor Shield (<code>04b</code>)</b> gently immobilizes the outer gimbal barrel (with a <code>Ø14.4 mm</code> non-contact lens cavity) and seals the downward sensors from mud.</li>
-        <li><b>Captive M4 Hex Nuts Throughout:</b> Every threaded joint uses precision <code>7.18 mm</code> across-flats DIN 934 hex nut traps—<b>no heat-set/melt inserts or soldering iron required</b>.</li>
+        <li><b>Main 2-Axis Gimbal Camera + Forward LiDAR (Nose):</b> Protected inside a <b>double-walled vault</b>. The soft <b><code>04d</code> 90A TPU Nose Liner</b> closes off the left/right side gaps of the cradle's nose cup, gently immobilizes the outer gimbal barrel to prevent end-stop hammering, and leaves a deep non-contact optical dome over the glass lens and LiDAR. On the Number-Plate Mount, the nose nests inside an <b>Armored 45°-Faceted Lower Chin Fender</b> that deflects front-tire rock/mud spray.</li>
+        <li><b>Top-Rear Omnidirectional Fisheye Lens (Ahead of Transceiver):</b> Shielded by the <b><code>04e</code> Faceted 90A TPU Visor Strap</b>, which hooks onto the cradle's built-in <code>Ø10.5 mm</code> side bosses, suspends a <code>Ø16.4 mm</code> non-contact dome over the fisheye glass, and acts as a fail-safe secondary retention strap.</li>
+        <li><b>Downward Vision Fisheye + IR ToF Sensors (Belly):</b> Sealed 100% against mud and water by the snap-in <b><code>04b</code> 90A TPU Belly Sensor Plug</b>.</li>
+        <li><b>Fox 38 Bottom-Out & Orbea SIC Cable Clearance:</b> On the Size Large Wild LT (<code>130 mm</code> head tube, <code>63.9°</code> HTA), the Number-Plate drop arms sweep <code>50 mm</code> forward (leaving a wide-open tunnel for Orbea SIC headset cables) and hold the chin fender <code>>60 mm</code> above the bottom of the Fox 38 crown—impossible for the front tire to touch even at full <code>170 mm</code> bottom-out.</li>
       </ul>
     </td>
   </tr>
@@ -70,205 +70,153 @@ All parts are pre-oriented on `256 × 256 mm` build plates for the **Bambu Lab P
 
 ## 📸 3D Assembly & Component Gallery
 
-### Complete Multi-Part Assemblies
+### Complete Cockpit Assemblies & 360° Lens Armor
 
 <table>
   <tr>
     <td width="50%" align="center">
-      <img src="renders/05_Downtube_Assembly_Preview.png" alt="Assembly 1 - Side-Mount Downtube L-Tower" width="100%"/>
+      <img src="renders/05_NumberPlate_Assembly_Preview.png" alt="Assembly 1 - Stealth Number-Plate Mount" width="100%"/>
       <br/>
-      <b>Assembly 1: Side-Mount Downtube L-Tower (<code>02a</code> + <code>01</code>)</b><br/>
-      <sub>Holds the drone edgewise inside the front triangle (<code>55.4 mm</code> total width). Features dual lower prop-guard saddles, open <code>64 mm</code> M5 bottle slots, and an underside Fidlock TWIST receiver.</sub>
+      <b>Assembly 1: Orbea "Stealth Fairing" Out-Front Number-Plate Mount</b><br/>
+      <sub>Raked at <code>64°</code> parallel to the Wild LT head tube. Features faceted side winglets, armored lower chin roost scoop, swept <code>72D TPU</code> truss drop arms, and <code>90A TPU</code> isolator + 360° lens armor.</sub>
     </td>
     <td width="50%" align="center">
-      <img src="renders/06_Stem_Assembly_Preview.png" alt="Assembly 2 - Over-Stem Handlebar Mount" width="100%"/>
+      <img src="renders/06_OverStem_Assembly_Preview.png" alt="Assembly 2 - Stealth OC Over-Stem Mount" width="100%"/>
       <br/>
-      <b>Assembly 2: Over-Stem Handlebar Clamshell Mount (<code>03a</code> + <code>03b</code> + <code>01</code>)</b><br/>
-      <sub>Straddles the <code>40 mm</code> OC MC11 stem faceplate with slotted <code>50–72 mm</code> lateral adjustment and swinging M4 pin-hinged <code>Ø35.0 mm</code> bar clamps.</sub>
+      <b>Assembly 2: Orbea "Stealth OC" Over-Stem Cockpit Mount</b><br/>
+      <sub>Oriented nose-forward over the chiseled front roost-deflector prow, with a <code>3.5 mm</code> recessed <code>90A TPU</code> shear isolator pocket and zero-flex hinged <code>Ø35.0 mm</code> bar clamps.</sub>
     </td>
   </tr>
   <tr>
     <td width="50%" align="center">
-      <img src="renders/08_Cradle_With_TPU_Armor_Assembly.png" alt="Assembly 3 - Cradle with Full TPU Armor" width="100%"/>
+      <img src="renders/08_Cradle_With_TPU_Armor_Assembly.png" alt="360-Deg Lens-Armored Cradle Assembly" width="100%"/>
       <br/>
-      <b>Assembly 3: Cradle Equipped w/ Full TPU Gimbal & Vibration Armor</b><br/>
-      <sub><b>Blue:</b> Universal Cradle (<code>01</code>) &nbsp;|&nbsp; <b>Cyan:</b> TPU Shear Isolator + Grommets (<code>04a</code>) &nbsp;|&nbsp; <b>Gold:</b> Snap-In Gimbal Lock & Sensor Shield (<code>04b</code>) &nbsp;|&nbsp; <b>Green:</b> Heatsink Mud Louver (<code>04c</code>).</sub>
+      <b>360° Lens-Armored Cradle Assembly</b><br/>
+      <sub><b>Orange:</b> <code>04d</code> Nose Gimbal/LiDAR Vault &nbsp;|&nbsp; <b>Pink:</b> <code>04e</code> Top Fisheye Visor Strap &nbsp;|&nbsp; <b>Gold:</b> <code>04b</code> Belly Sensor Seal &nbsp;|&nbsp; <b>Green:</b> <code>04c</code> Louver &nbsp;|&nbsp; <b>Cyan:</b> <code>04a</code> Shear Isolator.</sub>
     </td>
     <td width="50%" align="center">
-      <img src="renders/07_TPU_Gimbal_And_Vibration_Protection_Preview.png" alt="TPU Gimbal and Vibration Protection Suite" width="100%"/>
+      <img src="renders/07_TPU_Gimbal_And_Vibration_Protection_Preview.png" alt="Complete 5-Part 90A TPU Armor Suite" width="100%"/>
       <br/>
-      <b>TPU Gimbal, Sensor & Vibration Protection Suite (<code>04a</code>, <code>04b</code>, <code>04c</code>)</b><br/>
-      <sub>Printed in <code>TPU 95A</code> with 2–3 walls and 15–20% Gyroid infill for plush elastomer compliance and trail shock attenuation.</sub>
+      <b>Complete 5-Part <code>90A TPU</code> Lens, Gimbal & Vibration Suite (<code>04a</code>–<code>04e</code>)</b><br/>
+      <sub>All 5 parts print flat on the bed with zero supports in a single run on Plate 3.</sub>
     </td>
   </tr>
 </table>
 
-### Individual Component Orthographic & Isometric Inspection Sheets
+### Individual Stealth Component Inspection Sheets
 
 <table>
   <tr>
     <td width="50%" align="center">
-      <img src="renders/01_Cradle_And_Insert_Preview.png" alt="01 - Universal Cradle" width="100%"/>
+      <img src="renders/02_NumberPlate_Shield_And_Arms_Preview.png" alt="02a - Stealth Number-Plate Shield" width="100%"/>
       <br/>
-      <b><code>01</code> — DJI Neo 2 Universal Cradle</b><br/>
-      <sub>100% flat <code>Z = 0</code> bottom face; symmetric <code>15 × 15 mm</code> 4-bolt M4 square + <code>30 mm</code> centerline pattern with captive M4 hex nut pockets recessed <code>1.2 mm</code> below the drone belly plane.</sub>
+      <b><code>02a</code> — Orbea Stealth Number-Plate Shield & Chin Roost Fender</b><br/>
+      <sub>Prints 100% flat on its back (<code>Z = 0</code>, zero supports) with chiseled <code>45°</code> stealth facets, aero winglet slashes, and a recessed <code>90A TPU</code> isolator seat.</sub>
     </td>
     <td width="50%" align="center">
-      <img src="renders/02_Downtube_Fidlock_Mount_Preview.png" alt="02a - Side-Mount Downtube L-Tower" width="100%"/>
+      <img src="renders/02b_NumberPlate_Drop_Arms_Preview.png" alt="02b - Swept Out-Front Twin-Truss Drop Arms" width="100%"/>
       <br/>
-      <b><code>02a</code> — Orbea Wild LT Side-Mount Downtube L-Tower</b><br/>
-      <sub><code>47.4 mm</code> base width, twin gusset ribs, lower prop-guard saddles, <code>64 mm</code> M5 slots, and underside Fidlock TWIST keyhole sockets + <code>Ø10 × 3 mm</code> magnet pockets.</sub>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" align="center">
-      <img src="renders/03a_Stem_Bridge_Plate_Preview.png" alt="03a - Over-Stem Bridge Plate" width="100%"/>
-      <br/>
-      <b><code>03a</code> — Orbea OC MC11 Over-Stem Bridge Plate</b><br/>
-      <sub><code>46 mm</code> wide × <code>6 mm</code> high underside arch clears the OC MC11 stem faceplate; supports <code>0°</code> (fore-aft) or <code>90°</code> (transverse) cradle mounting.</sub>
-    </td>
-    <td width="50%" align="center">
-      <img src="renders/03b_Handlebar_C_Clips_Preview.png" alt="03b - Swinging M4 Pin-Hinged Clamshell Clamps" width="100%"/>
-      <br/>
-      <b><code>03b</code> — Swinging M4 Pin-Hinged 35mm Handlebar Clamps</b><br/>
-      <sub>Upper Saddle and Lower Swinging Jaw print separated on the bed, join at the front 3-knuckle hinge via an M4 bolt, and clamp at the rear with one M4 pinch bolt.</sub>
+      <b><code>02b</code> — Swept Out-Front Faceted Twin-Truss Drop Arms (Pair)</b><br/>
+      <sub>Bolts directly to the shared <code>03b</code> handlebar clamps, sweeping <code>50 mm</code> forward around the Orbea SIC cable bundle and angling the shield to <code>64°</code>.</sub>
     </td>
   </tr>
   <tr>
     <td width="50%" align="center">
-      <img src="renders/04_TPU_Sleeves_And_Pads_Preview.png" alt="03d - TPU Carbon Handlebar Grip Sleeves" width="100%"/>
+      <img src="renders/03a_Stem_Bridge_Plate_Preview.png" alt="03a - Stealth OC Over-Stem Bridge" width="100%"/>
       <br/>
-      <b><code>03d</code> — Flanged TPU Grip Sleeves for OC MC10 Ø35.0 mm Carbon Handlebar</b><br/>
-      <sub><code>35.0 mm</code> ID / <code>37.0 mm</code> OD split sleeves with <code>1.0 mm</code> side retaining lips that protect the carbon finish and prevent rotational slip at low bolt torque.</sub>
+      <b><code>03a</code> — Stealth OC Over-Stem Bridge w/ Front Roost Prow</b><br/>
+      <sub>Octagonal <code>45°</code> chamfered wings, V-creased forward mud-deflector prow, <code>46 mm</code> stem arch, and recessed <code>3.5 mm</code> top isolator pocket.</sub>
     </td>
     <td width="50%" align="center">
-      <img src="renders/09_Cradle_45Deg_EasyPA_Preview.png" alt="01b - 45-Deg Sunlu Easy-PA Cradle w/ Snap-Off Anchor Fin" width="100%"/>
+      <img src="renders/03b_Handlebar_C_Clips_Preview.png" alt="03b - Faceted OC-Styled Hinged Clamshells" width="100%"/>
+      <br/>
+      <b><code>03b</code> — Faceted OC-Styled Swinging 35mm Handlebar Clamps</b><br/>
+      <sub>Shared base clamps for BOTH mounts! 3-knuckle front M4 bolt hinge swings open <code>180°</code> over the <code>35 mm</code> bar with zero plastic bending.</sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <img src="renders/09_Cradle_45Deg_EasyPA_Preview.png" alt="01b - 45-Deg Sunlu Easy-PA Cradle" width="100%"/>
       <br/>
       <b><code>01b</code> — 45° Sunlu Easy-PA Cradle w/ Snap-Off A-Frame Anchor Fin</b><br/>
-      <sub>Rotated to its native <code>47.1°</code> self-supporting angle so continuous Nylon fibers run through the latch hooks and nose cup. Perforated <code>0.64 mm</code> tabs snap off cleanly after printing.</sub>
+      <sub>Runs continuous Nylon strands through the latch hooks and nose cup with zero slicer supports.</sub>
     </td>
-  </tr>
-  <tr>
-    <td colspan="2" align="center">
-      <img src="renders/10_PETG_Inserts_For_72D_TPU_Preview.png" alt="05 - Rigid PETG Reinforcement Insert Kit for 72D TPU Mounts" width="68%"/>
+    <td width="50%" align="center">
+      <img src="renders/10_PETG_Inserts_For_72D_TPU_Preview.png" alt="05 - Rigid PETG Fastener Inserts" width="100%"/>
       <br/>
-      <b><code>05</code> — Rigid PETG Fastener Reinforcement Insert Kit for 72D TPU Mounts</b><br/>
-      <sub><b>Center:</b> Unified 6-Nut Carrier Plate (snaps into <code>01c</code> so M4 nuts can never spin or pull through <code>72D TPU</code>) &nbsp;|&nbsp; <b>Top:</b> 2× M5 Bottle-Boss Slot Load-Spreader Plates (drop into <code>02a</code>) &nbsp;|&nbsp; <b>Bottom:</b> 8× Flanged Hex-Collar M4 Bushings (press into standard <code>7.18 mm</code> hex pockets on <code>01</code> or <code>02a</code>).</sub>
+      <b><code>05</code> — Rigid PETG Fastener Reinforcement Inserts for 72D TPU</b><br/>
+      <sub>Unified 6-Nut Cradle Carrier Plate (snaps into <code>01c</code>) + 8× Press-In Flanged Hex-Collar M4 Bolt Bushings.</sub>
     </td>
   </tr>
 </table>
 
 ---
 
-## 🧩 System Architecture & Fastener Flow
+## 🧩 Modular Cockpit Ecosystem & Damping Flow
 
 ```mermaid
 flowchart TD
-    subgraph StemMount["Mount 2: Over-Stem Cockpit Mount (Orbea OC MC10 Carbon Bar + MC11 40mm Stem)"]
-        Bar["OC MC10 Carbon Handlebar (Ø35.0 mm)"] --> TPUSleeve["03d: TPU Flanged Grip Sleeves (Ø35mm ID / Ø37mm OD)"]
-        TPUSleeve --> Clamshell["03b: Swinging M4 Pin-Hinged Clamshell Clamps (Front M4 Hinge Pin + Rear M4 Pinch Bolt)"]
-        Clamshell --> Bridge["03a: Over-Stem Bridge Plate (4x M4x14 Bolts into Upper Saddle Captive M4 Nuts)"]
-        Bridge --> IsolatorS["04a: TPU Vibration Isolator Puck + 6x Flanged M4 Grommets"]
-        IsolatorS --> CradleS["01: Universal Cradle + 04b TPU Gimbal Lock + 04c Mud Louver"]
-    end
+    Bar["OC MC10 Carbon Handlebar (Ø35.0 mm)"] --> Sleeves["03d: 90A TPU Flanged Carbon Bar Sleeves (Stage 1 Damping)"]
+    Sleeves --> Clamps["03b: Faceted Swinging M4 Pin-Hinged Clamshell Clamps (Zero Plastic Flex)"]
 
-    subgraph DowntubeMount["Mount 1: Side-Mount (Edgewise) Downtube L-Tower (55.4mm Total Width)"]
-        Frame["Orbea Wild LT Downtube (64mm M5 Bosses OR Fidlock TWIST Bike Base)"] --> DTBase["02a: Side-Mount 90° L-Tower Base (47.4mm Wide)"]
-        DTBase --> TPUSaddles["02b: 2x Snap-In TPU U-Groove Lower Prop-Guard Saddle Cushions"]
-        DTBase --> IsolatorDT["04a: TPU Vibration Isolator Puck + 6x Flanged M4 Grommets"]
-        IsolatorDT --> CradleDT["01: Universal Cradle + 04b TPU Gimbal Lock + 04c Mud Louver"]
-        TPUSaddles -. "Cushions lower prop-guard edge" .-> CradleDT
-    end
+    Clamps -->|"Mount Option 1: Out-Front Number-Plate"| DropArms["02b: Swept 64° Twin-Truss Drop Arms (72D TPU Stage 2 Damping)"]
+    DropArms --> NPShield["02a: Faceted Stealth Number-Plate Shield + Lower Chin Roost Fender"]
+    NPShield --> Isolator1["04a: Recessed 90A TPU Shear/Bellows Isolator Puck (Stage 3 Damping)"]
+
+    Clamps -->|"Mount Option 2: Over-Stem Cockpit"| StemBridge["03a: Stealth OC Over-Stem Bridge + Forward Roost Prow"]
+    StemBridge --> Isolator2["04a: Recessed 90A TPU Shear/Bellows Isolator Puck (Stage 3 Damping)"]
+
+    Isolator1 --> Cradle["01b (Easy-PA) or 01c (72D TPU + 05 PETG Carrier): Universal Cradle"]
+    Isolator2 --> Cradle
+    Cradle --> Armor["360° 90A TPU Optics Armor: 04d Nose Gimbal/LiDAR Vault + 04e Top Fisheye Visor + 04b Belly Seal + 04c Louver"]
 ```
 
 ---
 
 ## 📦 Individual `.STL` Part Catalog
 
-| Part ID | STL File | Dimensions (mm) | Recommended Material | Description |
+| Part ID | STL File | Dimensions (mm) | Recommended Filament | Purpose & Key Features |
 | :---: | :--- | :---: | :---: | :--- |
-| **`01`** | [`01_DJI_Neo2_Universal_Cradle.stl`](stl/01_DJI_Neo2_Universal_Cradle.stl) | `146.3 × 43.9 × 44.7` | `PETG` / `Easy Nylon` | Universal DJI Neo 2 + Transceiver cradle with flat `Z = 0` bottom and `15 × 15 mm` square + `30 mm` centerline captive M4 hex nut pockets. |
-| **`01b`** | [`01b_DJI_Neo2_Universal_Cradle_45Deg_With_AnchorFin.stl`](stl/01b_DJI_Neo2_Universal_Cradle_45Deg_With_AnchorFin.stl) | `124.4 × 48.0 × 121.6` | `Sunlu Easy-PA` | **45° Pre-Angled Nylon Cradle:** Tilted at `47.1°` on the closed-cup heel pad with a wide-base perforated snap-off A-frame stabilization fin (`zero slicer supports needed`; maximizes hook & cup flexural strength). |
-| **`01c`** | [`01c_DJI_Neo2_72D_TPU_Cradle_For_PETG_Insert.stl`](stl/01c_DJI_Neo2_72D_TPU_Cradle_For_PETG_Insert.stl) | `146.3 × 43.9 × 44.7` | `Elegoo 72D TPU` | **72D TPU Cradle w/ Snap-In Carrier Pocket:** Features a `43.0 × 21.6 × 3.6 mm` recessed pocket with a `0.35 mm` retention lip that captures the rigid 6-nut PETG Carrier Plate (`05`). |
-| **`02a`** | [`02a_Orbea_Wild_Downtube_SideMount_LTower.stl`](stl/02a_Orbea_Wild_Downtube_SideMount_LTower.stl) | `94.6 × 50.9 × 108.5` | `Elegoo 72D TPU` / `Easy-PA` | **Primary Sleek Twin-Spar Downtube L-Tower (`41.8 cm³` / `~50 g`):** `65.5%` lighter skeletal A-frame with 100% flat `Z = 0` base (`zero underside supports`), parabolic open-truss gussets, `7.0 mm` lower profile (`Z_center = 93 mm`), and contoured stadium head (`Y = -28.0 mm` puck pocket) that centers `[Tower + Puck + Cradle + Drone]` at `Y = 0`! |
-| **`02b`** | [`02b_Downtube_TPU_Damping_Pads.stl`](stl/02b_Downtube_TPU_Damping_Pads.stl) | `38.8 × 16.0 × 9.5` | `TPU 90A / 95A` | Pair of U-grooved TPU cushions that snap into the lower prop-guard saddles on `02a`. |
-| **`02c`** | [`02c_Integrated_Downtube_SideMount_Cradle.stl`](stl/02c_Integrated_Downtube_SideMount_Cradle.stl) | `146.3 × 54.4 × 115.0` | `PETG` / `ASA` | Optional 1-piece monolithic fusion of sleek `02a` and sideways `01`. |
-| **`02d`** | [`02d_Orbea_Wild_Downtube_Flat_Fidlock_Mount.stl`](stl/02d_Orbea_Wild_Downtube_Flat_Fidlock_Mount.stl) | `112.0 × 110.0 × 14.0` | `ASA` / `PETG` | Alternate flat-orientation downtube mount with 4 prop-guard wings. |
-| **`02f`** | [`02f_Orbea_Wild_Downtube_Fidlock_SideMount_LTower.stl`](stl/02f_Orbea_Wild_Downtube_Fidlock_SideMount_LTower.stl) | `112.0 × 58.7 × 121.0` | `ASA` / `Easy Nylon` | **Archived Fidlock-Compatible L-Tower (`121.4 cm³`):** Full-base version with underside Fidlock TWIST keyhole sockets + magnet pockets. |
-| **`03a`** | [`03a_Orbea_MC11_Stem_Bridge_Plate.stl`](stl/03a_Orbea_MC11_Stem_Bridge_Plate.stl) | `54.0 × 82.0 × 14.0` | `ASA` / `Easy Nylon` | Arched bridge over the **OC MC11 40mm stem** with `50–72 mm` slotted C-clip tracks and `0°`/`90°` captive M4 cradle mounting. |
-| **`03b`** | [`03b_Handlebar_35mm_Hinged_Clamshell_Clamps_For_TPU.stl`](stl/03b_Handlebar_35mm_Hinged_Clamshell_Clamps_For_TPU.stl) | `135.1 × 61.0 × 15.0` | `ASA` / `PETG` / `Nylon` | **Primary Bar Clamps:** Swinging M4 pin-hinged clamshells (`Ø37.0 mm` bore for use with `03d` TPU sleeves). Zero flexing during install. |
-| **`03c`** | [`03c_Handlebar_35mm_HookHinge_Clamps_For_TPU.stl`](stl/03c_Handlebar_35mm_HookHinge_Clamps_For_TPU.stl) | `125.7 × 56.5 × 15.0` | `ASA` / `PETG` / `Nylon` | Single-bolt front hook-hinged clamshell bar clamps (`Ø37.0 mm` bore for `03d` TPU sleeves). |
-| **`03d`** | [`03d_Handlebar_35mm_TPU_Grip_Sleeves_Pair.stl`](stl/03d_Handlebar_35mm_TPU_Grip_Sleeves_Pair.stl) | `83.0 × 38.8 × 17.0` | `TPU 95A` | Flanged split TPU sleeves (`Ø35.0 mm` ID / `Ø37.0 mm` OD) to protect the **OC MC10 Carbon** bar. |
-| **`03e`** | [`03e_Integrated_Stem_Bridge_Cradle.stl`](stl/03e_Integrated_Stem_Bridge_Cradle.stl) | `146.3 × 82.0 × 58.7` | `PETG` / `ASA` | Optional 1-piece monolithic fusion of `03a` and `01`. |
-| **`03f`** | [`03f_Handlebar_35mm_Hinged_Clamshell_Direct_35mm.stl`](stl/03f_Handlebar_35mm_Hinged_Clamshell_Direct_35mm.stl) | `133.1 × 59.0 × 15.0` | `ASA` / `PETG` / `Nylon` | Swinging M4 pin-hinged clamshell clamps bored to exact `Ø35.0 mm` for bare-bar mounting without TPU sleeves. |
-| **`04a`** | [`04a_TPU_Vibration_Isolator_Puck_And_Grommets.stl`](stl/04a_TPU_Vibration_Isolator_Puck_And_Grommets.stl) | `49.0 × 38.5 × 7.5` | `TPU 95A` | `7.5 mm` thick cellular/bellows shear isolator pad + **6× flanged M4 bolt-head isolator grommets**. |
-| **`04b`** | [`04b_TPU_Gimbal_Lock_And_Sensor_Shield.stl`](stl/04b_TPU_Gimbal_Lock_And_Sensor_Shield.stl) | `31.0 × 25.6 × 12.5` | `TPU 95A` | Snap-in TPU gimbal stabilizer cushion (`Ø14.4 mm` non-contact lens dome) + downward optical/IR sensor mud shield. |
-| **`04c`** | [`04c_TPU_Heatsink_Mud_Louver.stl`](stl/04c_TPU_Heatsink_Mud_Louver.stl) | `23.0 × 25.6 × 4.6` | `TPU 90A / 95A` | Snap-in 33° louvered mud/pebble shield for the rear heatsink cutout. |
-| **`05`** | [`05_PETG_Reinforcement_Inserts_For_72D_TPU.stl`](stl/05_PETG_Reinforcement_Inserts_For_72D_TPU.stl) | `86.6 × 47.6 × 4.6` | `PETG` / `ASA` | **Rigid Fastener Insert Kit for 72D TPU:** (1) Unified 6-Nut Cradle Carrier Plate (`42.6 × 21.2 × 3.5 mm`, snaps into `01c`); (2) 2× M5 Bottle-Slot Load-Spreader Plates (`25.6 × 9.8 × 2.4 mm`, drop into `02a`); (3) 8× Press-In Flanged Hex-Collar M4 Bushings (`7.08 mm` AF hex + `Ø9.5 mm` flange, press into standard hex pockets of `01` or `02a`). |
+| **`01a`** | [`01a_DJI_Neo2_Universal_Cradle.stl`](stl/01a_DJI_Neo2_Universal_Cradle.stl) | `146.3 × 43.9 × 44.7` | `PETG` / `Easy-PA` | Flat `Z = 0` universal cradle with `15 × 15 mm` square + `30 mm` centerline captive M4 hex pockets. |
+| **`01b`** | [`01b_DJI_Neo2_Universal_Cradle_45Deg_EasyPA.stl`](stl/01b_DJI_Neo2_Universal_Cradle_45Deg_EasyPA.stl) | `124.4 × 48.0 × 121.6` | `Sunlu Easy-PA` | **45° Pre-Angled Nylon Cradle** w/ perforated snap-off A-frame stabilization foot (`zero slicer supports`). |
+| **`01c`** | [`01c_DJI_Neo2_72D_TPU_Cradle_For_PETG_Insert.stl`](stl/01c_DJI_Neo2_72D_TPU_Cradle_For_PETG_Insert.stl) | `146.3 × 43.9 × 44.7` | `Elegoo 72D TPU` | Flat `72D TPU` cradle with snap-in pocket for the unified 6-nut rigid PETG carrier plate (`05`). |
+| **`02a`** | [`02a_Orbea_Stealth_NumberPlate_Shield.stl`](stl/02a_Orbea_Stealth_NumberPlate_Shield.stl) | `152.5 × 114.0 × 27.5` | `Elegoo 72D TPU` / `ASA` | **Stealth Number-Plate Fairing:** Prints flat (`zero supports`) with `45°` stealth winglets, armored lower chin roost fender, and `3.5 mm` recessed `90A` isolator pocket. |
+| **`02b`** | [`02b_Orbea_Stealth_NumberPlate_Drop_Arms_Pair.stl`](stl/02b_Orbea_Stealth_NumberPlate_Drop_Arms_Pair.stl) | `72.7 × 83.2 × 13.0` | `Elegoo 72D TPU` / `Easy-PA` | **Swept Twin-Truss Drop Arms:** Bolts `02a` to `03b` clamps at a `64°` head-tube rake with `50 mm` forward SIC cable clearance. |
+| **`03a`** | [`03a_Orbea_Stealth_OverStem_Bridge.stl`](stl/03a_Orbea_Stealth_OverStem_Bridge.stl) | `69.5 × 83.0 × 16.5` | `Sunlu Easy-PA` / `ASA` | **Stealth OC Over-Stem Bridge:** Chiseled front roost-deflector prow, `46 mm` stem arch, `50–72 mm` slotted tracks, and `3.5 mm` recessed isolator pocket. |
+| **`03b`** | [`03b_Orbea_Stealth_35mm_Hinged_Clamshells_For_TPU.stl`](stl/03b_Orbea_Stealth_35mm_Hinged_Clamshells_For_TPU.stl) | `135.1 × 61.1 × 15.0` | `Sunlu Easy-PA` / `ASA` | **Shared Bar Clamps:** Faceted OC-styled swinging M4 pin-hinged clamshells (`Ø37.0 mm` bore for `03d` TPU sleeves). |
+| **`03c`** | [`03c_Orbea_Stealth_35mm_Hinged_Clamshells_Direct_35mm.stl`](stl/03c_Orbea_Stealth_35mm_Hinged_Clamshells_Direct_35mm.stl) | `133.1 × 59.1 × 15.0` | `Sunlu Easy-PA` / `ASA` | Bare-bar `Ø35.0 mm` bore version of the swinging clamshell clamps. |
+| **`03d`** | [`03d_Handlebar_35mm_TPU_Grip_Sleeves_Pair.stl`](stl/03d_Handlebar_35mm_TPU_Grip_Sleeves_Pair.stl) | `83.0 × 38.8 × 17.0` | `90A TPU` | Flanged split sleeves (`Ø35.0 mm` ID / `Ø37.0 mm` OD) for the **OC MC10 Carbon** bar. |
+| **`04a`** | [`04a_TPU_Vibration_Isolator_Puck_And_Grommets.stl`](stl/04a_TPU_Vibration_Isolator_Puck_And_Grommets.stl) | `49.0 × 38.5 × 7.5` | `90A TPU` | `7.5 mm` cellular/bellows shear isolator puck + 6× flanged M4 bolt-head isolator grommets. |
+| **`04b`** | [`04b_TPU_Belly_Sensor_Shield.stl`](stl/04b_TPU_Belly_Sensor_Shield.stl) | `24.4 × 26.0 × 4.7` | `90A TPU` | Snap-in seal with non-contact optical dome for the downward vision fisheye & IR ToF sensors. |
+| **`04c`** | [`04c_TPU_Heatsink_Mud_Louver.stl`](stl/04c_TPU_Heatsink_Mud_Louver.stl) | `23.6 × 26.0 × 4.7` | `90A TPU` | Snap-in 33° louvered mud/pebble shield for the front belly heatsink window. |
+| **`04d`** | [`04d_TPU_Nose_Vault_Gimbal_And_LiDAR_Guard.stl`](stl/04d_TPU_Nose_Vault_Gimbal_And_LiDAR_Guard.stl) | `28.0 × 34.8 × 19.0` | `90A TPU` | **Nose-Cup Gimbal & LiDAR Vault:** Soft gimbal-stabilizing cheeks, side mud skirts, and non-contact camera/LiDAR dome. |
+| **`04e`** | [`04e_TPU_Top_Fisheye_Lens_Visor_Strap.stl`](stl/04e_TPU_Top_Fisheye_Lens_Visor_Strap.stl) | `26.0 × 106.5 × 5.4` | `90A TPU` | **Top Fisheye Lens Visor & Retention Strap:** Hooks onto the `Ø10.5 mm` cradle side bosses with a `Ø16.4 mm` non-contact dome over the top-rear fisheye lens. |
+| **`05`** | [`05_PETG_Reinforcement_Inserts_For_72D_TPU.stl`](stl/05_PETG_Reinforcement_Inserts_For_72D_TPU.stl) | `86.5 × 33.9 × 4.6` | `PETG` / `ASA` | Unified 6-Nut Cradle Carrier Plate (`snaps into 01c`) + 8× Flanged Hex-Collar M4 Bolt Bushings. |
 
 ---
 
-## 🖨️ Bambu Lab P2S (`0.4mm HF TC`) Slicer Settings & Graded-Durometer Strategy
+## 🖨️ Bambu Lab P2S (`0.4mm HF TC`) Graded-Durometer Slicer Matrix
 
-> [!TIP]
-> **Multi-Durometer ("Graded Stiffness") Vibration Damping:** Combining **`Sunlu Easy-PA`**, **`Elegoo 72D Hard TPU`**, **`90A Soft TPU`**, and **`Rigid PETG Fastener Inserts`** creates a true 3-stage progressive suspension tuned specifically for the light `160 g` DJI Neo 2:
-> 1. **Stage 1 — Structural Clamping & Retention (`Sunlu Easy-PA` or `Elegoo 72D TPU`):** Use `Sunlu Easy-PA` on the `45°` Cradle (`01b`), Stem Bridge (`03a`), and Swinging Bar Clamps (`03b`)—or print a second cradle flat at `0°` (`01c`) in **`Elegoo 72D TPU`** (`7–8 walls, 50% Gyroid`) with the snap-in **Rigid PETG 6-Nut Carrier Plate (`05`)** for unbreakable, cold-weather-proof latch hooks.
-> 2. **Stage 2 — Mid-Frequency Frame & G-Out Damping (`Elegoo 72D TPU` on Sleek `02a` L-Tower):** Printing the `41.8 cm³` twin-spar open-truss L-Tower (`02a`) in **`Elegoo 72D TPU`** (`6 walls, 45–50% Gyroid`) with the drop-in **Rigid PETG M5 Slot Plates & Flanged Hex Bushings (`05`)** lets the twin A-frame struts act as an indestructible viscoelastic leaf spring on big hits (`5–30 Hz`).
-> 3. **Stage 3 — High-Frequency Micro-Chatter Isolation (`90A TPU` on `04a`, `04b`, `02b`, `03d`):** Using softer **`90A TPU`** (`2–3 walls, 15% Gyroid`) for the bellows isolator puck (`04a`), gimbal cushion (`04b`), prop-guard saddles (`02b`), and carbon bar sleeves (`03d`) lowers the isolator cutoff frequency to filter out `30–120 Hz` trail buzz before it reaches the 2-axis gimbal bearings.
-
-| Parameter | Structural Nylon (`Sunlu Easy-PA`) | Semi-Rigid Elastomer (`Elegoo 72D TPU`) | Fastener Inserts (`PETG` / `ASA`) | Soft Dampers & Armor (`90A / 95A TPU`) |
+| Parameter | Rigid Cockpit (`Sunlu Easy-PA` / `ASA`) | Semi-Rigid Damped Armor (`Elegoo 72D TPU`) | Fastener Inserts (`PETG`) | Soft Lens & Vibration Armor (`90A TPU`) |
 | :--- | :--- | :--- | :--- | :--- |
-| **Target Parts** | `01b` (45° Cradle), `03a` (Stem Bridge), `03b` (Clamshells) | `02a` (Sleek Twin-Spar L-Tower), `01c` (Flat 72D Cradle) | `05` (6-Nut Carrier, M5 Slot Plates, Hex Bushings) | `04a` (Isolator Puck), `04b` (Gimbal Lock), `04c` (Louver), `02b` (Saddles), `03d` (Bar Sleeves) |
-| **Nozzle** | `0.4 mm` HF TC (`260–265°C`, dry 8h @ `75°C`) | `0.4 mm` HF TC (`235–245°C`) | `0.4 mm` HF TC (`245–255°C`) | `0.4 mm` HF TC (`225–235°C`) |
+| **Recommended Parts** | `01b` (45° Cradle), `03a` (Over-Stem Bridge), `03b` (Clamshells) | `02a` (Number-Plate Shield), `02b` (Swept Truss Arms), `01c` (Flat 72D Cradle) | `05` (6-Nut Carrier + Flanged Hex Bushings) | `03d` (Bar Sleeves), `04a` (Isolator), `04b` (Belly Seal), `04c` (Louver), `04d` (Nose Vault), `04e` (Top Visor Strap) |
+| **Nozzle Temp** | `260–265°C` (`Easy-PA`, dry 8h @ `75°C`) | `235–245°C` | `245–255°C` | `225–235°C` |
 | **Layer Height** | `0.20 mm` | `0.20 mm` | `0.20 mm` | `0.20 mm` |
-| **Wall Loops** | **`6 walls`** | **`6 to 8 walls`** | **`6 walls` (Solid)** | **`2 walls` (`04a`/`04b`) to `3 walls` (`03d`)** |
-| **Top / Bottom Shells** | `5 Top / 5 Bottom` (`1.0 mm`) | `5 Top / 5 Bottom` (`1.0 mm`) | `6 Top / 6 Bottom` | `4 Top / 4 Bottom` (`0.8 mm`) |
-| **Infill Pattern & Density** | **`35% Gyroid`** | **`45%–55% Gyroid`** | **`100% Rectilinear`** | **`15%–20% Gyroid`** |
-| **Supports** | **None** on `01b` & `03b`; **Build-plate only** on `03a` arch | **None** (Sleek `02a` & `01c` have 100% flat `Z = 0` bases!) | **None** | **None** |
+| **Wall Loops** | **`6 walls`** | **`6 to 7 walls`** | **`6 walls` (Solid)** | **`2 walls` (`04a`/`04d`) to `3 walls` (`03d`/`04e`)** |
+| **Infill** | **`35% Gyroid`** | **`45%–50% Gyroid`** | **`100% Rectilinear`** | **`15%–20% Gyroid`** |
+| **Supports** | **None** on `01b` & `03b`; **Build-plate only** on `03a` arch | **None** (`02a`, `02b`, and `01c` print 100% support-free!) | **None** | **None** |
 
 ---
 
 ## 🔩 Hardware Bill of Materials & Assembly Guide
 
-### Mount 1: Side-Mount Downtube L-Tower (`02a` + `01` + `02b` + `04a/b/c`)
-- **Hardware Needed:**
-  - `4× M4 × 20 mm` socket-head or button-head bolts (use `M4 × 14 mm` if omitting the `7.5 mm` `04a` TPU isolator puck)
-  - `4× M4 DIN 934 hex nuts`
-  - `2× Standard M5 × 14–16 mm` bottle cage bolts + M5 washers *(or `2× Ø10 × 3 mm` neodymium magnets for Fidlock TWIST Bike Base attachment)*
-- **Assembly Steps:**
-  1. Snap the **TPU Gimbal Lock & Sensor Shield (`04b`)** into the front camera/sensor window of the **Universal Cradle (`01`)**, and snap the **TPU Heatsink Louver (`04c`)** into the rear window.
-  2. Snap the two **TPU U-Groove Saddle Cushions (`02b`)** into the lower prop-guard rests on the base of the **Side-Mount L-Tower (`02a`)**.
-  3. Press 4× **M4 hex nuts** into the pointed-top hex pockets on the back of the vertical L-Tower (or into the top hex pockets inside the cradle floor), place the **TPU Vibration Isolator Puck (`04a`)** between the Cradle and the L-Tower wall, insert the **flanged TPU grommets (`04a`)** under the M4 bolt heads, and tighten the 4× `M4 × 20 mm` bolts. *(Orient the cradle with the closed cup or nose pointing up toward the head tube for best tire-spray protection).*
-  4. Bolt the L-Tower base to your Orbea Wild LT downtube `64 mm` bosses using 2× M5 bolts through the open top slots—or twist-lock it directly onto your **Fidlock TWIST Bike Base**.
-
-### Mount 2: Over-Stem Handlebar Clamshell Mount (`03a` + `03b` + `03d` + `01` + `04a/b/c`)
-- **Hardware Needed:**
-  - `2× M4 × 18–20 mm` bolts + `2× M4 hex nuts` *(front clamshell hinge pins)*
-  - `2× M4 × 20 mm` bolts + `2× M4 hex nuts` *(rear clamshell pinch bolts)*
-  - `4× M4 × 14 mm` bolts + `4× M4 hex nuts` *(Over-Stem Bridge Plate to C-clip saddles)*
-  - `4× M4 × 20 mm` bolts + `4× M4 hex nuts` *(Cradle + `04a` TPU isolator to Over-Stem Bridge Plate)*
-- **Assembly Steps:**
-  1. Assemble each **Swinging Clamshell Clamp (`03b`)** by placing the lower jaw's center hinge tongue between the upper saddle's two front knuckles, pressing an M4 hex nut into the outer knuckle recess, and threading an `M4 × 18–20 mm` bolt through as the permanent hinge pin.
-  2. Wrap the two **Flanged TPU Grip Sleeves (`03d`)** around the **Ø35.0 mm OC MC10 Carbon Handlebar** immediately to the left and right of the **OC MC11 stem faceplate**.
-  3. Swing the two clamshell clamps open around the TPU sleeves, close them, and thread the rear `M4 × 20 mm` pinch bolts into the rear captive M4 hex nuts (`snug only to ~1.5–2.0 Nm`).
-  4. Slide 4× M4 hex nuts into the horizontal side-entry slots at the top of the two handlebar clamps, place the **Over-Stem Bridge Plate (`03a`)** across the stem, slide the clamps flush against the left and right sides of the stem faceplate, and tighten the 4× `M4 × 14 mm` bridge bolts.
-  5. Bolt the **Universal Cradle (`01`)** + **TPU Vibration Isolator (`04a`)** on top of the bridge plate in either `0°` (fore-aft) or `90°` (transverse) orientation.
-
----
-
-## 💻 Rebuilding from Source
-
-All 3D models and multi-angle orthographic/isometric renders are generated deterministically from pure C# Signed Distance Field (SDF) equations using Dual-Projected Surface Nets (zero external CAD dependencies required—runs natively in Windows PowerShell / .NET):
-
-```powershell
-$srcDir = ".\src"
-$files = @(
-    "$srcDir\MountGeneratorCore.cs",
-    "$srcDir\PartDesigns.cs",
-    "$srcDir\ExporterAndRenderer.cs",
-    "$srcDir\HeroBannerGenerator.cs"
-)
-Add-Type -Path $files -ReferencedAssemblies System.Xml, System.IO.Compression, System.IO.Compression.FileSystem, System.Drawing
-[DjiNeo2OrbeaMounts.Program]::Main(@())
-[DjiNeo2OrbeaMounts.HeroBannerGenerator]::Generate()
-```
+- **Shared Ø35.0 mm Handlebar Clamshell Base (`03b` + `03d`):**
+  - `2× M4 × 18–20 mm` bolts + `2× M4 DIN 934 hex nuts` *(front 3-knuckle hinge pins)*
+  - `2× M4 × 20 mm` bolts + `2× M4 hex nuts` *(rear pinch bolts, torque gently to `~1.5 Nm` over `90A TPU` sleeves)*
+- **Mount 1 — Out-Front Stealth Number-Plate (`02a` + `02b`):**
+  - `4× M4 × 14 mm` bolts + `4× M4 hex nuts` *(top of `02b` drop arms into side-slot nuts of `03b` clamps)*
+  - `4× M4 × 16 mm` bolts + `4× M4 hex nuts` *(front of `02b` drop arms into slotted front nut tracks of `02a` shield)*
+  - `4× M4 × 20 mm` bolts + `4× M4 hex nuts` *(Cradle + `04a` TPU isolator puck + flanged grommets onto `02a` shield, oriented **Nose-Down** inside the lower chin roost fender)*
+- **Mount 2 — Stealth OC Over-Stem Bridge (`03a`):**
+  - `4× M4 × 14 mm` bolts + `4× M4 hex nuts` *(`03a` wings into `03b` clamp saddles)*
+  - `4× M4 × 20 mm` bolts + `4× M4 hex nuts` *(Cradle + `04a` TPU isolator puck onto `03a` bridge, oriented **Nose-Forward** over the front roost prow)*

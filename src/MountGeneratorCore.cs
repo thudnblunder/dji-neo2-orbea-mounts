@@ -149,6 +149,28 @@ namespace DjiNeo2OrbeaMounts
             return outDist + inDist - r;
         }
 
+        // Orbea Wild LT Stealth Design Language: Crisp 45-deg octagonal chamfered 2D profile
+        public static double ChamferBox2D(double x, double y, double hx, double hy, double chamfer)
+        {
+            double ax = Math.Abs(x);
+            double ay = Math.Abs(y);
+            double dRect = Math.Max(ax - hx, ay - hy);
+            if (chamfer <= 0.0) return dRect;
+            double dChamfer = (ax + ay - (hx + hy - chamfer)) * 0.70710678118;
+            return Math.Max(dRect, dChamfer);
+        }
+
+        // 3D Chamfered Stealth Block (octagonal XY + crisp 45-deg top/bottom Z bevels!)
+        public static double StealthBlock3D(double x, double y, double z, double hx, double hy, double hz, double chamferXY, double bevelZ = 0.0)
+        {
+            double dxy = ChamferBox2D(x, y, hx, hy, chamferXY);
+            double dz = Math.Abs(z) - hz;
+            double dBox = Math.Max(dxy, dz);
+            if (bevelZ <= 0.0) return dBox;
+            double dBevel = (dxy + dz + bevelZ) * 0.70710678118;
+            return Math.Max(dBox, dBevel);
+        }
+
         public static double RoundedBox3D(double x, double y, double z, double hx, double hy, double hz, double rXY = 0.0)
         {
             double dxy = Box2D(x, y, hx, hy, rXY);
