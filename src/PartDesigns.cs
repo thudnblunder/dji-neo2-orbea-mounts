@@ -730,5 +730,95 @@ namespace DjiNeo2OrbeaMounts
                 new Vec3(13.0, 14.0, 5.2),
                 step);
         }
+
+        // 01b. Rotate Universal Cradle to its native 47.08-deg self-supporting angle (cos=0.680983722, sin=0.732298553)
+        // where the built-in 19.6 x 31.0mm flat pad on the closed cup sits dead-flat at Z = 0.00mm!
+        public static MeshData RotateCradleTo45DegPrintOrientation(MeshData flatCradle, string newName)
+        {
+            double c = 0.680983722;
+            double s = 0.732298553;
+            var rotated = new MeshData(newName);
+            double minZ = 1e9;
+            var tempVerts = new List<Vec3>(flatCradle.Vertices.Count);
+            foreach (var v in flatCradle.Vertices)
+            {
+                double zOrig = v.Z - 22.37105;
+                double xr = c * v.X - s * zOrig;
+                double yr = v.Y;
+                double zr = s * v.X + c * zOrig;
+                if (zr < minZ) minZ = zr;
+                tempVerts.Add(new Vec3(xr, yr, zr));
+            }
+            foreach (var v in tempVerts)
+            {
+                rotated.Vertices.Add(new Vec3(v.X, v.Y, v.Z - minZ));
+            }
+            rotated.Triangles.AddRange(flatCradle.Triangles);
+            return rotated;
+        }
+
+        // Build the Snap-Off A-Frame Bed-Anchor Stabilization Foot for 45/47-deg Sunlu Easy-PA Printing
+        // Connects to the rising outer spine rails (Y = +-15.5mm) via 0.48mm perforated snap-off score tabs!
+        public static MeshData BuildCradle45DegSnapOffAnchorFin(double step = 0.38)
+        {
+            // In rotated coordinates (with minZ shifted to 0):
+            // The flat back spine plane is z_spine(x) = 1.075354 * (x + 23.410) for x >= -23.41
+            Func<double, double, double, double> sdf = (x, y, z) =>
+            {
+                double ay = Math.Abs(y);
+                double zSpine = 1.075354 * (x + 23.410);
+
+                // 1) Wide Bed Anchor Base Pad at Z in [0.0, 1.4], X in [-19.5, +28.0], Y in [-24.0, +24.0]
+                // Leaves X < -19.5 completely clear of the cradle's own flat heel pad at X in [-43.0, -23.4]!
+                double basePad = SdfMesher.RoundedBox3D(x - 4.25, y, z - 0.7, 23.75, 24.0, 0.7, 4.0);
+                // Cut central weight-saving window out of base pad (Y in [-11.5, +11.5], X in [-12.0, +18.0])
+                double baseCut = SdfMesher.Box2D(x - 3.0, y, 14.0, 11.5, 2.5);
+                basePad = Math.Max(basePad, -baseCut);
+
+                // 2) Twin A-Frame Triangular Support Fins under the solid side rails (ay in [14.2, 16.8] -> 2.6mm thick walls, tapering to 0.50mm score tabs at zSpine!)
+                double distToSpine = zSpine - z;
+                // Above zSpine + 0.05 (inside the cradle spine), do not exist!
+                // Within 1.8mm of zSpine, thin the wall from 1.3mm half-thickness down to 0.32mm half-thickness (0.64mm breakaway tab!)
+                double halfThickY = distToSpine < 2.2 ? Math.Max(0.32, 0.32 + (distToSpine / 2.2) * 0.98) : 1.30;
+                double dFinY = Math.Abs(ay - 15.5) - halfThickY;
+                double dFinX = Math.Max(-18.5 - x, x - 25.0);
+                // Slanted back edge of fin from (x = -18.5, z = 0) to (x = +25.0, z = zSpine(25))
+                // And keep distToSpine >= -0.05 so it just kisses the flat spine at Z = zSpine!
+                double dFinZ = Math.Max(0.0 - z, -0.05 - distToSpine);
+                double fins = Math.Max(Math.Max(dFinY, dFinX), dFinZ);
+
+                // 3) Diagonal Cross-Brace Strut connecting Left and Right fins at X in [+14.0, +24.0], Z in [0.0, 22.0] for lateral torsional rigidity!
+                double dCrossX = Math.Abs(x - 19.0) - 2.0;
+                double dCrossY = ay - 16.0;
+                double dCrossZ = Math.Max(0.0 - z, z - 20.0);
+                double crossBrace = Math.Max(Math.Max(dCrossX, dCrossY), dCrossZ);
+
+                double body = Math.Min(Math.Min(basePad, fins), crossBrace);
+
+                // 4) Perforation windows along the snap-off seam (every 8.5mm along X, right below zSpine: distToSpine in [0.0, 2.4])
+                // Creates 4 discrete 4mm-long breakaway tabs per side so the anchor snaps off effortlessly by hand!
+                double cut = 1e9;
+                for (int i = -1; i <= 2; i++)
+                {
+                    double cx = -7.0 + i * 9.5;
+                    double dPerfX = Math.Abs(x - cx) - 2.4;
+                    double dPerfSpine = Math.Abs(distToSpine - 1.1) - 1.3;
+                    cut = Math.Min(cut, Math.Max(dPerfX, dPerfSpine));
+                }
+
+                // Also add triangular lightening hole in the middle of each side fin
+                double dTriHole = Math.Max(Math.Abs(x - 9.0) - 6.5, Math.Max(5.0 - z, (zSpine - 6.0) - z));
+                cut = Math.Min(cut, dTriHole);
+
+                return Math.Max(body, -cut);
+            };
+
+            return SdfMesher.ExtractMesh(
+                "SnapOff_45Deg_Anchor_Fin",
+                sdf,
+                new Vec3(-21.0, -25.5, -0.5),
+                new Vec3(29.5, 25.5, 56.0),
+                step);
+        }
     }
 }

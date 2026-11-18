@@ -40,6 +40,7 @@ All parts are pre-oriented on `256 × 256 mm` build plates for the **Bambu Lab P
 | **Plate 1 — Structural Mounts** | `ASA` / `Easy Nylon` / `PETG` | Universal Cradle (`01`) + Side-Mount Downtube L-Tower (`02a`) + Over-Stem Bridge Plate (`03a`) + Swinging Pin-Hinged 35mm Handlebar Clamshells (`03b`) | [**Download Plate 1 (.3mf)**](3mf/Plate1_Structural_Mounts_ASA_PETG_Nylon.3mf) |
 | **Plate 2 — TPU Protection & Isolator Suite** | `TPU 95A` | Ø35mm Carbon Bar Grip Sleeves (`03d`) + Prop-Guard Saddle Cushions (`02b`) + Shear Vibration Isolator Puck & 6× M4 Grommets (`04a`) + Gimbal Lock & Sensor Shield (`04b`) + Heatsink Mud Louver (`04c`) | [**Download Plate 2 (.3mf)**](3mf/Plate2_Flexible_Dampers_TPU.3mf) |
 | **Plate 3 — Monolithic 1-Piece Variants** | `ASA` / `Easy Nylon` / `PETG` | Optional 1-Piece Fused Side-Mount Downtube+Cradle (`02c`) + 1-Piece Fused StemBridge+Cradle (`03e`) | [**Download Plate 3 (.3mf)**](3mf/Plate3_Integrated_OnePiece_Variants.3mf) |
+| **Plate 4 — 45° Sunlu Easy-PA Cradle w/ Snap-Off Anchor Fin** | `Sunlu Easy-PA` (Nylon) | Pre-angled `47.1°` Universal Cradle (`01b`) with integrated perforated snap-off A-frame stabilization foot for maximum hook & cup fiber strength with zero slicer supports | [**Download Plate 4 (.3mf)**](3mf/Plate4_Cradle_45Deg_Sunlu_EasyPA.3mf) |
 
 ---
 
@@ -133,11 +134,17 @@ All parts are pre-oriented on `256 × 256 mm` build plates for the **Bambu Lab P
     </td>
   </tr>
   <tr>
-    <td colspan="2" align="center">
-      <img src="renders/04_TPU_Sleeves_And_Pads_Preview.png" alt="03d - TPU Carbon Handlebar Grip Sleeves" width="65%"/>
+    <td width="50%" align="center">
+      <img src="renders/04_TPU_Sleeves_And_Pads_Preview.png" alt="03d - TPU Carbon Handlebar Grip Sleeves" width="100%"/>
       <br/>
       <b><code>03d</code> — Flanged TPU Grip Sleeves for OC MC10 Ø35.0 mm Carbon Handlebar</b><br/>
       <sub><code>35.0 mm</code> ID / <code>37.0 mm</code> OD split sleeves with <code>1.0 mm</code> side retaining lips that protect the carbon finish and prevent rotational slip at low bolt torque.</sub>
+    </td>
+    <td width="50%" align="center">
+      <img src="renders/09_Cradle_45Deg_EasyPA_Preview.png" alt="01b - 45-Deg Sunlu Easy-PA Cradle w/ Snap-Off Anchor Fin" width="100%"/>
+      <br/>
+      <b><code>01b</code> — 45° Sunlu Easy-PA Cradle w/ Snap-Off A-Frame Anchor Fin</b><br/>
+      <sub>Rotated to its native <code>47.1°</code> self-supporting angle so continuous Nylon fibers run through the latch hooks and nose cup. Perforated <code>0.64 mm</code> tabs snap off cleanly after printing.</sub>
     </td>
   </tr>
 </table>
@@ -172,6 +179,7 @@ flowchart TD
 | Part ID | STL File | Dimensions (mm) | Recommended Material | Description |
 | :---: | :--- | :---: | :---: | :--- |
 | **`01`** | [`01_DJI_Neo2_Universal_Cradle.stl`](stl/01_DJI_Neo2_Universal_Cradle.stl) | `146.3 × 43.9 × 44.7` | `PETG` / `Easy Nylon` | Universal DJI Neo 2 + Transceiver cradle with flat `Z = 0` bottom and `15 × 15 mm` square + `30 mm` centerline captive M4 hex nut pockets. |
+| **`01b`** | [`01b_DJI_Neo2_Universal_Cradle_45Deg_With_AnchorFin.stl`](stl/01b_DJI_Neo2_Universal_Cradle_45Deg_With_AnchorFin.stl) | `124.4 × 48.0 × 121.6` | `Sunlu Easy-PA` | **45° Pre-Angled Nylon Cradle:** Tilted at `47.1°` on the closed-cup heel pad with a wide-base perforated snap-off A-frame stabilization fin (`zero slicer supports needed`; maximizes hook & cup flexural strength). |
 | **`02a`** | [`02a_Orbea_Wild_Downtube_SideMount_LTower.stl`](stl/02a_Orbea_Wild_Downtube_SideMount_LTower.stl) | `112.0 × 47.4 × 120.0` | `ASA` / `Easy Nylon` | **Primary Downtube Mount:** 90° Side-Mount L-Tower (`47.4 mm` base width) with `64 mm` M5 slots, Fidlock TWIST receiver, and lower prop-guard saddles. |
 | **`02b`** | [`02b_Downtube_TPU_Damping_Pads.stl`](stl/02b_Downtube_TPU_Damping_Pads.stl) | `38.8 × 16.0 × 9.5` | `TPU 95A` | Pair of U-grooved TPU cushions that snap into the lower prop-guard saddles on `02a`. |
 | **`02c`** | [`02c_Integrated_Downtube_SideMount_Cradle.stl`](stl/02c_Integrated_Downtube_SideMount_Cradle.stl) | `146.3 × 55.4 × 122.0` | `PETG` / `ASA` | Optional 1-piece monolithic fusion of `02a` and sideways `01`. |

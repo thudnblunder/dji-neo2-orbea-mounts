@@ -495,6 +495,23 @@ namespace DjiNeo2OrbeaMounts
             var tpuLouver = PartDesigns.BuildTpuHeatsinkLouver(0.24);
             SaveAndReport(tpuLouver, Path.Combine(stlDir, "04c_TPU_Heatsink_Mud_Louver.stl"));
 
+            Console.WriteLine("13b. Building 45-Deg Pre-Angled Sunlu Easy-PA Cradle w/ Snap-Off A-Frame Bed Anchor Fin...");
+            var cradle45Only = PartDesigns.RotateCradleTo45DegPrintOrientation(universalCradle, "Cradle_45Deg");
+            var anchorFin45 = PartDesigns.BuildCradle45DegSnapOffAnchorFin(0.36);
+            var cradle45WithFin = cradle45Only.Clone("01b_DJI_Neo2_Universal_Cradle_45Deg_With_AnchorFin");
+            cradle45WithFin.Append(anchorFin45);
+            SaveAndReport(cradle45WithFin, Path.Combine(stlDir, "01b_DJI_Neo2_Universal_Cradle_45Deg_With_AnchorFin.stl"));
+
+            MeshRenderer.RenderMultiColorSheet(
+                Path.Combine(rendersDir, "09_Cradle_45Deg_EasyPA_Preview.png"),
+                "01b - 45-Deg Sunlu Easy-PA Cradle w/ Snap-Off A-Frame Bed Anchor Fin",
+                "Blue: 47.1 deg Self-Supporting Cradle (Max Hook & Cup Fiber Strength) | Gold: Perforated Snap-Off Stabilization Foot",
+                new List<ColoredMeshPart>
+                {
+                    new ColoredMeshPart(cradle45Only, Color.FromArgb(45, 125, 230)),
+                    new ColoredMeshPart(anchorFin45, Color.FromArgb(245, 165, 35))
+                });
+
             // Render sheet 07: All 3 TPU Gimbal/Sensor/Vibration Protection Parts laid out together
             var shieldForSheet = tpuGimbalShield.Clone("Shield");
             shieldForSheet.Translate(48.0, 5.0, 0.0);
@@ -582,6 +599,14 @@ namespace DjiNeo2OrbeaMounts
                 {
                     new PlateItem(integratedDowntube, 0.0, -48.0, 0.0),
                     new PlateItem(integratedStem, 0.0, 52.0, 0.0)
+                });
+
+            ThreeMfWriter.Save3mf(
+                Path.Combine(threeMfDir, "Plate4_Cradle_45Deg_Sunlu_EasyPA.3mf"),
+                "DJI Neo 2 - 45-Deg Sunlu Easy-PA Cradle w/ Snap-Off A-Frame Anchor Fin",
+                new List<PlateItem>
+                {
+                    new PlateItem(cradle45WithFin, 0.0, 0.0, 0.0)
                 });
 
             Console.WriteLine("ALL UPDATED STL, 3MF, AND RENDER FILES GENERATED SUCCESSFULLY.");
