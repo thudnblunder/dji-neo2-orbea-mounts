@@ -20,16 +20,16 @@ namespace DjiNeo2OrbeaMounts
             var universalCradle = cradleShell.Clone("Cradle");
             universalCradle.Append(cradleInsert);
 
-            var downtubeSideTower = PartDesigns.BuildDowntubeSideMountLTower(0.48);
+            var downtubeSideTower = PartDesigns.BuildDowntubeSleekSideMountLTower(0.44);
             var sidewaysIsolator = new MeshData("SidewaysIsolator");
             var rawIsolator = PartDesigns.BuildTpuVibrationIsolatorSystem(0.35, false);
             foreach (var v in rawIsolator.Vertices)
-                sidewaysIsolator.Vertices.Add(new Vec3(v.X, v.Z - 28.00, -v.Y + 100.00));
+                sidewaysIsolator.Vertices.Add(new Vec3(v.X, v.Z - 28.00, -v.Y + 93.00));
             sidewaysIsolator.Triangles.AddRange(rawIsolator.Triangles);
 
             var sidewaysCradle = new MeshData("SidewaysCradle");
             foreach (var v in universalCradle.Vertices)
-                sidewaysCradle.Vertices.Add(new Vec3(v.X - 9.50, v.Z - 20.50, -v.Y + 100.00));
+                sidewaysCradle.Vertices.Add(new Vec3(v.X - 9.50, v.Z - 20.50, -v.Y + 93.00));
             sidewaysCradle.Triangles.AddRange(universalCradle.Triangles);
 
             var stemBridge = PartDesigns.BuildStemBridgePlate(0.42);

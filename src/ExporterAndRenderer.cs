@@ -360,27 +360,27 @@ namespace DjiNeo2OrbeaMounts
             return m;
         }
 
-        // Rotate Universal Cradle 90 deg onto its side to mount onto the Angled-Outward Vertical L-Tower wall
+        // Rotate Universal Cradle 90 deg onto its side to mount onto the Sleek Angled-Outward Vertical L-Tower wall (Z_center = 93.00mm)
         // With the 7.5mm TPU Isolator Puck nested 3.5mm into the Y = -28.0mm pocket, the cradle back sits at Y = -20.50mm!
-        // Mapping: (X, Y, Z) -> (X - 9.50, Z + yMountFace, -Y + 100.00) has determinant +1 (preserves outward normals!)
-        private static MeshData RotateCradleSidewaysOnTower(MeshData src, string newName, double yMountFace = -20.50)
+        // Mapping: (X, Y, Z) -> (X - 9.50, Z + yMountFace, -Y + zCenter) has determinant +1 (preserves outward normals!)
+        private static MeshData RotateCradleSidewaysOnTower(MeshData src, string newName, double yMountFace = -20.50, double zCenter = 93.00)
         {
             var m = new MeshData(newName);
             foreach (var v in src.Vertices)
             {
-                m.Vertices.Add(new Vec3(v.X - 9.50, v.Z + yMountFace, -v.Y + 100.00));
+                m.Vertices.Add(new Vec3(v.X - 9.50, v.Z + yMountFace, -v.Y + zCenter));
             }
             m.Triangles.AddRange(src.Triangles);
             return m;
         }
 
-        // Rotate TPU Isolator Pad (Z in [0, 7.5]) to sit on the L-Tower recessed pocket face (Y = -28.00 to -20.50, Z = 100.00)
-        private static MeshData RotateIsolatorSidewaysOnTower(MeshData src, string newName)
+        // Rotate TPU Isolator Pad (Z in [0, 7.5]) to sit on the L-Tower recessed pocket face (Y = -28.00 to -20.50, Z = 93.00)
+        private static MeshData RotateIsolatorSidewaysOnTower(MeshData src, string newName, double zCenter = 93.00)
         {
             var m = new MeshData(newName);
             foreach (var v in src.Vertices)
             {
-                m.Vertices.Add(new Vec3(v.X, v.Z - 28.00, -v.Y + 100.00));
+                m.Vertices.Add(new Vec3(v.X, v.Z - 28.00, -v.Y + zCenter));
             }
             m.Triangles.AddRange(src.Triangles);
             return m;
@@ -412,16 +412,20 @@ namespace DjiNeo2OrbeaMounts
                 universalCradle,
                 Color.FromArgb(45, 125, 230));
 
-            Console.WriteLine("2. Building Side-Mount (Edgewise / Knee-Clearance) Downtube Bottle Cage + Fidlock L-Tower...");
-            var downtubeSideTower = PartDesigns.BuildDowntubeSideMountLTower(0.42);
+            Console.WriteLine("2. Building Sleek Direct-Mount (Twin-Spar A-Frame / Open-Truss) Downtube L-Tower...");
+            var downtubeSideTower = PartDesigns.BuildDowntubeSleekSideMountLTower(0.40);
             SaveAndReport(downtubeSideTower, Path.Combine(stlDir, "02a_Orbea_Wild_Downtube_SideMount_LTower.stl"));
 
             MeshRenderer.RenderMultiViewSheet(
                 Path.Combine(rendersDir, "02_Downtube_Fidlock_Mount_Preview.png"),
-                "02a - Orbea Wild LT Side-Mount Downtube L-Tower (Bottle Boss + Fidlock TWIST)",
-                "Holds Drone Edgewise Between Top Tube & Downtube (46mm Base Width) | Lower Prop-Guard Saddles | Fidlock Receiver",
+                "02a - Sleek Twin-Spar Open-Truss Downtube L-Tower (Direct 64mm M5 Mount)",
+                "55% Lighter Skeletal A-Frame | Flat Z=0 Base (Zero Supports) | Parabolic Truss Gussets | Centered Stadium Isolator Head",
                 downtubeSideTower,
                 Color.FromArgb(235, 110, 40));
+
+            Console.WriteLine("2f. Saving Archived Fidlock-Compatible Side-Mount Downtube L-Tower as 02f...");
+            var downtubeFidlockTower = PartDesigns.BuildDowntubeFidlockSideMountLTower(0.45);
+            SaveAndReport(downtubeFidlockTower, Path.Combine(stlDir, "02f_Orbea_Wild_Downtube_Fidlock_SideMount_LTower.stl"));
 
             Console.WriteLine("3. Building Downtube Side-Mount TPU Prop-Guard Saddle Cushions (Pair)...");
             var downtubeTpuPads = PartDesigns.BuildDowntubeTpuSaddlePads(0.25);

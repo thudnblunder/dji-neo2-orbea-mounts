@@ -100,10 +100,124 @@ namespace DjiNeo2OrbeaMounts
                 step);
         }
 
-        // 2a. UPDATED: Angled-Outward Centering Side-Mount Downtube Bottle Cage + Fidlock TWIST L-Tower
-        // Angles outward away from Y=0 (out to Y in [-34.5, -24.5]) with a 3.5mm recessed seat (at Y = -28.0) for the 7.5mm TPU Isolator Puck
-        // so that [Angled L-Tower + 7.5mm TPU Puck + Cradle + DJI Neo 2 + Transceiver] is 100% CENTERED (Y in [-34.5, +34.0mm]) in the frame cavity!
-        public static MeshData BuildDowntubeSideMountLTower(double step = 0.45)
+        // 2a. NEW SLEEK DIRECT-MOUNT L-TOWER: Sculpted Twin-Spar A-Frame & Open-Truss Parabolic Gusset Design (No Fidlock Bulk!)
+        // - 100% flat Z=0.00mm bottom face (zero underside supports!)
+        // - Slim 6.8mm base plate with scalloped hourglass waist & open center window
+        // - Lowers drone by 7.0mm (Z_center = 93.0mm instead of 100.0mm) for extra top-tube clearance and higher stiffness
+        // - Twin-spar swept legs with large central cathedral arch cutout + hollow open-truss parabolic gussets
+        // - Contoured 53 x 31mm stadium upper head that tightly hugs the 48 x 26mm TPU Vibration Isolator Puck at Y = -28.0mm
+        //   so [Sleek Tower + 7.5mm TPU Puck + Cradle + Drone] is 100% CENTERED at Y = 0.0mm!
+        public static MeshData BuildDowntubeSleekSideMountLTower(double step = 0.42)
+        {
+            Func<double, double, double, double> sdf = (x, y, z) =>
+            {
+                double ax = Math.Abs(x);
+                double ay = Math.Abs(y);
+
+                // 1) Sleek Scalloped Base Plate (Z in [0.0, 6.8mm]):
+                // Central 64mm M5 mounting spine: X in [-46.5, +46.5], width Y tapers smoothly to a narrow waist at X=0
+                double spineHalfY = 10.5 - 2.2 * Math.Exp(-(x * x) / (18.0 * 18.0));
+                double dSpine2D = SdfMesher.Box2D(x, y, 46.5, spineHalfY, 8.0);
+                double baseSpine3D = Math.Max(dSpine2D, Math.Max(0.0 - z, z - 6.8));
+
+                // 2) Streamlined Outrigger Pods for Lower Prop-Guard Saddles at ax = 38.0, Y = +6.8, Z in [0.0, 14.2]
+                // Blended smoothly into the central spine at ax in [28..46]
+                double dPod2D = SdfMesher.Box2D(ax - 38.0, y - 4.0, 8.8, 12.2, 5.5);
+                double pod3D = Math.Max(dPod2D, Math.Max(0.0 - z, z - 14.2));
+
+                // 3) Twin-Spar Swept A-Frame Struts connecting Base (Z = 0..6.8, Y_center = -13.5) to Stadium Head (Z = 75..93, Y_center = -29.25)
+                double tAngle = Math.Max(0.0, Math.Min(1.0, (z - 6.8) / 68.0));
+                double tSmooth = tAngle * tAngle * (3.0 - 2.0 * tAngle);
+                double towerCenterY = -13.5 - 15.75 * tSmooth; // sweeps from Y = -13.5 at base out to Y = -29.25 at Z >= 74.8!
+
+                // Each of the two twin-spar legs is centered at ax_leg(z): from ax = 20.0 at base to ax = 18.0 at head, width hx = 5.2mm, hy = 4.6mm
+                double legCenterX = 20.5 - 2.0 * tSmooth;
+                double dLeg2D = SdfMesher.Box2D(ax - legCenterX, y - towerCenterY, 5.4, 4.6, 2.2);
+                double legs3D = Math.Max(dLeg2D, Math.Max(0.0 - z, z - 86.0));
+
+                // Base lateral tie bar connecting the bottom roots of the two twin-spar legs to the central M5 spine at ax in [14..26], Y in [-18..0], Z in [0..6.8]
+                double dRootTie2D = SdfMesher.Box2D(ax - 20.5, y + 6.5, 6.5, 11.5, 3.0);
+                double rootTie3D = Math.Max(dRootTie2D, Math.Max(0.0 - z, z - 6.8));
+
+                // 4) Contoured Stadium Upper Head (centered at X = 0, Z = 93.0, Y = -29.25 -> Y in [-34.0, -24.5], 9.5mm thick)
+                // Hugs the 48 x 26mm TPU Vibration Isolator Puck with a sleek 53.0 x 31.0mm rounded stadium capsule (hx = 26.5, hz = 15.5, r = 8.0)!
+                double dHeadXZ = SdfMesher.Box2D(x, z - 93.0, 26.5, 15.5, 8.0);
+                double dHeadY = Math.Abs(y - (-29.25)) - 4.75;
+                double head3D = Math.Max(dHeadXZ, dHeadY);
+
+                // 5) Parabolic Open-Truss Gusset Ribs at ax = 20.5 (thickness 5.2mm in X: hx = 2.6mm)
+                // Braces from (Y = +6.5, Z = 6.8) up to (Y = -25.0, Z = 78.0) with a concave parabolic front profile!
+                double dGussetX = Math.Abs(ax - legCenterX) - 2.6;
+                double uG = Math.Max(0.0, Math.Min(1.0, (z - 6.8) / 71.2));
+                // Parabolic front chord of gusset: curves inward gracefully!
+                double yFrontChord = 6.5 * (1.0 - uG) + (-25.0) * uG - 6.5 * uG * (1.0 - uG);
+                double dGussetFront = y - yFrontChord;
+                double dGussetBack = (towerCenterY - 3.0) - y;
+                double gussetSolid3D = Math.Max(Math.Max(dGussetX, Math.Max(dGussetFront, dGussetBack)), Math.Max(0.0 - z, z - 78.0));
+
+                // Carve an open triangular truss window out of the interior of each gusset (leaving sturdy 4.8mm outer tension/compression chords!)
+                double dTrussFront = (yFrontChord - 4.8) - y;
+                double dTrussBack = y - (towerCenterY + 4.2);
+                double dTrussBot = 12.5 - z;
+                double dTrussTop = z - 58.0;
+                double gussetWindow = Math.Max(Math.Max(dTrussFront, dTrussBack), Math.Max(dTrussBot, dTrussTop));
+                double gusset3D = Math.Max(gussetSolid3D, -gussetWindow);
+
+                // Smoothly blend the skeletal structure together
+                double body = SdfMesher.SmoothMin(baseSpine3D, pod3D, 2.5);
+                body = SdfMesher.SmoothMin(body, rootTie3D, 2.5);
+                body = SdfMesher.SmoothMin(body, legs3D, 2.5);
+                body = SdfMesher.SmoothMin(body, head3D, 3.0);
+                body = SdfMesher.SmoothMin(body, gusset3D, 1.8);
+                body = Math.Max(body, 0.0 - z);
+
+                // Subtract features:
+                double cut = 1e9;
+
+                // (A) Concave U-Trough in Lower Prop-Guard Saddles (centered at ax = 38.0, Y = +6.8, Z = 15.0)
+                // Drops the prop-guard resting height by 7.0mm to match Z_center = 93.0mm!
+                double dySaddle = y - 6.8;
+                double dzSaddle = z - 15.0;
+                double dTrough = Math.Max(Math.Sqrt(dySaddle * dySaddle + dzSaddle * dzSaddle * 1.4) - 8.2, Math.Abs(ax - 38.0) - 7.6);
+                double dSaddlePin = Math.Max(Math.Sqrt((ax - 38.0) * (ax - 38.0) + (y - 6.8) * (y - 6.8)) - 2.15, Math.Max(3.5 - z, z - 11.0));
+                cut = Math.Min(cut, Math.Min(dTrough, dSaddlePin));
+
+                // (B) Recessed 3.5mm Deep Anti-Rotation Pocket on Stadium Head (Y in [-28.0, -24.0], centered at X = 0, Z = 93.0)
+                // Captures the 48.0 x 26.0 x 7.5mm TPU Vibration Isolator Puck (04a)
+                double dPuckPocket2D = SdfMesher.Box2D(x, z - 93.0, 24.3, 13.3, 4.1);
+                double dPuckPocket3D = Math.Max(dPuckPocket2D, -28.0 - y);
+                cut = Math.Min(cut, dPuckPocket3D);
+
+                // (C) Standard 64.0mm M5 Bottle Cage Boss Slots (X in [-39, -25] and [+25, +39], Y = 0)
+                // Through-slot width = 5.40mm (Z in [0, 6.8]); Top counterbore channel (Z in [3.8, 7.5]) width = 10.20mm (accepts M5 washers or 05b PETG slot plates!)
+                double dSlotM5 = SdfMesher.SlotX2D(ax, y, 25.0, 39.0, 0.0, 2.70);
+                double dCboreM5 = Math.Max(SdfMesher.SlotX2D(ax, y, 25.0, 39.0, 0.0, 5.10), 3.8 - z);
+                cut = Math.Min(cut, Math.Min(dSlotM5, dCboreM5));
+
+                // (D) Oval Lightening Window in Center of Base Spine between the two M5 slots (X in [-10.5, +10.5], Y in [-3.8, +3.8])
+                double dBaseWin = SdfMesher.Box2D(x, y, 10.5, 3.8, 3.8);
+                cut = Math.Min(cut, dBaseWin);
+
+                // (E) Sideways Cradle + TPU Isolator Mounting Pattern on Stadium Head (Y in [-34.0, -28.0], centered at X = 0.0, Z = 93.0mm)
+                // 4-bolt 15.0 x 15.0 mm square (X = +-7.50, Z = 93.0 +- 7.50 = {85.5, 100.5}) + 2-bolt 30.0mm centerline (X = +-15.0, Z = 93.0)
+                // Captive M4 hex nut channels on back face (Y in [-34.5, -30.5], leaving a 2.5mm solid clamping wall at Y in [-30.5, -28.0]!)
+                cut = Math.Min(cut, M4SlotYAndHexNutSdf(ax, y, z, 7.50, 85.50, 1.0, -34.5, -30.5));
+                cut = Math.Min(cut, M4SlotYAndHexNutSdf(ax, y, z, 7.50, 100.50, 1.0, -34.5, -30.5));
+                cut = Math.Min(cut, M4SlotYAndHexNutSdf(ax, y, z, 15.00, 93.00, 1.0, -34.5, -30.5));
+
+                return Math.Max(body, -cut);
+            };
+
+            return SdfMesher.ExtractMesh(
+                "Orbea_Wild_Downtube_Sleek_SideMount_LTower",
+                sdf,
+                new Vec3(-48.5, -35.5, -0.6),
+                new Vec3(48.5, 18.0, 110.0),
+                step);
+        }
+
+        // 2f. Archived Fidlock-Compatible Side-Mount Downtube L-Tower (kept as optional 02f variant)
+        public static MeshData BuildDowntubeFidlockSideMountLTower(double step = 0.45)
         {
             Func<double, double, double, double> sdf = (x, y, z) =>
             {
