@@ -62,7 +62,7 @@ namespace DjiNeo2OrbeaMounts
                 {
                     sw.WriteLine(@"<?xml version=""1.0"" encoding=""UTF-8""?>");
                     sw.WriteLine(@"<model unit=""millimeter"" xml:lang=""en-US"" xmlns=""http://schemas.microsoft.com/3dmanufacturing/core/2015/02"">");
-                    sw.WriteLine(string.Format(CultureInfo.InvariantCulture, @" <metadata name=""Title"">{0}</metadata>", title));
+                    sw.WriteLine(string.Format(CultureInfo.InvariantCulture, @" <metadata name=""Title"">{0}</metadata>", System.Security.SecurityElement.Escape(title)));
                     sw.WriteLine(@" <metadata name=""Application"">BambuStudio</metadata>");
                     sw.WriteLine(@" <resources>");
 
@@ -70,7 +70,7 @@ namespace DjiNeo2OrbeaMounts
                     {
                         var item = items[i];
                         int objId = i + 1;
-                        sw.WriteLine(string.Format(CultureInfo.InvariantCulture, @"  <object id=""{0}"" name=""{1}"" type=""model"">", objId, item.Mesh.Name));
+                        sw.WriteLine(string.Format(CultureInfo.InvariantCulture, @"  <object id=""{0}"" name=""{1}"" type=""model"">", objId, System.Security.SecurityElement.Escape(item.Mesh.Name)));
                         sw.WriteLine(@"   <mesh>");
                         sw.WriteLine(@"    <vertices>");
                         foreach (var v in item.Mesh.Vertices)
