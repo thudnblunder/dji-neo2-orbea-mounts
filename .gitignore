@@ -1,0 +1,3 @@
+# Ignore temporary extracted 3MF cache
+reference/extracted/
+*.tmp
