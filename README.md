@@ -72,6 +72,12 @@ All parts are pre-oriented on `256 × 256 mm` build plates for the **Bambu Lab P
 
 ### Complete Cockpit Assemblies & 360° Lens Armor
 
+<p align="center">
+  <img src="renders/11_NumberPlate_Exploded_And_Deployed_Guide.png" alt="How It Fits: Orbea Stealth Number-Plate Mount Exploded & Deployed on Bike Cockpit" width="100%"/>
+  <br/>
+  <b>How It Fits Together:</b> Exploded stack-up order, deployed 3/4 view with the DJI Neo 2 + Transceiver clipped in, and side profile showing the <code>64°</code> parallel head-tube rake and open Orbea SIC cable tunnel.
+</p>
+
 <table>
   <tr>
     <td width="50%" align="center">
