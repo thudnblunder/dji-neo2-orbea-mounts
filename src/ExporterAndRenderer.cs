@@ -458,115 +458,140 @@ namespace DjiNeo2OrbeaMounts
             Directory.CreateDirectory(threeMfDir);
             Directory.CreateDirectory(rendersDir);
 
-            Console.WriteLine("1. Building DJI Neo 2 Cradles (01 Flat, 01b 45-Deg Sunlu Easy-PA, 01c 72D TPU Pocketed)...");
+            bool doRenders = args != null && Array.IndexOf(args, "--renders") >= 0;
+
+            Console.WriteLine("1. Building Watertight Boolean-Unioned DJI Neo 2 Cradles (01a Flat, 01b 45-Deg Easy-PA, 01c 72D TPU)...");
             var cradleShell = PartDesigns.LoadReferenceCradleMesh(refModelXml);
-            var cradleInsert = PartDesigns.BuildCradleMountingInsert(0.30);
-            var universalCradle = cradleShell.Clone("01a_DJI_Neo2_Universal_Cradle");
-            universalCradle.Append(cradleInsert);
+
+            var universalCradle = PartDesigns.BuildCradleBooleanUnion(
+                "01a_DJI_Neo2_Universal_Cradle", cradleShell, PartDesigns.CradleMountingInsertSdf, 0.65);
             SaveAndReport(universalCradle, Path.Combine(stlDir, "01a_DJI_Neo2_Universal_Cradle.stl"));
 
-            var cradle45Only = PartDesigns.RotateCradleTo45DegPrintOrientation(universalCradle, "Cradle_45Deg");
-            var anchorFin45 = PartDesigns.BuildCradle45DegSnapOffAnchorFin(0.36);
-            var cradle45WithFin = cradle45Only.Clone("01b_DJI_Neo2_Universal_Cradle_45Deg_EasyPA");
-            cradle45WithFin.Append(anchorFin45);
+            var cradle45WithFin = PartDesigns.BuildCradle45DegBooleanUnion(
+                "01b_DJI_Neo2_Universal_Cradle_45Deg_EasyPA", cradleShell, includeAnchorFin: true, step: 0.65);
             SaveAndReport(cradle45WithFin, Path.Combine(stlDir, "01b_DJI_Neo2_Universal_Cradle_45Deg_EasyPA.stl"));
 
-            var cradle72DPocket = PartDesigns.BuildCradle72DMountingInsertForPetgCarrier(0.28);
-            var cradle72D = cradleShell.Clone("01c_DJI_Neo2_72D_TPU_Cradle_For_PETG_Insert");
-            cradle72D.Append(cradle72DPocket);
+            var cradle72D = PartDesigns.BuildCradleBooleanUnion(
+                "01c_DJI_Neo2_72D_TPU_Cradle_For_PETG_Insert", cradleShell, PartDesigns.Cradle72DMountingInsertSdf, 0.65);
             SaveAndReport(cradle72D, Path.Combine(stlDir, "01c_DJI_Neo2_72D_TPU_Cradle_For_PETG_Insert.stl"));
 
-            MeshRenderer.RenderMultiViewSheet(
-                Path.Combine(rendersDir, "01_Cradle_And_Insert_Preview.png"),
-                "01a - DJI Neo 2 Universal Cradle (Transceiver-Compatible)",
-                "Flat Z=0 Base | 15x15mm 4-Bolt Square + 30mm Centerline | Captive M4 DIN 934 Hex Nut Traps",
-                universalCradle,
-                Color.FromArgb(45, 125, 230));
+            if (doRenders)
+            {
+                var cradle45Only = PartDesigns.BuildCradle45DegBooleanUnion(
+                    "Cradle_45Deg", cradleShell, includeAnchorFin: false, step: 0.70);
+                var anchorFin45 = PartDesigns.BuildCradle45DegSnapOffAnchorFin(0.65);
+                MeshRenderer.RenderMultiViewSheet(
+                    Path.Combine(rendersDir, "01_Cradle_And_Insert_Preview.png"),
+                    "01a - DJI Neo 2 Universal Cradle (Transceiver-Compatible)",
+                    "Flat Z=0 Base | 15x15mm 4-Bolt Square + 30mm Centerline | Captive M4 DIN 934 Hex Nut Traps",
+                    universalCradle,
+                    Color.FromArgb(45, 125, 230));
 
-            MeshRenderer.RenderMultiColorSheet(
-                Path.Combine(rendersDir, "09_Cradle_45Deg_EasyPA_Preview.png"),
-                "01b - 45-Deg Sunlu Easy-PA Cradle w/ Snap-Off A-Frame Bed Anchor Fin",
-                "Blue: 47.1 deg Self-Supporting Cradle (Max Hook & Cup Fiber Strength) | Gold: Perforated Snap-Off Stabilization Foot",
-                new List<ColoredMeshPart>
-                {
-                    new ColoredMeshPart(cradle45Only, Color.FromArgb(45, 125, 230)),
-                    new ColoredMeshPart(anchorFin45, Color.FromArgb(245, 165, 35))
-                });
+                MeshRenderer.RenderMultiColorSheet(
+                    Path.Combine(rendersDir, "09_Cradle_45Deg_EasyPA_Preview.png"),
+                    "01b - 45-Deg Sunlu Easy-PA Cradle w/ Snap-Off A-Frame Bed Anchor Fin",
+                    "Blue: 47.1 deg Self-Supporting Cradle (Max Hook & Cup Fiber Strength) | Gold: Perforated Snap-Off Stabilization Foot",
+                    new List<ColoredMeshPart>
+                    {
+                        new ColoredMeshPart(cradle45Only, Color.FromArgb(45, 125, 230)),
+                        new ColoredMeshPart(anchorFin45, Color.FromArgb(245, 165, 35))
+                    });
+            }
 
             Console.WriteLine("2. Building Mount 1: Orbea Wild LT 'Stealth Fairing' Number-Plate Shield (02a) + Swept Drop Arms (02b)...");
-            var numberPlateShield = PartDesigns.BuildOrbeaStealthNumberPlateShield(0.40);
+            var numberPlateShield = PartDesigns.BuildOrbeaStealthNumberPlateShield(0.90);
+            numberPlateShield.SnapBottomToZero();
             SaveAndReport(numberPlateShield, Path.Combine(stlDir, "02a_Orbea_Stealth_NumberPlate_Shield.stl"));
 
-            var numberPlateDropArms = PartDesigns.BuildOrbeaStealthNumberPlateDropArmsPair(0.34);
+            var numberPlateDropArms = PartDesigns.BuildOrbeaStealthNumberPlateDropArmsPair(0.72);
+            numberPlateDropArms.SnapBottomToZero();
             SaveAndReport(numberPlateDropArms, Path.Combine(stlDir, "02b_Orbea_Stealth_NumberPlate_Drop_Arms_Pair.stl"));
 
-            MeshRenderer.RenderMultiViewSheet(
-                Path.Combine(rendersDir, "02_NumberPlate_Shield_And_Arms_Preview.png"),
-                "02a - Orbea Wild LT 'Stealth Fairing' Number-Plate Shield & Chin Roost Fender",
-                "Faceted 45-deg Stealth Winglets | Armored Lower Gimbal/LiDAR Chin Scoop | Recessed 90A TPU Isolator Seat | Zero Supports",
-                numberPlateShield,
-                Color.FromArgb(235, 105, 35));
+            if (doRenders)
+            {
+                MeshRenderer.RenderMultiViewSheet(
+                    Path.Combine(rendersDir, "02_NumberPlate_Shield_And_Arms_Preview.png"),
+                    "02a - Orbea Wild LT 'Stealth Fairing' Number-Plate Shield & Chin Roost Fender",
+                    "Faceted 45-deg Stealth Winglets | Armored Lower Gimbal/LiDAR Chin Scoop | Recessed 90A TPU Isolator Seat | Zero Supports",
+                    numberPlateShield,
+                    Color.FromArgb(235, 105, 35));
 
-            MeshRenderer.RenderMultiViewSheet(
-                Path.Combine(rendersDir, "02b_NumberPlate_Drop_Arms_Preview.png"),
-                "02b - Swept Out-Front Faceted Twin-Truss Handlebar Drop Arms (Pair)",
-                "64-deg Head-Tube Rake | 50mm Forward SIC Cable Tunnel Clearance | Tuned 72D TPU / Easy-PA Truss Cutouts",
-                numberPlateDropArms,
-                Color.FromArgb(75, 165, 225));
+                MeshRenderer.RenderMultiViewSheet(
+                    Path.Combine(rendersDir, "02b_NumberPlate_Drop_Arms_Preview.png"),
+                    "02b - Swept Out-Front Faceted Twin-Truss Handlebar Drop Arms (Pair)",
+                    "64-deg Head-Tube Rake | 50mm Forward SIC Cable Tunnel Clearance | Tuned 72D TPU / Easy-PA Truss Cutouts",
+                    numberPlateDropArms,
+                    Color.FromArgb(75, 165, 225));
+            }
 
-            Console.WriteLine("3. Building Mount 2: Orbea Wild LT 'Stealth OC' Over-Stem Bridge (03a) + Faceted Clamshells (03b/03f)...");
-            var stemBridge = PartDesigns.BuildOrbeaStealthOverStemBridge(0.36);
+            Console.WriteLine("3. Building Mount 2: Orbea Wild LT 'Stealth OC' Over-Stem Bridge (03a) + Faceted Clamshells (03b/03c)...");
+            var stemBridge = PartDesigns.BuildOrbeaStealthOverStemBridge(0.75);
+            stemBridge.SnapBottomToZero();
             SaveAndReport(stemBridge, Path.Combine(stlDir, "03a_Orbea_Stealth_OverStem_Bridge.stl"));
 
-            var hingedClampsForTpu = PartDesigns.BuildHandlebarHingedClamshellPair(37.0, "03b_Orbea_Stealth_35mm_Hinged_Clamshells_For_TPU", 0.34);
+            var hingedClampsForTpu = PartDesigns.BuildHandlebarHingedClamshellPair(37.0, "03b_Orbea_Stealth_35mm_Hinged_Clamshells_For_TPU", 0.70);
+            hingedClampsForTpu.SnapBottomToZero();
             SaveAndReport(hingedClampsForTpu, Path.Combine(stlDir, "03b_Orbea_Stealth_35mm_Hinged_Clamshells_For_TPU.stl"));
 
-            var hingedClampsDirect = PartDesigns.BuildHandlebarHingedClamshellPair(35.0, "03c_Orbea_Stealth_35mm_Hinged_Clamshells_Direct_35mm", 0.34);
+            var hingedClampsDirect = PartDesigns.BuildHandlebarHingedClamshellPair(35.0, "03c_Orbea_Stealth_35mm_Hinged_Clamshells_Direct_35mm", 0.70);
+            hingedClampsDirect.SnapBottomToZero();
             SaveAndReport(hingedClampsDirect, Path.Combine(stlDir, "03c_Orbea_Stealth_35mm_Hinged_Clamshells_Direct_35mm.stl"));
 
-            var tpuSleeves = PartDesigns.BuildHandlebarTpuSleeves(0.28);
+            var tpuSleeves = PartDesigns.BuildHandlebarTpuSleeves(0.50);
+            tpuSleeves.SnapBottomToZero();
             SaveAndReport(tpuSleeves, Path.Combine(stlDir, "03d_Handlebar_35mm_TPU_Grip_Sleeves_Pair.stl"));
 
-            MeshRenderer.RenderMultiViewSheet(
-                Path.Combine(rendersDir, "03a_Stem_Bridge_Plate_Preview.png"),
-                "03a - Orbea Wild LT 'Stealth OC' Over-Stem Bridge w/ Front Roost Prow",
-                "Chiseled Forward Mud-Deflector Prow | Recessed 3.5mm TPU Isolator Pocket | 46mm OC MC11 Stem Arch",
-                stemBridge,
-                Color.FromArgb(55, 190, 125));
+            if (doRenders)
+            {
+                MeshRenderer.RenderMultiViewSheet(
+                    Path.Combine(rendersDir, "03a_Stem_Bridge_Plate_Preview.png"),
+                    "03a - Orbea Wild LT 'Stealth OC' Over-Stem Bridge w/ Front Roost Prow",
+                    "Chiseled Forward Mud-Deflector Prow | Recessed 3.5mm TPU Isolator Pocket | 46mm OC MC11 Stem Arch",
+                    stemBridge,
+                    Color.FromArgb(55, 190, 125));
 
-            MeshRenderer.RenderMultiViewSheet(
-                Path.Combine(rendersDir, "03b_Handlebar_C_Clips_Preview.png"),
-                "03b - Faceted OC-Styled Swinging M4 Pin-Hinged 35mm Handlebar Clamps",
-                "Zero Plastic Flexing Over 35mm Carbon Bar | 3-Knuckle M4 Bolt Hinge | Shared by Both Number-Plate & Over-Stem Mounts!",
-                hingedClampsForTpu,
-                Color.FromArgb(165, 95, 235));
+                MeshRenderer.RenderMultiViewSheet(
+                    Path.Combine(rendersDir, "03b_Handlebar_C_Clips_Preview.png"),
+                    "03b - Faceted OC-Styled Swinging M4 Pin-Hinged 35mm Handlebar Clamps",
+                    "Zero Plastic Flexing Over 35mm Carbon Bar | 3-Knuckle M4 Bolt Hinge | Shared by Both Number-Plate & Over-Stem Mounts!",
+                    hingedClampsForTpu,
+                    Color.FromArgb(165, 95, 235));
 
-            MeshRenderer.RenderMultiViewSheet(
-                Path.Combine(rendersDir, "04_TPU_Sleeves_And_Pads_Preview.png"),
-                "03d - Flanged 90A TPU Grip Sleeves for OC MC10 35.0mm Carbon Handlebar",
-                "35mm ID / 37mm OD w/ Retaining Lips | Protects Carbon Finish | High-Friction Anti-Slip & First-Stage Bar Damping",
-                tpuSleeves,
-                Color.FromArgb(40, 195, 210));
+                MeshRenderer.RenderMultiViewSheet(
+                    Path.Combine(rendersDir, "04_TPU_Sleeves_And_Pads_Preview.png"),
+                    "03d - Flanged 90A TPU Grip Sleeves for OC MC10 35.0mm Carbon Handlebar",
+                    "35mm ID / 37mm OD w/ Retaining Lips | Protects Carbon Finish | High-Friction Anti-Slip & First-Stage Bar Damping",
+                    tpuSleeves,
+                    Color.FromArgb(40, 195, 210));
+            }
 
             Console.WriteLine("4. Building 360-Deg 90A TPU Lens, Gimbal, Sensor & Vibration Armor Suite (04a - 04e) + PETG Inserts (05)...");
-            var tpuIsolator = PartDesigns.BuildTpuVibrationIsolatorSystem(0.26, true);
+            var tpuIsolator = PartDesigns.BuildTpuVibrationIsolatorSystem(0.55, true);
+            tpuIsolator.SnapBottomToZero();
             SaveAndReport(tpuIsolator, Path.Combine(stlDir, "04a_TPU_Vibration_Isolator_Puck_And_Grommets.stl"));
 
-            var tpuBellyShield = PartDesigns.BuildTpuBellySensorShield(0.24);
+            var tpuBellyShield = PartDesigns.BuildTpuBellySensorShield(0.45);
+            tpuBellyShield.SnapBottomToZero();
             SaveAndReport(tpuBellyShield, Path.Combine(stlDir, "04b_TPU_Belly_Sensor_Shield.stl"));
 
-            var tpuHeatsinkLouver = PartDesigns.BuildTpuHeatsinkLouver(0.24);
+            var tpuHeatsinkLouver = PartDesigns.BuildTpuHeatsinkLouver(0.45);
+            tpuHeatsinkLouver.SnapBottomToZero();
             SaveAndReport(tpuHeatsinkLouver, Path.Combine(stlDir, "04c_TPU_Heatsink_Mud_Louver.stl"));
 
-            var tpuNoseGuard = PartDesigns.BuildTpuNoseVaultGimbalGuard(0.26);
+            var tpuNoseGuard = PartDesigns.BuildTpuNoseVaultGimbalGuard(0.55);
+            tpuNoseGuard.SnapBottomToZero();
             SaveAndReport(tpuNoseGuard, Path.Combine(stlDir, "04d_TPU_Nose_Vault_Gimbal_And_LiDAR_Guard.stl"));
 
-            var tpuTopVisorStrap = PartDesigns.BuildTpuTopFisheyeLensVisorStrap(0.25);
+            var tpuTopVisorStrap = PartDesigns.BuildTpuTopFisheyeLensVisorStrap(0.50);
+            tpuTopVisorStrap.SnapBottomToZero();
             SaveAndReport(tpuTopVisorStrap, Path.Combine(stlDir, "04e_TPU_Top_Fisheye_Lens_Visor_Strap.stl"));
 
-            var petgInsertKit = PartDesigns.BuildPetgReinforcementInsertKit(0.24);
+            var petgInsertKit = PartDesigns.BuildPetgReinforcementInsertKit(0.48);
+            petgInsertKit.SnapBottomToZero();
             SaveAndReport(petgInsertKit, Path.Combine(stlDir, "05_PETG_Reinforcement_Inserts_For_72D_TPU.stl"));
 
+            if (doRenders)
+            {
             // Render Sheet 07: Complete 5-Part 90A TPU Lens & Vibration Armor Kit laid out cleanly
             var s04b = tpuBellyShield.Clone("b"); s04b.Translate(-52.0, 18.0, 0.0);
             var s04c = tpuHeatsinkLouver.Clone("c"); s04c.Translate(-52.0, -18.0, 0.0);
@@ -593,7 +618,7 @@ namespace DjiNeo2OrbeaMounts
                 Color.FromArgb(230, 75, 95));
 
             // Render Sheet 08: Universal Cradle Equipped w/ All 5 TPU Lens & Vibration Armor Pieces!
-            var padOnly = PartDesigns.BuildTpuVibrationIsolatorSystem(0.30, false);
+            var padOnly = PartDesigns.BuildTpuVibrationIsolatorSystem(0.55, false);
             var instIsolator = padOnly.Clone("InstIso"); instIsolator.Translate(9.50, 0.0, -7.50);
             var instBelly = tpuBellyShield.Clone("InstBelly"); instBelly.Translate(50.50, 0.0, -1.60);
             var instLouver = tpuHeatsinkLouver.Clone("InstLouver"); instLouver.Translate(-31.25, 0.0, -1.60);
@@ -615,7 +640,7 @@ namespace DjiNeo2OrbeaMounts
                 });
 
             // Render Sheet 05: Complete Assembly 1 - Orbea Stealth Number-Plate Mount on Handlebar Clamps!
-            var closedClamp = PartDesigns.BuildHandlebarHingedClamshellSingle(37.0, assembledClosed: true, step: 0.38);
+            var closedClamp = PartDesigns.BuildHandlebarHingedClamshellSingle(37.0, assembledClosed: true, step: 0.70);
             var npClampL = RotateClampToHandlebar(closedClamp, "NP_Clamp_L", -31.5);
             var npClampR = RotateClampToHandlebar(closedClamp, "NP_Clamp_R", +31.5);
             var npArmL = TransformDropArmToWorld(numberPlateDropArms, true, "NP_Arm_L", -31.5);
@@ -666,6 +691,7 @@ namespace DjiNeo2OrbeaMounts
                     new ColoredMeshPart(osNose, Color.FromArgb(240, 110, 50)),
                     new ColoredMeshPart(osStrap, Color.FromArgb(225, 85, 165))
                 });
+            }
 
             Console.WriteLine("5. Packaging Bambu Studio .3mf build plates for Bambu Lab P2S...");
             // Plate 1: Number-Plate Shield + Swept Drop Arms (Elegoo 72D TPU or Sunlu Easy-PA / ASA) - ZERO SUPPORTS!

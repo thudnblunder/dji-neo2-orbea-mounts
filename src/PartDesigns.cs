@@ -56,30 +56,213 @@ namespace DjiNeo2OrbeaMounts
             return Math.Min(dHole, dHex3D);
         }
 
+        // Same M4 nut pocket rotated 30 deg so hexagon flats face +-Y (compact Y extent: +-3.59mm instead of +-4.15mm)
+        private static double M4HoleAndHexNutYFlatSdf(double x, double y, double z, double hx, double hy, double zNutMin, double zNutMax)
+        {
+            double dx = x - hx;
+            double dy = y - hy;
+            double dHole = Math.Sqrt(dx * dx + dy * dy) - 2.15;
+            double dHex2D = SdfMesher.Hexagon2D(dy, dx, 7.18);
+            double dHexZ = Math.Max(zNutMin - z, z - zNutMax);
+            double dHex3D = Math.Max(dHex2D, dHexZ);
+            return Math.Min(dHole, dHex3D);
+        }
+
         // =========================================================================
         // 01. UNIVERSAL CRADLE INSERT, 45-DEG EASY-PA CRADLE, & 72D POCKETED CRADLE
         // =========================================================================
+        public static double CradleMountingInsertSdf(double x, double y, double z)
+        {
+            double w1 = SdfMesher.RoundedBox3D(x - (-4.125), y, z - 1.425, 10.075, 11.50, 1.425, 0.8);
+            double w2 = SdfMesher.RoundedBox3D(x - 23.00, y, z - 1.425, 9.95, 11.50, 1.425, 0.8);
+            double deck = SdfMesher.StealthBlock3D(x - 9.50, y, z - 4.125, 25.00, 13.20, 1.425, 3.0, 0.6);
+            double body = Math.Min(Math.Min(w1, w2), deck);
+
+            double holes = 1e9;
+            holes = Math.Min(holes, M4HoleAndHexNutSdf(x, y, z, 2.00, -7.50, 2.05, 6.00));
+            holes = Math.Min(holes, M4HoleAndHexNutSdf(x, y, z, 2.00,  7.50, 2.05, 6.00));
+            holes = Math.Min(holes, M4HoleAndHexNutSdf(x, y, z, 17.00, -7.50, 2.05, 6.00));
+            holes = Math.Min(holes, M4HoleAndHexNutSdf(x, y, z, 17.00,  7.50, 2.05, 6.00));
+            holes = Math.Min(holes, M4HoleAndHexNutSdf(x, y, z, -5.50, 0.00, 2.05, 6.00));
+            holes = Math.Min(holes, M4HoleAndHexNutSdf(x, y, z, 24.50, 0.00, 2.05, 6.00));
+
+            return Math.Max(body, -holes);
+        }
+
         public static MeshData BuildCradleMountingInsert(double step = 0.30)
         {
-            Func<double, double, double, double> sdf = (x, y, z) =>
+            return SdfMesher.ExtractMesh("Cradle_Mounting_Insert", CradleMountingInsertSdf, new Vec3(-17.0, -15.0, -0.5), new Vec3(36.0, 15.0, 6.2), step);
+        }
+
+        public static double Cradle45DegAnchorFinSdf(double x, double y, double z)
+        {
+            double ay = Math.Abs(y);
+            double zSpine = 1.075354 * (x + 23.410);
+            double basePad = SdfMesher.StealthBlock3D(x - 4.25, y, z - 0.7, 23.75, 24.0, 0.7, 5.0, 0.0);
+            double baseCut = SdfMesher.ChamferBox2D(x - 3.0, y, 14.0, 11.5, 3.0);
+            basePad = Math.Max(basePad, -baseCut);
+
+            double distToSpine = zSpine - z;
+            double halfThickY = distToSpine < 2.2 ? Math.Max(0.50, 0.50 + (distToSpine / 2.2) * 0.80) : 1.30;
+            double dFinY = Math.Abs(ay - 15.5) - halfThickY;
+            double dFinX = Math.Max(-18.5 - x, x - 25.0);
+            double dFinZ = Math.Max(0.0 - z, -0.20 - distToSpine);
+            double fins = Math.Max(Math.Max(dFinY, dFinX), dFinZ);
+
+            double dCross = Math.Max(Math.Max(Math.Abs(x - 19.0) - 2.0, ay - 16.0), Math.Max(0.0 - z, z - 20.0));
+            double body = Math.Min(Math.Min(basePad, fins), dCross);
+
+            double cut = 1e9;
+            for (int i = -1; i <= 2; i++)
             {
-                double w1 = SdfMesher.RoundedBox3D(x - (-4.125), y, z - 1.425, 10.075, 11.50, 1.425, 0.8);
-                double w2 = SdfMesher.RoundedBox3D(x - 23.00, y, z - 1.425, 9.95, 11.50, 1.425, 0.8);
-                double deck = SdfMesher.StealthBlock3D(x - 9.50, y, z - 4.125, 25.00, 13.20, 1.425, 3.0, 0.6);
-                double body = Math.Min(Math.Min(w1, w2), deck);
+                double cx = -7.0 + i * 9.5;
+                cut = Math.Min(cut, Math.Max(Math.Abs(x - cx) - 2.4, Math.Abs(distToSpine - 1.1) - 1.3));
+            }
+            cut = Math.Min(cut, Math.Max(Math.Abs(x - 9.0) - 6.5, Math.Max(5.0 - z, (zSpine - 6.0) - z)));
+            return Math.Max(body, -cut);
+        }
 
-                double holes = 1e9;
-                holes = Math.Min(holes, M4HoleAndHexNutSdf(x, y, z, 2.00, -7.50, 2.05, 6.00));
-                holes = Math.Min(holes, M4HoleAndHexNutSdf(x, y, z, 2.00,  7.50, 2.05, 6.00));
-                holes = Math.Min(holes, M4HoleAndHexNutSdf(x, y, z, 17.00, -7.50, 2.05, 6.00));
-                holes = Math.Min(holes, M4HoleAndHexNutSdf(x, y, z, 17.00,  7.50, 2.05, 6.00));
-                holes = Math.Min(holes, M4HoleAndHexNutSdf(x, y, z, -5.50, 0.00, 2.05, 6.00));
-                holes = Math.Min(holes, M4HoleAndHexNutSdf(x, y, z, 24.50, 0.00, 2.05, 6.00));
+        public static double Cradle72DMountingInsertSdf(double x, double y, double z)
+        {
+            double w1 = SdfMesher.RoundedBox3D(x - (-4.125), y, z - 1.425, 10.075, 11.50, 1.425, 0.8);
+            double w2 = SdfMesher.RoundedBox3D(x - 23.00, y, z - 1.425, 9.95, 11.50, 1.425, 0.8);
+            // Widened deck (hy = 14.20) frames the 12.50mm PETG carrier pocket cleanly with solid 1.70mm TPU rims
+            double deck = SdfMesher.StealthBlock3D(x - 9.50, y, z - 4.125, 25.00, 14.20, 1.425, 3.0, 0.6);
+            double body = Math.Min(Math.Min(w1, w2), deck);
 
-                return Math.Max(body, -holes);
-            };
+            // Continuous CSG snap-lip pocket (zero SDF discontinuity!)
+            double dPocketLower = Math.Max(SdfMesher.Box2D(x - 9.50, y, 21.50, 12.50, 3.0), Math.Max(1.95 - z, z - 5.10));
+            double dPocketMouth = Math.Max(SdfMesher.Box2D(x - 9.50, y, 21.15, 12.15, 2.8), 4.95 - z);
+            double dCarrierPocket3D = Math.Min(dPocketLower, dPocketMouth);
 
-            return SdfMesher.ExtractMesh("Cradle_Mounting_Insert", sdf, new Vec3(-17.0, -15.0, -0.5), new Vec3(36.0, 15.0, 6.2), step);
+            double holes = 1e9;
+            holes = Math.Min(holes, Math.Sqrt((x - 2.00) * (x - 2.00) + (y + 7.50) * (y + 7.50)) - 2.15);
+            holes = Math.Min(holes, Math.Sqrt((x - 2.00) * (x - 2.00) + (y - 7.50) * (y - 7.50)) - 2.15);
+            holes = Math.Min(holes, Math.Sqrt((x - 17.00) * (x - 17.00) + (y + 7.50) * (y + 7.50)) - 2.15);
+            holes = Math.Min(holes, Math.Sqrt((x - 17.00) * (x - 17.00) + (y - 7.50) * (y - 7.50)) - 2.15);
+            holes = Math.Min(holes, Math.Sqrt((x + 5.50) * (x + 5.50) + y * y) - 2.15);
+            holes = Math.Min(holes, Math.Sqrt((x - 24.50) * (x - 24.50) + y * y) - 2.15);
+
+            return Math.Max(body, -Math.Min(dCarrierPocket3D, holes));
+        }
+
+        // True Watertight CSG Boolean Union of Reference Cradle Shell + Flat Mounting Insert (01a or 01c)
+        public static MeshData BuildCradleBooleanUnion(
+            string name,
+            MeshData refCradleShell,
+            Func<double, double, double, double> insertSdf,
+            double step = 0.30)
+        {
+            Vec3 minB, maxB;
+            refCradleShell.GetBounds(out minB, out maxB);
+            double ox = minB.X - 2.0 * step;
+            double oy = minB.Y - 2.0 * step;
+            double oz = Math.Floor((minB.Z - step) / step) * step - 0.5 * step;
+
+            int nx = (int)Math.Ceiling((maxB.X + 2.0 * step - ox) / step) + 2;
+            int ny = (int)Math.Ceiling((maxB.Y + 2.0 * step - oy) / step) + 2;
+            int nz = (int)Math.Ceiling((maxB.Z + 2.0 * step - oz) / step) + 2;
+
+            float[,,] grid = SdfMesher.ComputeMeshSignedDistanceGrid(refCradleShell, ox, oy, oz, nx, ny, nz, step);
+
+            for (int ix = 0; ix <= nx; ix++)
+            {
+                double x = ox + ix * step;
+                if (x < -17.5 || x > 36.5) continue;
+                for (int iy = 0; iy <= ny; iy++)
+                {
+                    double y = oy + iy * step;
+                    if (y < -15.5 || y > 15.5) continue;
+                    for (int iz = 0; iz <= nz; iz++)
+                    {
+                        double z = oz + iz * step;
+                        if (z < -1.0 || z > 6.8) continue;
+                        float dIns = (float)insertSdf(x, y, z);
+                        if (dIns < grid[ix, iy, iz]) grid[ix, iy, iz] = dIns;
+                    }
+                }
+            }
+
+            var result = SdfMesher.ExtractFromGrid(name, grid, ox, oy, oz, step, null);
+            result.SnapBottomToZero();
+            return result;
+        }
+
+        // True Watertight CSG Boolean Union of 45-Deg Easy-PA Cradle + Insert + Snap-Off Anchor Fin (01b)
+        public static MeshData BuildCradle45DegBooleanUnion(
+            string name,
+            MeshData refCradleShell,
+            bool includeAnchorFin,
+            double step = 0.30)
+        {
+            double c = 0.680983722;
+            double s = 0.732298553;
+
+            // Rotate reference cradle shell to 45 deg and record exact minZ for orthonormal inverse mapping
+            var rotShell = new MeshData("RotShell");
+            double minZ = 1e9;
+            var tempVerts = new List<Vec3>(refCradleShell.Vertices.Count);
+            foreach (var v in refCradleShell.Vertices)
+            {
+                double zOrig = v.Z - 22.37105;
+                double xr = c * v.X - s * zOrig;
+                double yr = v.Y;
+                double zr = s * v.X + c * zOrig;
+                if (zr < minZ) minZ = zr;
+                tempVerts.Add(new Vec3(xr, yr, zr));
+            }
+            foreach (var v in tempVerts) rotShell.Vertices.Add(new Vec3(v.X, v.Y, v.Z - minZ));
+            rotShell.Triangles.AddRange(refCradleShell.Triangles);
+
+            Vec3 minB, maxB;
+            rotShell.GetBounds(out minB, out maxB);
+            if (includeAnchorFin)
+            {
+                if (-21.0 < minB.X) minB.X = -21.0; if (29.5 > maxB.X) maxB.X = 29.5;
+                if (-25.5 < minB.Y) minB.Y = -25.5; if (25.5 > maxB.Y) maxB.Y = 25.5;
+                if (0.0 < minB.Z) minB.Z = 0.0; if (56.0 > maxB.Z) maxB.Z = 56.0;
+            }
+
+            double ox = minB.X - 2.0 * step;
+            double oy = minB.Y - 2.0 * step;
+            double oz = Math.Floor((minB.Z - step) / step) * step - 0.5 * step;
+
+            int nx = (int)Math.Ceiling((maxB.X + 2.0 * step - ox) / step) + 2;
+            int ny = (int)Math.Ceiling((maxB.Y + 2.0 * step - oy) / step) + 2;
+            int nz = (int)Math.Ceiling((maxB.Z + 2.0 * step - oz) / step) + 2;
+
+            float[,,] grid = SdfMesher.ComputeMeshSignedDistanceGrid(rotShell, ox, oy, oz, nx, ny, nz, step);
+
+            for (int ix = 0; ix <= nx; ix++)
+            {
+                double x = ox + ix * step;
+                for (int iy = 0; iy <= ny; iy++)
+                {
+                    double y = oy + iy * step;
+                    for (int iz = 0; iz <= nz; iz++)
+                    {
+                        double z = oz + iz * step;
+                        // Inverse-rotate into flat cradle space to union CradleMountingInsertSdf
+                        double zrRaw = z + minZ;
+                        double xFlat = c * x + s * zrRaw;
+                        double zFlat = (-s * x + c * zrRaw) + 22.37105;
+                        if (xFlat >= -17.5 && xFlat <= 36.5 && y >= -15.5 && y <= 15.5 && zFlat >= -1.0 && zFlat <= 6.8)
+                        {
+                            float dIns = (float)CradleMountingInsertSdf(xFlat, y, zFlat);
+                            if (dIns < grid[ix, iy, iz]) grid[ix, iy, iz] = dIns;
+                        }
+                        if (includeAnchorFin && x >= -21.0 && x <= 29.5 && y >= -25.5 && y <= 25.5 && z >= -1.0 && z <= 56.0)
+                        {
+                            float dFin = (float)Cradle45DegAnchorFinSdf(x, y, z);
+                            if (dFin < grid[ix, iy, iz]) grid[ix, iy, iz] = dFin;
+                        }
+                    }
+                }
+            }
+
+            var result = SdfMesher.ExtractFromGrid(name, grid, ox, oy, oz, step, null);
+            result.SnapBottomToZero();
+            return result;
         }
 
         public static MeshData RotateCradleTo45DegPrintOrientation(MeshData flatCradle, string newName)
@@ -103,62 +286,14 @@ namespace DjiNeo2OrbeaMounts
             return rotated;
         }
 
-        public static MeshData BuildCradle45DegSnapOffAnchorFin(double step = 0.38)
+        public static MeshData BuildCradle45DegSnapOffAnchorFin(double step = 0.36)
         {
-            Func<double, double, double, double> sdf = (x, y, z) =>
-            {
-                double ay = Math.Abs(y);
-                double zSpine = 1.075354 * (x + 23.410);
-                double basePad = SdfMesher.StealthBlock3D(x - 4.25, y, z - 0.7, 23.75, 24.0, 0.7, 5.0, 0.0);
-                double baseCut = SdfMesher.ChamferBox2D(x - 3.0, y, 14.0, 11.5, 3.0);
-                basePad = Math.Max(basePad, -baseCut);
-
-                double distToSpine = zSpine - z;
-                double halfThickY = distToSpine < 2.2 ? Math.Max(0.32, 0.32 + (distToSpine / 2.2) * 0.98) : 1.30;
-                double dFinY = Math.Abs(ay - 15.5) - halfThickY;
-                double dFinX = Math.Max(-18.5 - x, x - 25.0);
-                double dFinZ = Math.Max(0.0 - z, -0.05 - distToSpine);
-                double fins = Math.Max(Math.Max(dFinY, dFinX), dFinZ);
-
-                double dCross = Math.Max(Math.Max(Math.Abs(x - 19.0) - 2.0, ay - 16.0), Math.Max(0.0 - z, z - 20.0));
-                double body = Math.Min(Math.Min(basePad, fins), dCross);
-
-                double cut = 1e9;
-                for (int i = -1; i <= 2; i++)
-                {
-                    double cx = -7.0 + i * 9.5;
-                    cut = Math.Min(cut, Math.Max(Math.Abs(x - cx) - 2.4, Math.Abs(distToSpine - 1.1) - 1.3));
-                }
-                cut = Math.Min(cut, Math.Max(Math.Abs(x - 9.0) - 6.5, Math.Max(5.0 - z, (zSpine - 6.0) - z)));
-                return Math.Max(body, -cut);
-            };
-            return SdfMesher.ExtractMesh("SnapOff_45Deg_Anchor_Fin", sdf, new Vec3(-21.0, -25.5, -0.5), new Vec3(29.5, 25.5, 56.0), step);
+            return SdfMesher.ExtractMesh("SnapOff_45Deg_Anchor_Fin", Cradle45DegAnchorFinSdf, new Vec3(-21.0, -25.5, -0.5), new Vec3(29.5, 25.5, 56.0), step);
         }
 
         public static MeshData BuildCradle72DMountingInsertForPetgCarrier(double step = 0.28)
         {
-            Func<double, double, double, double> sdf = (x, y, z) =>
-            {
-                double w1 = SdfMesher.RoundedBox3D(x - (-4.125), y, z - 1.425, 10.075, 11.50, 1.425, 0.8);
-                double w2 = SdfMesher.RoundedBox3D(x - 23.00, y, z - 1.425, 9.95, 11.50, 1.425, 0.8);
-                double deck = SdfMesher.StealthBlock3D(x - 9.50, y, z - 4.125, 25.00, 13.20, 1.425, 3.0, 0.6);
-                double body = Math.Min(Math.Min(w1, w2), deck);
-
-                double snapLip = (z >= 4.95 && z <= 5.55) ? -0.35 : 0.0;
-                double dCarrierPocket2D = SdfMesher.Box2D(x - 9.50, y, 21.50 + snapLip, 10.80 + snapLip, 3.0);
-                double dCarrierPocket3D = Math.Max(dCarrierPocket2D, 1.95 - z);
-
-                double holes = 1e9;
-                holes = Math.Min(holes, Math.Sqrt((x - 2.00) * (x - 2.00) + (y + 7.50) * (y + 7.50)) - 2.15);
-                holes = Math.Min(holes, Math.Sqrt((x - 2.00) * (x - 2.00) + (y - 7.50) * (y - 7.50)) - 2.15);
-                holes = Math.Min(holes, Math.Sqrt((x - 17.00) * (x - 17.00) + (y + 7.50) * (y + 7.50)) - 2.15);
-                holes = Math.Min(holes, Math.Sqrt((x - 17.00) * (x - 17.00) + (y - 7.50) * (y - 7.50)) - 2.15);
-                holes = Math.Min(holes, Math.Sqrt((x + 5.50) * (x + 5.50) + y * y) - 2.15);
-                holes = Math.Min(holes, Math.Sqrt((x - 24.50) * (x - 24.50) + y * y) - 2.15);
-
-                return Math.Max(body, -Math.Min(dCarrierPocket3D, holes));
-            };
-            return SdfMesher.ExtractMesh("Cradle_72D_Pocket_Insert", sdf, new Vec3(-17.0, -15.0, -0.5), new Vec3(36.0, 15.0, 6.2), step);
+            return SdfMesher.ExtractMesh("Cradle_72D_Pocket_Insert", Cradle72DMountingInsertSdf, new Vec3(-17.0, -15.5, -0.5), new Vec3(36.0, 15.5, 6.2), step);
         }
 
         // =========================================================================
@@ -319,8 +454,9 @@ namespace DjiNeo2OrbeaMounts
                 double profile2D = SdfMesher.SmoothMin(Math.Min(dTopPad2D, dFlange2D), Math.Min(dChordTop, Math.Min(dChordBotA, dChordBotB)), 2.2);
                 profile2D = Math.Min(profile2D, dWeb);
 
-                // Trim flush against top of C-clip saddle (Y >= 0 for X < 15.5) and flush against back of Number Plate (sNormal <= 0.0)!
-                if (x < 14.5 && y < 0.0) profile2D = Math.Max(profile2D, 0.0 - y);
+                // Continuous CSG trim flush against top of C-clip saddle (Y >= 0 for X < 14.5) and flush against back of Number Plate (sNormal <= 0.0)!
+                double dSaddleClear = Math.Max(x - 14.5, y - 0.0);
+                profile2D = Math.Max(profile2D, -dSaddleClear);
                 profile2D = Math.Max(profile2D, sNormal);
 
                 // Extrude Z in [0.0, 15.0mm] (matches exact 15.0mm width of 03b handlebar clamps!) with 1.0mm Orbea stealth bevels
@@ -562,16 +698,19 @@ namespace DjiNeo2OrbeaMounts
             return pair;
         }
 
-        public static MeshData BuildHandlebarTpuSleeves(double step = 0.28)
+        public static MeshData BuildHandlebarTpuSleeves(double step = 0.30)
         {
             Func<double, double, double, double> singleSleeveSdf = (x, y, z) =>
             {
                 double r = Math.Sqrt(x * x + y * y);
-                bool isFlange = (z <= 1.0 || z >= 16.0);
-                double rOuter = isFlange ? 19.5 : 18.5;
-                double dRing = Math.Max(17.5 - r, r - rOuter);
+                // Continuous CSG union of central sleeve + bottom/top retaining flanges
+                double dShaft = Math.Max(r - 18.5, Math.Max(0.0 - z, z - 17.0));
+                double dFlangeBot = Math.Max(r - 19.5, Math.Max(0.0 - z, z - 1.2));
+                double dFlangeTop = Math.Max(r - 19.5, Math.Max(15.8 - z, z - 17.0));
+                double dOuter = Math.Min(dShaft, Math.Min(dFlangeBot, dFlangeTop));
+                double dRing = Math.Max(dOuter, 17.5 - r);
                 double dSplit = Math.Max(Math.Abs(x) - 2.5, y);
-                return Math.Max(Math.Max(dRing, -dSplit), Math.Max(0.0 - z, z - 17.0));
+                return Math.Max(dRing, -dSplit);
             };
 
             var single = SdfMesher.ExtractMesh("TPU_Sleeve_Single", singleSleeveSdf, new Vec3(-20.5, -20.5, -0.5), new Vec3(20.5, 20.5, 17.5), step);
@@ -587,7 +726,7 @@ namespace DjiNeo2OrbeaMounts
         // 04. 360-DEG TPU LENS, GIMBAL, SENSOR & VIBRATION ARMOR SUITE (90A TPU)
         // =========================================================================
         // 04a: Shear/Bellows Vibration Isolator Puck + 6x Flanged M4 Bolt Grommets
-        public static MeshData BuildTpuVibrationIsolatorSystem(double step = 0.26, bool includeLooseGrommetsOnPlate = true)
+        public static MeshData BuildTpuVibrationIsolatorSystem(double step = 0.28, bool includeLooseGrommetsOnPlate = true)
         {
             Func<double, double, double, double> isolatorPadSdf = (x, y, z) =>
             {
@@ -603,8 +742,9 @@ namespace DjiNeo2OrbeaMounts
                 dBellows = Math.Max(dBellows, -dBoltBosses);
 
                 double cut = dBellows;
-                double dCellCenter = Math.Max(Math.Sqrt(x * x + y * y) - 3.8, Math.Abs(z - 3.75) - 2.6);
-                double dCellMidX = Math.Max(Math.Sqrt((ax - 19.5) * (ax - 19.5) + (ay - 6.8) * (ay - 6.8)) - 2.6, Math.Abs(z - 3.75) - 2.6);
+                // Open through-venting damping cells (eliminates enclosed negative-volume internal voids & improves elastomer compliance!)
+                double dCellCenter = Math.Sqrt(x * x + y * y) - 3.6;
+                double dCellMidX = Math.Sqrt((ax - 19.5) * (ax - 19.5) + (ay - 6.8) * (ay - 6.8)) - 2.2;
                 cut = Math.Min(cut, Math.Min(dCellCenter, dCellMidX));
 
                 double dHoles = Math.Min(
@@ -622,8 +762,10 @@ namespace DjiNeo2OrbeaMounts
             Func<double, double, double, double> grommetSdf = (x, y, z) =>
             {
                 double r = Math.Sqrt(x * x + y * y);
-                double rOut = z <= 1.6 ? 4.5 : 3.35;
-                return Math.Max(Math.Max(2.08 - r, r - rOut), Math.Max(0.0 - z, z - 4.2));
+                // Continuous CSG union of flange + shank
+                double dFlange = Math.Max(r - 4.5, Math.Max(0.0 - z, z - 1.6));
+                double dShank = Math.Max(r - 3.35, Math.Max(0.0 - z, z - 4.2));
+                return Math.Max(Math.Min(dFlange, dShank), 2.08 - r);
             };
 
             var mainPad = SdfMesher.ExtractMesh("TPU_Isolator_Pad", isolatorPadSdf, new Vec3(-25.5, -14.5, -0.5), new Vec3(25.5, 14.5, 8.0), step);
@@ -632,7 +774,7 @@ namespace DjiNeo2OrbeaMounts
 
             if (includeLooseGrommetsOnPlate)
             {
-                var singleGrommet = SdfMesher.ExtractMesh("TPU_Bolt_Grommet", grommetSdf, new Vec3(-5.2, -5.2, -0.4), new Vec3(5.2, 5.2, 4.6), 0.22);
+                var singleGrommet = SdfMesher.ExtractMesh("TPU_Bolt_Grommet", grommetSdf, new Vec3(-5.2, -5.2, -0.4), new Vec3(5.2, 5.2, 4.6), 0.42);
                 for (int i = 0; i < 6; i++)
                 {
                     var g = singleGrommet.Clone("Grommet_" + i);
@@ -645,14 +787,15 @@ namespace DjiNeo2OrbeaMounts
 
         // 04b: Snap-In 90A TPU Belly Downward Vision & IR Sensor Mud Shield
         // Seals the 20.0 x 22.6mm rear belly cutout (X in [+40.5, +60.5], Y in [-11.3, +11.3]) with a non-contact recessed optical dome!
-        public static MeshData BuildTpuBellySensorShield(double step = 0.24)
+        public static MeshData BuildTpuBellySensorShield(double step = 0.26)
         {
             Func<double, double, double, double> sdf = (x, y, z) =>
             {
                 double flange = SdfMesher.StealthBlock3D(x, y, z - 0.8, 12.2, 13.0, 0.8, 3.0, 0.0);
-                double bead = (z >= 3.2 && z <= 4.4) ? 0.55 : 0.0;
-                double plug = SdfMesher.RoundedBox3D(x, y, z - 3.1, 9.95 + bead, 11.25 + bead, 1.6, 1.5);
-                double body = Math.Min(flange, plug);
+                double plug = SdfMesher.RoundedBox3D(x, y, z - 3.1, 9.95, 11.25, 1.6, 1.5);
+                // Continuous CSG retention bead
+                double beadRing = SdfMesher.RoundedBox3D(x, y, z - 3.8, 10.50, 11.80, 0.6, 1.8);
+                double body = Math.Min(flange, Math.Min(plug, beadRing));
 
                 // Recessed non-contact optical dome (Z in [2.6, 5.5]) so nothing ever touches the downward fisheye lens or IR ToF window!
                 double dOpticalDome = Math.Max(SdfMesher.Box2D(x, y, 7.6, 8.4, 3.0), 2.5 - z);
@@ -662,14 +805,15 @@ namespace DjiNeo2OrbeaMounts
         }
 
         // 04c: Snap-In 90A TPU Heatsink Mud-Guard Louver (X in [-41.0, -21.5])
-        public static MeshData BuildTpuHeatsinkLouver(double step = 0.24)
+        public static MeshData BuildTpuHeatsinkLouver(double step = 0.26)
         {
             Func<double, double, double, double> sdf = (x, y, z) =>
             {
                 double flange = SdfMesher.StealthBlock3D(x, y, z - 0.8, 11.8, 13.0, 0.8, 3.0, 0.0);
-                double bead = (z >= 3.2 && z <= 4.4) ? 0.55 : 0.0;
-                double plug = SdfMesher.RoundedBox3D(x, y, z - 3.1, 9.70 + bead, 11.25 + bead, 1.6, 1.5);
-                double body = Math.Min(flange, plug);
+                double plug = SdfMesher.RoundedBox3D(x, y, z - 3.1, 9.70, 11.25, 1.6, 1.5);
+                // Continuous CSG retention bead
+                double beadRing = SdfMesher.RoundedBox3D(x, y, z - 3.8, 10.25, 11.80, 0.6, 1.8);
+                double body = Math.Min(flange, Math.Min(plug, beadRing));
 
                 double cut = 1e9;
                 for (int i = -2; i <= 2; i++)
@@ -771,15 +915,16 @@ namespace DjiNeo2OrbeaMounts
         // =========================================================================
         // 05. RIGID PETG FASTENER REINFORCEMENT INSERT KIT FOR 72D TPU PRINTS
         // =========================================================================
-        public static MeshData BuildPetgReinforcementInsertKit(double step = 0.24)
+        public static MeshData BuildPetgReinforcementInsertKit(double step = 0.26)
         {
             Func<double, double, double, double> carrierPlateSdf = (x, y, z) =>
             {
                 double ax = Math.Abs(x);
                 double ay = Math.Abs(y);
-                double body = SdfMesher.RoundedBox3D(x, y, z - 1.75, 21.30, 10.60, 1.75, 2.8);
+                // Widened hy to 12.30mm + Y-flat rotated corner hex pockets (7.50 + 3.59 = 11.09mm) -> solid 1.21mm perimeter walls!
+                double body = SdfMesher.RoundedBox3D(x, y, z - 1.75, 21.30, 12.30, 1.75, 2.8);
                 double holes = Math.Min(
-                    M4HoleAndHexNutSdf(ax, ay, z, 7.50, 7.50, 1.10, 3.80),
+                    M4HoleAndHexNutYFlatSdf(ax, ay, z, 7.50, 7.50, 1.10, 3.80),
                     M4HoleAndHexNutSdf(ax, y, z, 15.00, 0.00, 1.10, 3.80));
                 return Math.Max(body, -holes);
             };
@@ -787,21 +932,23 @@ namespace DjiNeo2OrbeaMounts
             Func<double, double, double, double> hexBushingSdf = (x, y, z) =>
             {
                 double r = Math.Sqrt(x * x + y * y);
-                double dOuter = z <= 3.2 ? SdfMesher.Hexagon2D(x, y, 7.08) : (r - 4.75);
-                return Math.Max(Math.Max(dOuter, 2.125 - r), Math.Max(0.0 - z, z - 4.60));
+                // Continuous CSG union of hex stem + round retention collar (zero SDF discontinuity!)
+                double dHexStem = Math.Max(SdfMesher.Hexagon2D(x, y, 7.08), Math.Max(0.0 - z, z - 3.30));
+                double dFlange = Math.Max(r - 4.75, Math.Max(3.20 - z, z - 4.60));
+                return Math.Max(Math.Min(dHexStem, dFlange), 2.125 - r);
             };
 
             var carrierMesh = SdfMesher.ExtractMesh("05a_PETG_Cradle_6Nut_Carrier_Plate", carrierPlateSdf,
-                new Vec3(-22.5, -12.0, -0.4), new Vec3(22.5, 12.0, 4.0), step);
+                new Vec3(-22.5, -13.5, -0.4), new Vec3(22.5, 13.5, 4.0), step);
             var hexBushMesh = SdfMesher.ExtractMesh("05b_PETG_Hex_Collar_M4_Bushing", hexBushingSdf,
-                new Vec3(-5.5, -5.5, -0.4), new Vec3(5.5, 5.5, 5.0), 0.20);
+                new Vec3(-5.5, -5.5, -0.4), new Vec3(5.5, 5.5, 5.0), 0.36);
 
             var kitMesh = new MeshData("05_PETG_Reinforcement_Inserts_For_72D_TPU");
             kitMesh.Append(carrierMesh);
             for (int i = 0; i < 8; i++)
             {
                 var b = hexBushMesh.Clone("Hex_Bush_" + i);
-                b.Translate(-38.5 + i * 11.0, -18.5, 0.0);
+                b.Translate(-38.5 + i * 11.0, -20.5, 0.0);
                 kitMesh.Append(b);
             }
             return kitMesh;
