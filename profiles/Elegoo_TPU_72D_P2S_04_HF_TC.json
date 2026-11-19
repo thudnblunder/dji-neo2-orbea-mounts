@@ -1,11 +1,12 @@
 {
     "type": "filament",
     "from": "User",
-    "inherits": "Generic TPU",
-    "name": "Elegoo TPU 72D - Orbea MTB @BBL P2S 0.4 HF TC",
+    "inherits": "Bambu TPU for AMS @base",
+    "name": "Elegoo TPU 72D (AMS) - Orbea MTB @BBL P2S 0.4 HF TC",
     "filament_settings_id": [
-        "Elegoo TPU 72D - Orbea MTB @BBL P2S 0.4 HF TC"
+        "Elegoo TPU 72D (AMS) - Orbea MTB @BBL P2S 0.4 HF TC"
     ],
+    "filament_id": "GFU02",
     "instantiation": "true",
     "is_custom_defined": "0",
     "version": "2.0.0.0",
