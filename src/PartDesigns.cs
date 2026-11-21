@@ -188,12 +188,25 @@ namespace DjiNeo2OrbeaMounts
             return result;
         }
 
-        // True Watertight CSG Boolean Union of 45-Deg Easy-PA Cradle + Insert + Snap-Off Anchor Fin (01b)
+        // Flex-Clip outer shave for rigid filaments (Sunlu Easy-PA / PETG):
+        // Smoothly trims outer excess wall of twin rear spring-clip arms (X > 50.5, Z > 5) from |Y|=20.8..21.8 down to |Y|=19.4mm
+        // (~2.8mm arm thickness -> ~60% lower snap-in force) while keeping inner |Y|=16.6mm drone grip & Ø10.5mm strap bosses 100% intact!
+        public static double RearFlexClipTrimSdf(double x, double y, double z)
+        {
+            double ay = Math.Abs(y);
+            double dBox = SdfMesher.SmoothMax(SdfMesher.SmoothMax(50.5 - x, 5.0 - z, 1.5), 19.4 - ay, 1.0);
+            double rBoss = Math.Sqrt((x - 60.6) * (x - 60.6) + (z - 19.2) * (z - 19.2));
+            double dKeepBoss = rBoss - 5.45;
+            return SdfMesher.SmoothMax(dBox, -dKeepBoss, 1.2);
+        }
+
+        // True Watertight CSG Boolean Union of 45-Deg Easy-PA Cradle + Insert + Snap-Off Anchor Fin (01b or 01d Flex-Clip)
         public static MeshData BuildCradle45DegBooleanUnion(
             string name,
             MeshData refCradleShell,
             bool includeAnchorFin,
-            double step = 0.30)
+            double step = 0.30,
+            bool applyRearFlexClipTrim = false)
         {
             double c = 0.680983722;
             double s = 0.732298553;
@@ -242,10 +255,17 @@ namespace DjiNeo2OrbeaMounts
                     for (int iz = 0; iz <= nz; iz++)
                     {
                         double z = oz + iz * step;
-                        // Inverse-rotate into flat cradle space to union CradleMountingInsertSdf
+                        // Inverse-rotate into flat cradle space to union CradleMountingInsertSdf & optional Flex-Clip trim
                         double zrRaw = z + minZ;
                         double xFlat = c * x + s * zrRaw;
                         double zFlat = (-s * x + c * zrRaw) + 22.37105;
+
+                        if (applyRearFlexClipTrim && xFlat >= 48.0 && Math.Abs(y) >= 17.5 && zFlat >= 2.0)
+                        {
+                            float dTrim = -(float)RearFlexClipTrimSdf(xFlat, y, zFlat);
+                            if (dTrim > grid[ix, iy, iz]) grid[ix, iy, iz] = dTrim;
+                        }
+
                         if (xFlat >= -17.5 && xFlat <= 36.5 && y >= -15.5 && y <= 15.5 && zFlat >= -1.0 && zFlat <= 6.8)
                         {
                             float dIns = (float)CradleMountingInsertSdf(xFlat, y, zFlat);

@@ -475,6 +475,10 @@ namespace DjiNeo2OrbeaMounts
                 "01c_DJI_Neo2_72D_TPU_Cradle_For_PETG_Insert", cradleShell, PartDesigns.Cradle72DMountingInsertSdf, 0.65);
             SaveAndReport(cradle72D, Path.Combine(stlDir, "01c_DJI_Neo2_72D_TPU_Cradle_For_PETG_Insert.stl"));
 
+            var cradle45EasyPaFlex = PartDesigns.BuildCradle45DegBooleanUnion(
+                "01d_DJI_Neo2_Cradle_45Deg_EasyPA_FlexClip", cradleShell, includeAnchorFin: true, step: 0.65, applyRearFlexClipTrim: true);
+            SaveAndReport(cradle45EasyPaFlex, Path.Combine(stlDir, "01d_DJI_Neo2_Cradle_45Deg_EasyPA_FlexClip.stl"));
+
             if (doRenders)
             {
                 var cradle45Only = PartDesigns.BuildCradle45DegBooleanUnion(
@@ -745,6 +749,15 @@ namespace DjiNeo2OrbeaMounts
                 {
                     new PlateItem(cradle45WithFin, 0.0, -38.0, 0.0),
                     new PlateItem(cradle72D, 0.0, 42.0, 0.0)
+                });
+
+            // Plate 4b: 45-Deg Sunlu Easy-PA / PETG Flex-Clip Cradle (2.8mm Thinned Outer Rear Arms, ~60% Easier Snap-In, Same Grip)
+            ThreeMfWriter.Save3mf(
+                Path.Combine(threeMfDir, "Plate4b_Cradle_45Deg_EasyPA_FlexClip.3mf"),
+                "DJI Neo 2 - 45-Deg Easy-PA / PETG Flex-Clip Cradle (Thinned Rear Arms, Zero Supports)",
+                new List<PlateItem>
+                {
+                    new PlateItem(cradle45EasyPaFlex, 0.0, 0.0, 0.0)
                 });
 
             // Plate 5: Rigid PETG Fastener Reinforcement Inserts for 72D TPU Parts
