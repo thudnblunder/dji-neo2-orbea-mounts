@@ -420,6 +420,88 @@ namespace DjiNeo2OrbeaMounts
                 step);
         }
 
+        // 02c: Stealth Number-Plate Shield Variant w/ Fully-Embedded Print-Pause M4 DIN 934 Captive Nuts (Zero Exposed Nuts!)
+        //   - Pause 1 at Z = 4.60 mm (Layer 23 @ 0.20mm): drop 6x M4 DIN 934 nuts into cradle pockets (Z = 1.00..4.60, 0.40mm headroom)
+        //   - Pause 2 at Z = 8.40 mm (Layer 42 @ 0.20mm): drop 4x M4 DIN 934 nuts into strut-arm pockets (Z = 4.80..8.40, 4.8mm solid rear wall!)
+        public static MeshData BuildOrbeaStealthNumberPlateShieldPauseEmbed(double step = 0.90)
+        {
+            Func<double, double, double, double> sdf = (x, y, z) =>
+            {
+                double ay = Math.Abs(y);
+
+                double dSpine = SdfMesher.StealthBlock3D(x + 3.5, y, z - 4.75, 75.5, 25.5, 4.75, 11.0, 1.5);
+
+                double wingU = Math.Max(0.0, Math.Min(1.0, (ay - 20.0) / 37.0));
+                double wingHalfX = 55.0 - 20.0 * wingU;
+                double wingShiftX = 4.0 * wingU;
+                double dWing2D = Math.Max(Math.Max(20.0 - ay, ay - 57.0), Math.Abs(x - wingShiftX) - wingHalfX);
+                double dWingCorner = (Math.Abs(x - wingShiftX) + (ay - 20.0) - (wingHalfX + 37.0 - 14.0)) * 0.70710678;
+                dWing2D = Math.Max(dWing2D, dWingCorner);
+                double dWingZ = Math.Max(0.0 - z, z - 6.2);
+                double dWingBevel = (dWing2D + (z - 6.2) + 2.2) * 0.70710678;
+                double wings3D = Math.Max(Math.Max(dWing2D, dWingZ), dWingBevel);
+
+                double strutPad = SdfMesher.StealthBlock3D(x - 31.0, ay - 31.5, z - 4.75, 17.5, 8.5, 4.75, 4.0, 1.2);
+
+                double dChin2D = SdfMesher.ChamferBox2D(x - (-63.5), y, 17.0, 27.5, 9.5);
+                double dChinProw = ((-79.5 - x) + (z - 9.5)) * 0.70710678;
+                double chinOuter = Math.Max(Math.Max(dChin2D, Math.Max(0.0 - z, z - 27.5)), dChinProw);
+                double chinCavity = Math.Max(SdfMesher.ChamferBox2D(x - (-56.0), y, 18.8, 23.2, 5.0), 9.5 - z);
+                double chinFender = Math.Max(chinOuter, -chinCavity);
+
+                double body = Math.Min(Math.Min(dSpine, wings3D), Math.Min(strutPad, chinFender));
+                body = Math.Max(body, 0.0 - z);
+
+                double cut = 1e9;
+
+                // (A) Recessed 3.5mm Deep Stadium Pocket on Front Face (Z in [6.0, 10.0]) for 04a 90A TPU Puck
+                double dPuckPocket = Math.Max(SdfMesher.Box2D(x - 9.50, y, 24.3, 13.3, 4.1), 6.0 - z);
+                cut = Math.Min(cut, dPuckPocket);
+
+                // (B) 6x Embedded Cradle M4 DIN 934 Hex Pockets (Z in [1.00, 4.60] -> Pause 1 at Z = 4.60mm!)
+                // Bolt bores enter from front (+Z down to Z = 1.00) so the rear Z = 0..1.00 skin stays 100% sealed!
+                double[] cxArr = new double[] { 2.00, 2.00, 17.00, 17.00, -5.50, 24.50 };
+                double[] cyArr = new double[] { -7.50, 7.50, -7.50, 7.50, 0.00, 0.00 };
+                for (int i = 0; i < 6; i++)
+                {
+                    double dx = x - cxArr[i], dy = y - cyArr[i];
+                    double dBore = Math.Max(Math.Sqrt(dx * dx + dy * dy) - 2.15, 1.00 - z);
+                    double dHex = Math.Max(SdfMesher.Hexagon2D(dx, dy, 7.25), Math.Max(1.00 - z, z - 4.60));
+                    cut = Math.Min(cut, Math.Min(dBore, dHex));
+                }
+
+                // (C) 4x Embedded Strut-Arm M4 DIN 934 Hex Pockets at Y = +-31.5, X = 23.0 & 39.0 (Z in [4.80, 8.40] -> Pause 2 at Z = 8.40mm!)
+                // Bolt bores enter from rear (Z = -0.5 up to Z = 8.40) against 4.80mm solid rear wall; front Z = 8.40..9.50 skin stays 100% sealed!
+                for (int sIdx = 0; sIdx < 2; sIdx++)
+                {
+                    double sx = sIdx == 0 ? 23.0 : 39.0;
+                    double dx = x - sx, dy = ay - 31.5;
+                    double dBore = Math.Max(Math.Sqrt(dx * dx + dy * dy) - 2.15, z - 8.40);
+                    double dHex = Math.Max(SdfMesher.Hexagon2D(dx, dy, 7.25), Math.Max(4.80 - z, z - 8.40));
+                    cut = Math.Min(cut, Math.Min(dBore, dHex));
+                }
+
+                // (D) Orbea-Styled Angular Stealth Aero Slashes in Side Winglets
+                double slashX = x + 15.0 - (ay - 44.5) * 0.7;
+                double dSlash = SdfMesher.ChamferBox2D(slashX, ay - 45.0, 14.0, 3.2, 2.0);
+                cut = Math.Min(cut, dSlash);
+
+                // (E) Rear Weight-Saving Relief Pockets
+                double dRearRelief1 = Math.Max(SdfMesher.ChamferBox2D(x - 51.0, y, 11.0, 12.0, 4.0), z - 4.5);
+                double dRearRelief2 = Math.Max(SdfMesher.ChamferBox2D(x + 31.0, y, 10.0, 12.0, 4.0), z - 4.5);
+                cut = Math.Min(cut, Math.Min(dRearRelief1, dRearRelief2));
+
+                return Math.Max(body, -cut);
+            };
+
+            return SdfMesher.ExtractMesh(
+                "02c_Orbea_Stealth_NumberPlate_Shield_PauseEmbed",
+                sdf,
+                new Vec3(-82.0, -59.0, -0.6),
+                new Vec3(74.0, 59.0, 28.5),
+                step);
+        }
+
         // 02b: Swept Out-Front Faceted Twin-Truss Handlebar Drop Arms (Pair)
         // Printed FLAT on their sides (Z in [0.0, 13.0mm] is lateral arm thickness!) with ZERO supports and 100% continuous perimeter strength!
         // In side-view print plane (X, Y):
@@ -710,6 +792,123 @@ namespace DjiNeo2OrbeaMounts
         public static MeshData BuildHandlebarHingedClamshellPair(double boreDiameter, string meshName, double step = 0.34)
         {
             var single = BuildHandlebarHingedClamshellSingle(boreDiameter, assembledClosed: false, step: step);
+            var pair = new MeshData(meshName);
+            var left = single.Clone(meshName + "_L"); left.Translate(-38.0, 0, 0);
+            var right = single.Clone(meshName + "_R"); right.Translate(38.0, 0, 0);
+            pair.Append(left);
+            pair.Append(right);
+            return pair;
+        }
+
+        // 03e & 03f: M4 Heat-Set Brass Insert Variant of Hinged Clamshell Clamps (For Sunlu Easy-PA / ASA / PETG)
+        // Universal Ø5.60mm pilot bores (CNC Kitchen / Ruthex / Bambu Maker's Supply M4x4, M4x5, M4x6 brass inserts):
+        //   - Top Saddle (2x): Ø5.60mm x 6.4mm deep from top face (zero side-entry slots; >=1.94mm solid wall above bar!)
+        //   - Rear Pinch (1x): Reverse-installed from TOP of upper lug (Ø5.60mm from Y=+3.0..+9.5) so bolt pulls insert against 2.3mm solid Easy-PA!
+        //   - Front Hinge (1x): Ø5.60mm x 4.6mm deep from outer Z=15.0 knuckle face (fits M4x4mm brass insert flush!)
+        public static MeshData BuildHandlebarHingedClamshellPairHeatSet(double boreDiameter, string meshName, double step = 0.70)
+        {
+            double rIn = boreDiameter * 0.5;
+            double rOut = rIn + 5.6;
+            double ySaddleTop = rIn + 6.0;
+            double pivotX = -(rIn + 5.2);
+            double pivotY = 0.0;
+            double pinchX = +(rIn + 6.5);
+
+            Func<double, double, double, double> upperHalfSdf = (x, y, z) =>
+            {
+                double r = Math.Sqrt(x * x + y * y);
+                double dOct = SdfMesher.ChamferBox2D(x, y, rOut, rOut, rOut * 0.52);
+                double dRing2D = Math.Max(rIn - r, Math.Max(r - (rOut + 0.6), dOct));
+
+                double dSaddle2D = SdfMesher.ChamferBox2D(x, y - (ySaddleTop * 0.5 + 3.0), 14.8, ySaddleTop * 0.5 - 3.0, 3.2);
+                dSaddle2D = Math.Max(dSaddle2D, rIn - r);
+
+                double dHingeCyl2D = Math.Sqrt((x - pivotX) * (x - pivotX) + (y - pivotY) * (y - pivotY)) - 5.2;
+                double dHingeWeb2D = Math.Max(SdfMesher.ChamferBox2D(x - (pivotX * 0.5 - 4.0), y - 2.5, 6.0, 4.5, 1.8), rIn - r);
+                double dFront2D = SdfMesher.SmoothMin(dHingeCyl2D, dHingeWeb2D, 1.2);
+
+                double dRearLug2D = Math.Max(SdfMesher.ChamferBox2D(x - (rIn + 5.2), y - 5.1, 6.5, 4.4, 2.2), rIn - r);
+
+                double upperMain2D = Math.Max(SdfMesher.SmoothMin(Math.Min(dRing2D, dSaddle2D), dRearLug2D, 1.4), 0.6 - y);
+                double profile2D = Math.Max(Math.Min(upperMain2D, dFront2D), rIn - r);
+
+                double dz = Math.Abs(z - 7.5) - 7.5;
+                double dSideBevel = (profile2D + dz + 1.0) * 0.70710678;
+                double body3D = Math.Max(Math.Max(profile2D, dz), dSideBevel);
+
+                double cut = 1e9;
+                double dKnuckleSlot = Math.Max(Math.Max(x - (-rIn + 0.5), y - 5.5), Math.Abs(z - 7.5) - 2.75);
+                cut = Math.Min(cut, dKnuckleSlot);
+
+                // Front hinge: M4 through-bore + Ø5.60mm heat-set pilot on Z=10.4..15.0 outer knuckle (fits M4x4mm brass insert)
+                double rHinge = Math.Sqrt((x - pivotX) * (x - pivotX) + (y - pivotY) * (y - pivotY));
+                double dHingePinBore = rHinge - 2.15;
+                double dHingeInsert = Math.Max(rHinge - 2.80, 10.4 - z);
+                cut = Math.Min(cut, Math.Min(dHingePinBore, dHingeInsert));
+
+                // Top saddle (2x): Ø5.60mm x 6.4mm deep heat-set pilots (M4x4, M4x5, or M4x6 inserts) + 0.6mm lead-in bevel
+                for (int sx = -1; sx <= 1; sx += 2)
+                {
+                    double bx = sx * 9.0;
+                    double rTop = Math.Sqrt((x - bx) * (x - bx) + (z - 7.5) * (z - 7.5));
+                    double dTopInsert = Math.Max(rTop - 2.80, Math.Max((ySaddleTop - 6.4) - y, y - (ySaddleTop + 1.0)));
+                    double dTopLead = Math.Max(rTop - 3.20, (ySaddleTop - 0.6) - y);
+                    cut = Math.Min(cut, Math.Min(dTopInsert, dTopLead));
+                }
+
+                // Rear pinch: Ø4.3mm through-bore + reverse-installed Ø5.60mm heat-set pilot from TOP (y = 3.0..9.5)
+                // Tightening the bolt from below pulls the brass insert DOWN against 2.3mm of solid Easy-PA (zero pull-out!)
+                double rPinch = Math.Sqrt((x - pinchX) * (x - pinchX) + (z - 7.5) * (z - 7.5));
+                double dPinchBore = rPinch - 2.15;
+                double dPinchInsert = Math.Max(rPinch - 2.80, 3.0 - y);
+                cut = Math.Min(cut, Math.Min(dPinchBore, dPinchInsert));
+
+                return Math.Max(body3D, -cut);
+            };
+
+            Func<double, double, double, double> lowerHalfSdf = (x, y, z) =>
+            {
+                double r = Math.Sqrt(x * x + y * y);
+                double dOct = SdfMesher.ChamferBox2D(x, y, rOut, rOut, rOut * 0.52);
+                double dRing2D = Math.Max(rIn - r, Math.Max(r - (rOut + 0.6), dOct));
+
+                double dHingeCyl2D = Math.Sqrt((x - pivotX) * (x - pivotX) + (y - pivotY) * (y - pivotY)) - 5.2;
+                double dHingeWeb2D = Math.Max(SdfMesher.ChamferBox2D(x - (pivotX * 0.5 - 4.0), y + 2.5, 6.0, 4.5, 1.8), rIn - r);
+                double dFront2D = SdfMesher.SmoothMin(dHingeCyl2D, dHingeWeb2D, 1.2);
+
+                double dRearLug2D = Math.Max(SdfMesher.ChamferBox2D(x - (rIn + 5.2), y + 5.1, 6.5, 4.4, 2.2), rIn - r);
+
+                double lowerMain2D = Math.Max(SdfMesher.SmoothMin(dRing2D, dRearLug2D, 1.4), y - (-0.6));
+                double dz = Math.Abs(z - 7.5) - 7.5;
+                double lowerMain3D = Math.Max(Math.Max(lowerMain2D, dz), (lowerMain2D + dz + 1.0) * 0.70710678);
+
+                double dTongue3D = Math.Max(Math.Max(dFront2D, rIn - r), Math.Abs(z - 7.5) - 2.45);
+                lowerMain3D = Math.Max(lowerMain3D, (pivotX + 5.5) - x);
+
+                double body3D = Math.Min(lowerMain3D, dTongue3D);
+
+                double cut = 1e9;
+                double dHingePinBore = Math.Sqrt((x - pivotX) * (x - pivotX) + (y - pivotY) * (y - pivotY)) - 2.15;
+                cut = Math.Min(cut, dHingePinBore);
+
+                double rPinch = Math.Sqrt((x - pinchX) * (x - pinchX) + (z - 7.5) * (z - 7.5));
+                double dPinchBore = rPinch - 2.15;
+                double dPinchHead = Math.Max(rPinch - 4.15, y - (-5.2));
+                cut = Math.Min(cut, Math.Min(dPinchBore, dPinchHead));
+
+                return Math.Max(body3D, -cut);
+            };
+
+            var upperMesh = SdfMesher.ExtractMesh("Upper_Saddle_HeatSet", upperHalfSdf,
+                new Vec3(pivotX - 6.0, -6.0, -0.5), new Vec3(pinchX + 6.5, ySaddleTop + 1.0, 15.5), step);
+            var lowerMesh = SdfMesher.ExtractMesh("Lower_Swinging_Jaw_HeatSet", lowerHalfSdf,
+                new Vec3(pivotX - 6.0, -(rOut + 1.5), -0.5), new Vec3(pinchX + 6.5, 6.0, 15.5), step);
+            lowerMesh.Translate(0.0, -12.5, 0.0);
+
+            var single = new MeshData("Hinged_Clamshell_HeatSet_Unit");
+            single.Append(upperMesh);
+            single.Append(lowerMesh);
+
             var pair = new MeshData(meshName);
             var left = single.Clone(meshName + "_L"); left.Translate(-38.0, 0, 0);
             var right = single.Clone(meshName + "_R"); right.Translate(38.0, 0, 0);

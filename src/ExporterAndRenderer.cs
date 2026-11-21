@@ -511,6 +511,10 @@ namespace DjiNeo2OrbeaMounts
             numberPlateDropArms.SnapBottomToZero();
             SaveAndReport(numberPlateDropArms, Path.Combine(stlDir, "02b_Orbea_Stealth_NumberPlate_Drop_Arms_Pair.stl"));
 
+            var numberPlateShieldPause = PartDesigns.BuildOrbeaStealthNumberPlateShieldPauseEmbed(0.90);
+            numberPlateShieldPause.SnapBottomToZero();
+            SaveAndReport(numberPlateShieldPause, Path.Combine(stlDir, "02c_Orbea_Stealth_NumberPlate_Shield_PauseEmbed.stl"));
+
             if (doRenders)
             {
                 MeshRenderer.RenderMultiViewSheet(
@@ -540,6 +544,14 @@ namespace DjiNeo2OrbeaMounts
             var hingedClampsDirect = PartDesigns.BuildHandlebarHingedClamshellPair(35.0, "03c_Orbea_Stealth_35mm_Hinged_Clamshells_Direct_35mm", 0.70);
             hingedClampsDirect.SnapBottomToZero();
             SaveAndReport(hingedClampsDirect, Path.Combine(stlDir, "03c_Orbea_Stealth_35mm_Hinged_Clamshells_Direct_35mm.stl"));
+
+            var heatSetClampsForTpu = PartDesigns.BuildHandlebarHingedClamshellPairHeatSet(37.0, "03e_Orbea_Stealth_Clamshells_HeatSet_M4_For_TPU", 0.70);
+            heatSetClampsForTpu.SnapBottomToZero();
+            SaveAndReport(heatSetClampsForTpu, Path.Combine(stlDir, "03e_Orbea_Stealth_Clamshells_HeatSet_M4_For_TPU.stl"));
+
+            var heatSetClampsDirect = PartDesigns.BuildHandlebarHingedClamshellPairHeatSet(35.0, "03f_Orbea_Stealth_Clamshells_HeatSet_M4_Direct_35mm", 0.70);
+            heatSetClampsDirect.SnapBottomToZero();
+            SaveAndReport(heatSetClampsDirect, Path.Combine(stlDir, "03f_Orbea_Stealth_Clamshells_HeatSet_M4_Direct_35mm.stl"));
 
             var tpuSleeves = PartDesigns.BuildHandlebarTpuSleeves(0.50);
             tpuSleeves.SnapBottomToZero();
@@ -708,6 +720,16 @@ namespace DjiNeo2OrbeaMounts
                     new PlateItem(numberPlateDropArms, 58.0, 0.0, 0.0)
                 });
 
+            // Plate 1b: Stealth Number-Plate Shield w/ Fully-Embedded Print-Pause M4 DIN 934 Nuts + Drop Arms
+            ThreeMfWriter.Save3mf(
+                Path.Combine(threeMfDir, "Plate1b_NumberPlate_Shield_PauseEmbed_Nuts.3mf"),
+                "Orbea Wild LT - Stealth Number-Plate Shield (Pause-Embed M4 Nuts: Z=4.6mm & Z=8.4mm) & Drop Arms",
+                new List<PlateItem>
+                {
+                    new PlateItem(numberPlateShieldPause, -35.0, 0.0, 0.0),
+                    new PlateItem(numberPlateDropArms, 58.0, 0.0, 0.0)
+                });
+
             // Plate 2: Over-Stem Stealth Bridge + Hinged 35mm Handlebar Clamshells (For 1mm TPU Sleeves)
             ThreeMfWriter.Save3mf(
                 Path.Combine(threeMfDir, "Plate2_OverStem_Stealth_Bridge_And_Clamps.3mf"),
@@ -725,6 +747,16 @@ namespace DjiNeo2OrbeaMounts
                 new List<PlateItem>
                 {
                     new PlateItem(hingedClampsDirect, 0.0, 0.0, 0.0)
+                });
+
+            // Plate 2c: M4 Heat-Set Brass Insert Hinged Clamshells (Both 37mm For TPU & 35mm Direct-Fit — delete whichever pair you don't need!)
+            ThreeMfWriter.Save3mf(
+                Path.Combine(threeMfDir, "Plate2c_HeatSet_M4_Clamps_35mm_And_37mm.3mf"),
+                "Orbea Wild LT - M4 Heat-Set Brass Insert Handlebar Clamshells (37mm For TPU & 35mm Direct)",
+                new List<PlateItem>
+                {
+                    new PlateItem(heatSetClampsForTpu, 0.0, 42.0, 0.0),
+                    new PlateItem(heatSetClampsDirect, 0.0, -42.0, 0.0)
                 });
 
             // Plate 3: Complete 90A TPU 360-Deg Lens, Gimbal & Vibration Armor Suite (All 6 TPU Parts on 1 Plate!)
