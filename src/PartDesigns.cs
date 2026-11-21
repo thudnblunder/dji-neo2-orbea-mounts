@@ -722,11 +722,12 @@ namespace DjiNeo2OrbeaMounts
                 double body3D = Math.Max(Math.Max(profile2D, dz), dSideBevel);
 
                 double cut = 1e9;
-                double dKnuckleSlot = Math.Max(Math.Max(x - (-rIn + 0.5), y - 5.5), Math.Abs(z - 7.5) - 2.75);
-                cut = Math.Min(cut, dKnuckleSlot);
+                // 100% Support-Free Half-Lap Hinge: upper jaw knuckle occupies Z = 0.0..7.35mm (flat on build plate!)
+                double dKnuckleCut = Math.Max(Math.Max(x - (-rIn + 0.5), y - 5.5), 7.35 - z);
+                cut = Math.Min(cut, dKnuckleCut);
 
                 double dHingePinBore = Math.Sqrt((x - pivotX) * (x - pivotX) + (y - pivotY) * (y - pivotY)) - 2.15;
-                double dHingeNut = Math.Max(SdfMesher.Hexagon2D(x - pivotX, y - pivotY, 7.18), 12.0 - z);
+                double dHingeNut = Math.Max(SdfMesher.Hexagon2D(x - pivotX, y - pivotY, 7.18), z - 3.4);
                 cut = Math.Min(cut, Math.Min(dHingePinBore, dHingeNut));
 
                 for (int sx = -1; sx <= 1; sx += 2)
@@ -757,15 +758,18 @@ namespace DjiNeo2OrbeaMounts
                 double dRearLug2D = Math.Max(SdfMesher.ChamferBox2D(x - (rIn + 5.2), y + 5.1, 6.5, 4.4, 2.2), rIn - r);
 
                 double lowerMain2D = Math.Max(SdfMesher.SmoothMin(dRing2D, dRearLug2D, 1.4), y - (-0.6));
+                double profile2D = Math.Max(Math.Min(lowerMain2D, dFront2D), rIn - r);
+
                 double dz = Math.Abs(z - 7.5) - 7.5;
-                double lowerMain3D = Math.Max(Math.Max(lowerMain2D, dz), (lowerMain2D + dz + 1.0) * 0.70710678);
-
-                double dTongue3D = Math.Max(Math.Max(dFront2D, rIn - r), Math.Abs(z - 7.5) - 2.45);
-                lowerMain3D = Math.Max(lowerMain3D, (pivotX + 5.5) - x);
-
-                double body3D = Math.Min(lowerMain3D, dTongue3D);
+                double dSideBevel = (profile2D + dz + 1.0) * 0.70710678;
+                double body3D = Math.Max(Math.Max(profile2D, dz), dSideBevel);
 
                 double cut = 1e9;
+                // Matching Half-Lap Hinge: assembled lower knuckle occupies Z = 7.65..15.0mm (0.30mm smooth clearance!)
+                // For printing (!assembledClosed), lowerMesh is rotated 180 deg around Y so Z=7.65..15.0 sits FLAT on Z=0.0..7.35!
+                double dLowerKnuckleCut = Math.Max(Math.Max(x - (-rIn + 0.5), -5.5 - y), z - 7.65);
+                cut = Math.Min(cut, dLowerKnuckleCut);
+
                 double dHingePinBore = Math.Sqrt((x - pivotX) * (x - pivotX) + (y - pivotY) * (y - pivotY)) - 2.15;
                 cut = Math.Min(cut, dHingePinBore);
 
@@ -781,7 +785,16 @@ namespace DjiNeo2OrbeaMounts
             var lowerMesh = SdfMesher.ExtractMesh("Lower_Swinging_Jaw", lowerHalfSdf,
                 new Vec3(pivotX - 6.0, -(rOut + 1.5), -0.5), new Vec3(pinchX + 6.5, 6.0, 15.5), step);
 
-            if (!assembledClosed) lowerMesh.Translate(0.0, -12.5, 0.0);
+            if (!assembledClosed)
+            {
+                // Proper 180-deg rigid rotation around Y-axis: (x, y, z) -> (-x, y, 15.0 - z), det = +1
+                // Puts the lower jaw's 7.35mm hinge knuckle 100% FLAT on the build plate (Z = 0.0) for ZERO supports!
+                for (int i = 0; i < lowerMesh.Vertices.Count; i++)
+                {
+                    var v = lowerMesh.Vertices[i];
+                    lowerMesh.Vertices[i] = new Vec3(-v.X, v.Y - 12.5, 15.0 - v.Z);
+                }
+            }
 
             var combined = new MeshData("Hinged_Clamshell_Unit");
             combined.Append(upperMesh);
@@ -837,13 +850,15 @@ namespace DjiNeo2OrbeaMounts
                 double body3D = Math.Max(Math.Max(profile2D, dz), dSideBevel);
 
                 double cut = 1e9;
-                double dKnuckleSlot = Math.Max(Math.Max(x - (-rIn + 0.5), y - 5.5), Math.Abs(z - 7.5) - 2.75);
-                cut = Math.Min(cut, dKnuckleSlot);
+                // 100% Support-Free Half-Lap Hinge: upper jaw knuckle occupies Z = 0.0..7.35mm (flat on build plate!)
+                double dKnuckleCut = Math.Max(Math.Max(x - (-rIn + 0.5), y - 5.5), 7.35 - z);
+                cut = Math.Min(cut, dKnuckleCut);
 
-                // Front hinge: M4 through-bore + Ø5.60mm heat-set pilot on Z=10.4..15.0 outer knuckle (fits M4x4mm brass insert)
+                // Front hinge: M4 through-bore + Ø5.60mm heat-set pilot from Z=0.0..5.8mm (fits standard M4x5mm or M4x6mm brass insert!)
+                // Bolt enters from Lower Jaw (Z=15) and pulls insert against 1.55mm solid Easy-PA!
                 double rHinge = Math.Sqrt((x - pivotX) * (x - pivotX) + (y - pivotY) * (y - pivotY));
                 double dHingePinBore = rHinge - 2.15;
-                double dHingeInsert = Math.Max(rHinge - 2.80, 10.4 - z);
+                double dHingeInsert = Math.Max(rHinge - 2.80, z - 5.8);
                 cut = Math.Min(cut, Math.Min(dHingePinBore, dHingeInsert));
 
                 // Top saddle (2x): Ø5.60mm x 6.4mm deep heat-set pilots (M4x4, M4x5, or M4x6 inserts) + 0.6mm lead-in bevel
@@ -879,15 +894,17 @@ namespace DjiNeo2OrbeaMounts
                 double dRearLug2D = Math.Max(SdfMesher.ChamferBox2D(x - (rIn + 5.2), y + 5.1, 6.5, 4.4, 2.2), rIn - r);
 
                 double lowerMain2D = Math.Max(SdfMesher.SmoothMin(dRing2D, dRearLug2D, 1.4), y - (-0.6));
+                double profile2D = Math.Max(Math.Min(lowerMain2D, dFront2D), rIn - r);
+
                 double dz = Math.Abs(z - 7.5) - 7.5;
-                double lowerMain3D = Math.Max(Math.Max(lowerMain2D, dz), (lowerMain2D + dz + 1.0) * 0.70710678);
-
-                double dTongue3D = Math.Max(Math.Max(dFront2D, rIn - r), Math.Abs(z - 7.5) - 2.45);
-                lowerMain3D = Math.Max(lowerMain3D, (pivotX + 5.5) - x);
-
-                double body3D = Math.Min(lowerMain3D, dTongue3D);
+                double dSideBevel = (profile2D + dz + 1.0) * 0.70710678;
+                double body3D = Math.Max(Math.Max(profile2D, dz), dSideBevel);
 
                 double cut = 1e9;
+                // Matching Half-Lap Hinge: assembled lower knuckle occupies Z = 7.65..15.0mm (rotated 180 deg around Y to sit flat on bed!)
+                double dLowerKnuckleCut = Math.Max(Math.Max(x - (-rIn + 0.5), -5.5 - y), z - 7.65);
+                cut = Math.Min(cut, dLowerKnuckleCut);
+
                 double dHingePinBore = Math.Sqrt((x - pivotX) * (x - pivotX) + (y - pivotY) * (y - pivotY)) - 2.15;
                 cut = Math.Min(cut, dHingePinBore);
 
@@ -903,7 +920,13 @@ namespace DjiNeo2OrbeaMounts
                 new Vec3(pivotX - 6.0, -6.0, -0.5), new Vec3(pinchX + 6.5, ySaddleTop + 1.0, 15.5), step);
             var lowerMesh = SdfMesher.ExtractMesh("Lower_Swinging_Jaw_HeatSet", lowerHalfSdf,
                 new Vec3(pivotX - 6.0, -(rOut + 1.5), -0.5), new Vec3(pinchX + 6.5, 6.0, 15.5), step);
-            lowerMesh.Translate(0.0, -12.5, 0.0);
+            // Proper 180-deg rigid rotation around Y-axis: (x, y, z) -> (-x, y, 15.0 - z), det = +1
+            // Puts the lower jaw's 7.35mm hinge knuckle 100% FLAT on the build plate (Z = 0.0) for ZERO supports!
+            for (int i = 0; i < lowerMesh.Vertices.Count; i++)
+            {
+                var v = lowerMesh.Vertices[i];
+                lowerMesh.Vertices[i] = new Vec3(-v.X, v.Y - 12.5, 15.0 - v.Z);
+            }
 
             var single = new MeshData("Hinged_Clamshell_HeatSet_Unit");
             single.Append(upperMesh);
