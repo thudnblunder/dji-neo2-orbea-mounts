@@ -146,12 +146,13 @@ namespace DjiNeo2OrbeaMounts
             return Math.Max(body, -Math.Min(dCarrierPocket3D, holes));
         }
 
-        // True Watertight CSG Boolean Union of Reference Cradle Shell + Flat Mounting Insert (01a or 01c)
+        // True Watertight CSG Boolean Union of Reference Cradle Shell + Flat Mounting Insert (01a, 01c, or 01e Flex-Clip)
         public static MeshData BuildCradleBooleanUnion(
             string name,
             MeshData refCradleShell,
             Func<double, double, double, double> insertSdf,
-            double step = 0.30)
+            double step = 0.30,
+            bool applyRearFlexClipTrim = false)
         {
             Vec3 minB, maxB;
             refCradleShell.GetBounds(out minB, out maxB);
@@ -168,17 +169,22 @@ namespace DjiNeo2OrbeaMounts
             for (int ix = 0; ix <= nx; ix++)
             {
                 double x = ox + ix * step;
-                if (x < -17.5 || x > 36.5) continue;
                 for (int iy = 0; iy <= ny; iy++)
                 {
                     double y = oy + iy * step;
-                    if (y < -15.5 || y > 15.5) continue;
                     for (int iz = 0; iz <= nz; iz++)
                     {
                         double z = oz + iz * step;
-                        if (z < -1.0 || z > 6.8) continue;
-                        float dIns = (float)insertSdf(x, y, z);
-                        if (dIns < grid[ix, iy, iz]) grid[ix, iy, iz] = dIns;
+                        if (applyRearFlexClipTrim && x >= 48.0 && Math.Abs(y) >= 17.5 && z >= 2.0)
+                        {
+                            float dTrim = -(float)RearFlexClipTrimSdf(x, y, z);
+                            if (dTrim > grid[ix, iy, iz]) grid[ix, iy, iz] = dTrim;
+                        }
+                        if (x >= -17.5 && x <= 36.5 && y >= -15.5 && y <= 15.5 && z >= -1.0 && z <= 6.8)
+                        {
+                            float dIns = (float)insertSdf(x, y, z);
+                            if (dIns < grid[ix, iy, iz]) grid[ix, iy, iz] = dIns;
+                        }
                     }
                 }
             }

@@ -479,6 +479,10 @@ namespace DjiNeo2OrbeaMounts
                 "01d_DJI_Neo2_Cradle_45Deg_EasyPA_FlexClip", cradleShell, includeAnchorFin: true, step: 0.65, applyRearFlexClipTrim: true);
             SaveAndReport(cradle45EasyPaFlex, Path.Combine(stlDir, "01d_DJI_Neo2_Cradle_45Deg_EasyPA_FlexClip.stl"));
 
+            var cradleFlatEasyPaFlex = PartDesigns.BuildCradleBooleanUnion(
+                "01e_DJI_Neo2_Cradle_Flat_EasyPA_FlexClip", cradleShell, PartDesigns.CradleMountingInsertSdf, 0.65, applyRearFlexClipTrim: true);
+            SaveAndReport(cradleFlatEasyPaFlex, Path.Combine(stlDir, "01e_DJI_Neo2_Cradle_Flat_EasyPA_FlexClip.stl"));
+
             if (doRenders)
             {
                 var cradle45Only = PartDesigns.BuildCradle45DegBooleanUnion(
@@ -790,6 +794,15 @@ namespace DjiNeo2OrbeaMounts
                 new List<PlateItem>
                 {
                     new PlateItem(cradle45EasyPaFlex, 0.0, 0.0, 0.0)
+                });
+
+            // Plate 4c: FLAT Sunlu Easy-PA Flex-Clip Cradle (Dead-Flat Z=0 Underside, Crisp Vertical Walls, Only Needs Simple Nose-Cup Support!)
+            ThreeMfWriter.Save3mf(
+                Path.Combine(threeMfDir, "Plate4c_Cradle_Flat_EasyPA_FlexClip.3mf"),
+                "DJI Neo 2 - Flat Easy-PA Flex-Clip Cradle (Dead-Flat Z=0 Base, Vertical 2.8mm Flex Arms)",
+                new List<PlateItem>
+                {
+                    new PlateItem(cradleFlatEasyPaFlex, 0.0, 0.0, 0.0)
                 });
 
             // Plate 5: Rigid PETG Fastener Reinforcement Inserts for 72D TPU Parts
