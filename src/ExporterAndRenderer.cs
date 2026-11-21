@@ -704,14 +704,23 @@ namespace DjiNeo2OrbeaMounts
                     new PlateItem(numberPlateDropArms, 58.0, 0.0, 0.0)
                 });
 
-            // Plate 2: Over-Stem Stealth Bridge + Hinged 35mm Handlebar Clamshells (Sunlu Easy-PA / ASA / PETG)
+            // Plate 2: Over-Stem Stealth Bridge + Hinged 35mm Handlebar Clamshells (For 1mm TPU Sleeves)
             ThreeMfWriter.Save3mf(
                 Path.Combine(threeMfDir, "Plate2_OverStem_Stealth_Bridge_And_Clamps.3mf"),
-                "Orbea Wild LT - Stealth OC Over-Stem Bridge & 35mm Hinged Clamshells",
+                "Orbea Wild LT - Stealth OC Over-Stem Bridge & 35mm Hinged Clamshells (For TPU Sleeves)",
                 new List<PlateItem>
                 {
                     new PlateItem(stemBridge, 0.0, 48.0, 0.0),
                     new PlateItem(hingedClampsForTpu, 0.0, -32.0, 0.0)
+                });
+
+            // Plate 2b: Standalone Direct-Fit 35.0mm Hinged Clamshells (No TPU Sleeves Needed)
+            ThreeMfWriter.Save3mf(
+                Path.Combine(threeMfDir, "Plate2b_Direct_35mm_Clamps_No_TPU_Sleeves.3mf"),
+                "Orbea Wild LT - Direct-Fit 35.0mm Hinged Handlebar Clamshells (No TPU Sleeves)",
+                new List<PlateItem>
+                {
+                    new PlateItem(hingedClampsDirect, 0.0, 0.0, 0.0)
                 });
 
             // Plate 3: Complete 90A TPU 360-Deg Lens, Gimbal & Vibration Armor Suite (All 6 TPU Parts on 1 Plate!)
