@@ -2,13 +2,18 @@
     "type": "process",
     "from": "User",
     "inherits": "0.20mm Standard @BBL P2S",
-    "name": "0.20mm Plate1 MTB Structural 72D TPU @BBL P2S 0.4 HF",
-    "print_settings_id": "0.20mm Plate1 MTB Structural 72D TPU @BBL P2S 0.4 HF",
-    "instantiation": "true",
-    "version": "2.0.0.0",
-    "compatible_printers": [
-        "Bambu Lab P2S 0.4 nozzle",
-        "Bambu Lab P2S 0.4 HF nozzle"
+    "name": "0.20mm Plate1 MTB 72D TPU - 0.4HF",
+    "print_settings_id": "0.20mm Plate1 MTB 72D TPU - 0.4HF",
+    "version": "2.9.0.74",
+    "print_extruder_id": [
+        "1",
+        "1",
+        "1"
+    ],
+    "print_extruder_variant": [
+        "Direct Drive Standard",
+        "Direct Drive High Flow",
+        "Direct Drive E3D High Flow"
     ],
     "layer_height": "0.2",
     "initial_layer_print_height": "0.2",
@@ -23,49 +28,124 @@
     "wall_generator": "arachne",
     "wall_sequence": "inner wall/outer wall",
     "precise_outer_wall": "1",
-    "detect_thin_wall": "0",
-    "only_one_wall_top": "0",
     "top_shell_layers": "5",
     "bottom_shell_layers": "5",
-    "top_shell_thickness": "1.0",
-    "bottom_shell_thickness": "1.0",
-    "top_surface_pattern": "monotonicline",
-    "bottom_surface_pattern": "monotonic",
+    "top_shell_thickness": "1",
+    "bottom_shell_thickness": "1",
     "sparse_infill_density": "30%",
     "sparse_infill_pattern": "gyroid",
     "infill_wall_overlap": "25%",
-    "infill_combination": "0",
     "seam_position": "aligned",
     "staggered_inner_seams": "1",
     "xy_hole_compensation": "0.05",
-    "xy_contour_compensation": "0",
     "elefant_foot_compensation": "0.15",
     "enable_support": "0",
     "brim_type": "no_brim",
     "reduce_crossing_wall": "1",
     "max_travel_detour_distance": "50%",
-    "reduce_infill_retraction": "1",
-    "initial_layer_speed": "35",
-    "initial_layer_infill_speed": "60",
-    "outer_wall_speed": "75",
-    "inner_wall_speed": "120",
-    "sparse_infill_speed": "130",
-    "internal_solid_infill_speed": "110",
-    "top_surface_speed": "75",
-    "gap_infill_speed": "80",
-    "enable_overhang_speed": "1",
-    "overhang_1_4_speed": "50",
-    "overhang_2_4_speed": "35",
-    "overhang_3_4_speed": "25",
-    "overhang_4_4_speed": "15",
-    "bridge_speed": "35",
-    "travel_speed": "400",
-    "default_acceleration": "5000",
-    "outer_wall_acceleration": "3000",
-    "inner_wall_acceleration": "4000",
-    "top_surface_acceleration": "2500",
-    "initial_layer_acceleration": "500",
-    "travel_acceleration": "6000",
-    "skirt_loops": "0",
-    "notes": "Optimized for Plate 1 (02a Stealth Number-Plate Shield + 02b Swept Drop Arms) in Elegoo TPU 72D on Bambu Lab P2S 0.4mm HF TC nozzle: 6 walls (solid truss chords & Chin Fender), 30% Gyroid (isotropic damping, zero crossing bumps), Inner/Outer + Arachne for 45-deg bevels and horizontal M4 bores, Avoid Crossing Walls ON, +0.05mm XY hole comp for crisp M4 hardware & PETG hex bushings, zero supports."
+    "initial_layer_speed": [
+        "35",
+        "35",
+        "35"
+    ],
+    "initial_layer_infill_speed": [
+        "60",
+        "60",
+        "60"
+    ],
+    "outer_wall_speed": [
+        "75",
+        "75",
+        "75"
+    ],
+    "inner_wall_speed": [
+        "120",
+        "120",
+        "120"
+    ],
+    "sparse_infill_speed": [
+        "130",
+        "130",
+        "130"
+    ],
+    "internal_solid_infill_speed": [
+        "110",
+        "110",
+        "110"
+    ],
+    "top_surface_speed": [
+        "75",
+        "75",
+        "75"
+    ],
+    "gap_infill_speed": [
+        "80",
+        "80",
+        "80"
+    ],
+    "enable_overhang_speed": [
+        "1",
+        "1",
+        "1"
+    ],
+    "overhang_1_4_speed": [
+        "50",
+        "50",
+        "50"
+    ],
+    "overhang_2_4_speed": [
+        "35",
+        "35",
+        "35"
+    ],
+    "overhang_3_4_speed": [
+        "25",
+        "25",
+        "25"
+    ],
+    "overhang_4_4_speed": [
+        "15",
+        "15",
+        "15"
+    ],
+    "bridge_speed": [
+        "35",
+        "35",
+        "35"
+    ],
+    "travel_speed": [
+        "400",
+        "400",
+        "400"
+    ],
+    "default_acceleration": [
+        "5000",
+        "5000",
+        "5000"
+    ],
+    "outer_wall_acceleration": [
+        "3000",
+        "3000",
+        "3000"
+    ],
+    "inner_wall_acceleration": [
+        "4000",
+        "4000",
+        "4000"
+    ],
+    "top_surface_acceleration": [
+        "2500",
+        "2500",
+        "2500"
+    ],
+    "initial_layer_acceleration": [
+        "500",
+        "500",
+        "500"
+    ],
+    "travel_acceleration": [
+        "6000",
+        "6000",
+        "6000"
+    ]
 }
