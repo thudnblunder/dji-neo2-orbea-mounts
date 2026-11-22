@@ -146,16 +146,22 @@ namespace DjiNeo2OrbeaMounts
             return Math.Max(body, -Math.Min(dCarrierPocket3D, holes));
         }
 
-        // True Watertight CSG Boolean Union of Reference Cradle Shell + Flat Mounting Insert (01a, 01c, or 01e Flex-Clip)
+        // True Watertight CSG Boolean Union of Reference Cradle Shell + Flat Mounting Insert (01a, 01c, or 01e Flat Easy-PA V2)
         public static MeshData BuildCradleBooleanUnion(
             string name,
             MeshData refCradleShell,
             Func<double, double, double, double> insertSdf,
             double step = 0.30,
-            bool applyRearFlexClipTrim = false)
+            bool applyRearFlexClipTrim = false,
+            bool applyFlatEasyPaV2 = false)
         {
             Vec3 minB, maxB;
             refCradleShell.GetBounds(out minB, out maxB);
+            if (applyFlatEasyPaV2)
+            {
+                if (-27.2 < minB.Y) minB.Y = -27.2;
+                if (27.2 > maxB.Y) maxB.Y = 27.2;
+            }
             double ox = minB.X - 2.0 * step;
             double oy = minB.Y - 2.0 * step;
             double oz = Math.Floor((minB.Z - step) / step) * step - 0.5 * step;
@@ -172,10 +178,34 @@ namespace DjiNeo2OrbeaMounts
                 for (int iy = 0; iy <= ny; iy++)
                 {
                     double y = oy + iy * step;
+                    double ay = Math.Abs(y);
                     for (int iz = 0; iz <= nz; iz++)
                     {
                         double z = oz + iz * step;
-                        if (applyRearFlexClipTrim && x >= 48.0 && Math.Abs(y) >= 17.5 && z >= 2.0)
+                        if (applyFlatEasyPaV2)
+                        {
+                            // 1) Smooth, lump-free rear flank shave (removes ALL Ø10.5mm bosses + lower shoulders down to Z=0 -> uniform 2.8mm flex arms!)
+                            if (x >= 43.0 && ay >= 17.5)
+                            {
+                                float dCleanTrim = -(float)RearFlexClipCleanTrimSdf(x, y, z);
+                                if (dCleanTrim > grid[ix, iy, iz]) grid[ix, iy, iz] = dCleanTrim;
+                            }
+                            // 2) Self-supporting 29-deg Stealth Front Lower Nose Chin (eliminates rough 45-55 deg Easy-PA overhang without touching inner pocket!)
+                            if (x <= -46.0 && z >= -0.5 && z <= 17.5)
+                            {
+                                float dChin = (float)NoseChin30DegFillSdf(x, y, z);
+                                if (dChin < grid[ix, iy, iz]) grid[ix, iy, iz] = dChin;
+                            }
+                            // 3) Flush Z=0.0..6.0mm side 14.0 x 3.5mm FPV LiPo Velcro strap pass-through loops (locks rear flex arms closed + fail-safe tether!)
+                            if (x >= 46.5 && x <= 71.5 && ay >= 12.5 && z >= -0.5 && z <= 7.5)
+                            {
+                                float dLoopBody = (float)RearVelcroStrapLoopBodySdf(x, y, z);
+                                if (dLoopBody < grid[ix, iy, iz]) grid[ix, iy, iz] = dLoopBody;
+                                float dSlotCut = -(float)RearVelcroStrapSlotCutSdf(x, y, z);
+                                if (dSlotCut > grid[ix, iy, iz]) grid[ix, iy, iz] = dSlotCut;
+                            }
+                        }
+                        else if (applyRearFlexClipTrim && x >= 48.0 && ay >= 17.5 && z >= 2.0)
                         {
                             float dTrim = -(float)RearFlexClipTrimSdf(x, y, z);
                             if (dTrim > grid[ix, iy, iz]) grid[ix, iy, iz] = dTrim;
@@ -194,7 +224,7 @@ namespace DjiNeo2OrbeaMounts
             return result;
         }
 
-        // Flex-Clip outer shave for rigid filaments (Sunlu Easy-PA / PETG):
+        // Flex-Clip outer shave for rigid filaments (Sunlu Easy-PA / PETG) preserving Ø10.5mm bosses (01d):
         // Smoothly trims outer excess wall of twin rear spring-clip arms (X > 50.5, Z > 5) from |Y|=20.8..21.8 down to |Y|=19.4mm
         // (~2.8mm arm thickness -> ~60% lower snap-in force) while keeping inner |Y|=16.6mm drone grip & Ø10.5mm strap bosses 100% intact!
         public static double RearFlexClipTrimSdf(double x, double y, double z)
@@ -204,6 +234,48 @@ namespace DjiNeo2OrbeaMounts
             double rBoss = Math.Sqrt((x - 60.6) * (x - 60.6) + (z - 19.2) * (z - 19.2));
             double dKeepBoss = rBoss - 5.45;
             return SdfMesher.SmoothMax(dBox, -dKeepBoss, 1.2);
+        }
+
+        // Clean, lump-free Flex-Clip outer shave for 01e (Flat Easy-PA V2):
+        // Shaves the entire outer flank of the rear clip section (X > 45.5, all Z >= 0) smoothly to |Y| = 19.4 mm
+        // (~2.8 mm uniform flex arm, 0 leftover strap bosses, 0 bulbous lower shoulders) while preserving inner |Y| = 16.6 mm drone grip!
+        public static double RearFlexClipCleanTrimSdf(double x, double y, double z)
+        {
+            double ay = Math.Abs(y);
+            return SdfMesher.SmoothMax(45.5 - x, 19.4 - ay, 1.4);
+        }
+
+        // Self-supporting 29-deg Stealth Front Lower Nose Chin for 01e (Flat Easy-PA V2):
+        // Extends the Z=0 front chin footprint forward to X=-64.0 and sweeps smoothly at 29.4 deg from vertical up to X=-73.0 at Z=16.0.
+        // Strictly bounded outside the inner Neo 2 nose pocket via xSafeRear so interior gimbal/nose clearance is 100% untouched!
+        public static double NoseChin30DegFillSdf(double x, double y, double z)
+        {
+            double ay = Math.Abs(y);
+            double zClamped = Math.Max(0.0, Math.Min(16.0, z));
+            double xFront = -64.0 - 0.5625 * zClamped; // -64.0 at Z=0 -> -73.0 at Z=16.0 (29.4 deg from vertical!)
+            double xBack = -48.0;
+            double dOuter = SdfMesher.Box2D(x - 0.5 * (xFront + xBack), y, 0.5 * (xBack - xFront), 21.60, 5.5);
+            double xSafeRear = -57.5 - 0.90 * zClamped + Math.Max(0.0, ay - 16.0) * 0.95;
+            double dRearClip = x - xSafeRear;
+            double dZ = Math.Max(0.0 - z, z - 16.2);
+            return Math.Max(Math.Max(dOuter, dRearClip), dZ);
+        }
+
+        // Flush Z=0.0..6.0mm side Velcro/FPV LiPo strap loop tabs at X in [48.0, 70.0] (centered at X=59.0, right beside the rear flex arms!)
+        public static double RearVelcroStrapLoopBodySdf(double x, double y, double z)
+        {
+            double ay = Math.Abs(y);
+            // Solid flat-on-bed ear from |Y|=14.0 to |Y|=26.2, X in [48.0, 70.0], Z in [0.0, 6.0] with 3.0mm XY chamfers & 0.8mm top bevel
+            return SdfMesher.StealthBlock3D(x - 59.0, ay - 20.1, z - 3.0, 11.0, 6.1, 3.0, 3.0, 0.8);
+        }
+
+        // Vertical 14.0 x 3.5 mm pass-through strap slot at X in [52.0, 66.0], |Y| in [19.7, 23.2] (clears |Y|=19.4 rear arm; 3.0mm outer tie bar!)
+        public static double RearVelcroStrapSlotCutSdf(double x, double y, double z)
+        {
+            double ay = Math.Abs(y);
+            double dSlot2D = SdfMesher.Box2D(x - 59.0, ay - 21.45, 7.0, 1.75, 0.9);
+            double dSlotZ = Math.Max(-1.0 - z, z - 7.5);
+            return Math.Max(dSlot2D, dSlotZ);
         }
 
         // True Watertight CSG Boolean Union of 45-Deg Easy-PA Cradle + Insert + Snap-Off Anchor Fin (01b or 01d Flex-Clip)
