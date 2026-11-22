@@ -146,18 +146,24 @@ namespace DjiNeo2OrbeaMounts
             return Math.Max(body, -Math.Min(dCarrierPocket3D, holes));
         }
 
-        // True Watertight CSG Boolean Union of Reference Cradle Shell + Flat Mounting Insert (01a, 01c, or 01e Flat Easy-PA V2)
+        // True Watertight CSG Boolean Union of Reference Cradle Shell + Flat Mounting Insert (01a, 01c, 01e TPU Flex-Clip, or 01f Easy-PA Reinforced)
         public static MeshData BuildCradleBooleanUnion(
             string name,
             MeshData refCradleShell,
             Func<double, double, double, double> insertSdf,
             double step = 0.30,
             bool applyRearFlexClipTrim = false,
-            bool applyFlatEasyPaV2 = false)
+            bool applyFlatEasyPaV2 = false,
+            bool applyFlatEasyPaReinforced = false)
         {
             Vec3 minB, maxB;
             refCradleShell.GetBounds(out minB, out maxB);
-            if (applyFlatEasyPaV2)
+            if (applyFlatEasyPaReinforced)
+            {
+                if (-29.0 < minB.Y) minB.Y = -29.0;
+                if (29.0 > maxB.Y) maxB.Y = 29.0;
+            }
+            else if (applyFlatEasyPaV2)
             {
                 if (-27.2 < minB.Y) minB.Y = -27.2;
                 if (27.2 > maxB.Y) maxB.Y = 27.2;
@@ -182,7 +188,31 @@ namespace DjiNeo2OrbeaMounts
                     for (int iz = 0; iz <= nz; iz++)
                     {
                         double z = oz + iz * step;
-                        if (applyFlatEasyPaV2)
+                        if (applyFlatEasyPaReinforced)
+                        {
+                            // 1) Tapered reinforced lump-free rear flank shave for Easy-PA:
+                            //    4.5mm thick root (|Y|=21.1 at Z<=12) tapering smoothly to 3.2mm upper hook (|Y|=19.8 at Z=38) -> +125% stronger at bend zone!
+                            if (x >= 43.0 && ay >= 18.0)
+                            {
+                                float dReinfTrim = -(float)RearFlexClipReinforcedTrimSdf(x, y, z);
+                                if (dReinfTrim > grid[ix, iy, iz]) grid[ix, iy, iz] = dReinfTrim;
+                            }
+                            // 2) Self-supporting 29.4-deg Stealth Front Lower Nose Chin (zero intrusion into inner Neo 2 nose pocket!)
+                            if (x <= -46.0 && z >= -0.5 && z <= 17.5)
+                            {
+                                float dChin = (float)NoseChin30DegFillSdf(x, y, z);
+                                if (dChin < grid[ix, iy, iz]) grid[ix, iy, iz] = dChin;
+                            }
+                            // 3) Flush Z=0.0..6.0mm side 14.0 x 3.5mm FPV LiPo Velcro strap loops (shifted +1.7mm outward to clear 4.5mm arm root!)
+                            if (x >= 46.5 && x <= 71.5 && ay >= 12.5 && z >= -0.5 && z <= 7.5)
+                            {
+                                float dLoopBody = (float)RearVelcroStrapLoopBodyReinforcedSdf(x, y, z);
+                                if (dLoopBody < grid[ix, iy, iz]) grid[ix, iy, iz] = dLoopBody;
+                                float dSlotCut = -(float)RearVelcroStrapSlotCutReinforcedSdf(x, y, z);
+                                if (dSlotCut > grid[ix, iy, iz]) grid[ix, iy, iz] = dSlotCut;
+                            }
+                        }
+                        else if (applyFlatEasyPaV2)
                         {
                             // 1) Smooth, lump-free rear flank shave (removes ALL Ø10.5mm bosses + lower shoulders down to Z=0 -> uniform 2.8mm flex arms!)
                             if (x >= 43.0 && ay >= 17.5)
@@ -274,6 +304,34 @@ namespace DjiNeo2OrbeaMounts
         {
             double ay = Math.Abs(y);
             double dSlot2D = SdfMesher.Box2D(x - 59.0, ay - 21.45, 7.0, 1.75, 0.9);
+            double dSlotZ = Math.Max(-1.0 - z, z - 7.5);
+            return Math.Max(dSlot2D, dSlotZ);
+        }
+
+        // Tapered reinforced lump-free rear flank shave for 01f (Flat Easy-PA Reinforced):
+        // Keeps inner |Y|=16.6mm drone grip intact while tapering outer wall smoothly from |Y|=21.1mm (4.5mm thick root at Z<=12)
+        // down to |Y|=19.8mm (3.2mm upper hook at Z=38) -> +125% bending strength right at the Z=18mm bend zone, with 0 boss lumps!
+        public static double RearFlexClipReinforcedTrimSdf(double x, double y, double z)
+        {
+            double ay = Math.Abs(y);
+            double u = Math.Max(0.0, Math.Min(1.0, (z - 12.0) / 26.0));
+            double yOuter = 21.1 - 1.3 * u;
+            return SdfMesher.SmoothMax(45.5 - x, yOuter - ay, 1.4);
+        }
+
+        // Flush Z=0.0..6.0mm side Velcro/FPV LiPo strap loops for 01f (shifted +1.7mm outward to clear the 4.5mm arm root at |Y|=21.1)
+        public static double RearVelcroStrapLoopBodyReinforcedSdf(double x, double y, double z)
+        {
+            double ay = Math.Abs(y);
+            // Solid flat-on-bed ear from |Y|=14.0 to |Y|=27.9, X in [48.0, 70.0], Z in [0.0, 6.0] with 3.0mm XY chamfers & 0.8mm top bevel
+            return SdfMesher.StealthBlock3D(x - 59.0, ay - 20.95, z - 3.0, 11.0, 6.95, 3.0, 3.0, 0.8);
+        }
+
+        // Vertical 14.0 x 3.5 mm pass-through strap slot for 01f at X in [52.0, 66.0], |Y| in [21.4, 24.9] (clears |Y|=21.1 arm root; 3.0mm outer tie bar!)
+        public static double RearVelcroStrapSlotCutReinforcedSdf(double x, double y, double z)
+        {
+            double ay = Math.Abs(y);
+            double dSlot2D = SdfMesher.Box2D(x - 59.0, ay - 23.15, 7.0, 1.75, 0.9);
             double dSlotZ = Math.Max(-1.0 - z, z - 7.5);
             return Math.Max(dSlot2D, dSlotZ);
         }

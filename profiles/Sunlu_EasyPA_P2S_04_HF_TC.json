@@ -23,20 +23,20 @@
         "12"
     ],
     "nozzle_temperature_range_low": [
-        "245"
+        "235"
     ],
     "nozzle_temperature_range_high": [
-        "275"
+        "265"
     ],
     "nozzle_temperature_initial_layer": [
-        "255",
-        "255",
-        "255"
+        "245",
+        "245",
+        "245"
     ],
     "nozzle_temperature": [
-        "255",
-        "255",
-        "255"
+        "242",
+        "242",
+        "242"
     ],
     "textured_plate_temp_initial_layer": [
         "55"
@@ -51,25 +51,25 @@
         "50"
     ],
     "close_fan_the_first_x_layers": [
-        "1"
+        "2"
     ],
     "fan_min_speed": [
-        "30"
+        "10"
     ],
     "fan_max_speed": [
-        "50"
+        "25"
     ],
     "slow_down_for_layer_cooling": [
         "1"
     ],
     "slow_down_layer_time": [
-        "10"
+        "8"
     ],
     "overhang_fan_threshold": [
-        "10%"
+        "50%"
     ],
     "overhang_fan_speed": [
-        "95"
+        "60"
     ],
     "additional_cooling_fan_speed": [
         "0"

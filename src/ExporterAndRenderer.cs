@@ -483,6 +483,10 @@ namespace DjiNeo2OrbeaMounts
                 "01e_DJI_Neo2_Cradle_Flat_EasyPA_FlexClip", cradleShell, PartDesigns.CradleMountingInsertSdf, 0.50, applyRearFlexClipTrim: false, applyFlatEasyPaV2: true);
             SaveAndReport(cradleFlatEasyPaFlex, Path.Combine(stlDir, "01e_DJI_Neo2_Cradle_Flat_EasyPA_FlexClip.stl"));
 
+            var cradleFlatEasyPaReinforced = PartDesigns.BuildCradleBooleanUnion(
+                "01f_DJI_Neo2_Cradle_Flat_EasyPA_Reinforced", cradleShell, PartDesigns.CradleMountingInsertSdf, 0.50, applyRearFlexClipTrim: false, applyFlatEasyPaV2: false, applyFlatEasyPaReinforced: true);
+            SaveAndReport(cradleFlatEasyPaReinforced, Path.Combine(stlDir, "01f_DJI_Neo2_Cradle_Flat_EasyPA_Reinforced.stl"));
+
             if (doRenders)
             {
                 var cradle45Only = PartDesigns.BuildCradle45DegBooleanUnion(
@@ -507,10 +511,17 @@ namespace DjiNeo2OrbeaMounts
 
                 MeshRenderer.RenderMultiViewSheet(
                     Path.Combine(rendersDir, "13_Cradle_Flat_EasyPA_FlexClip_V2_Preview.png"),
-                    "01e V2 - Flat Sunlu Easy-PA Flex-Clip Cradle (Stealth Over-Stem Edition)",
+                    "01e V2 - Flat 72D TPU Flex-Clip Cradle (2.8mm Uniform Arms)",
                     "29-Deg Self-Supporting Nose Chin | Lump-Free 2.8mm Rear Flex Arms | Flush 14x3.5mm FPV LiPo Velcro Strap Loops",
                     cradleFlatEasyPaFlex,
                     Color.FromArgb(65, 165, 245));
+
+                MeshRenderer.RenderMultiViewSheet(
+                    Path.Combine(rendersDir, "14_Cradle_Flat_EasyPA_Reinforced_Preview.png"),
+                    "01f - Flat Sunlu Easy-PA Reinforced Cradle (Tapered 4.5->3.2mm Arms)",
+                    "29-Deg Self-Supporting Nose Chin | Lump-Free Tapered 4.5->3.2mm Reinforced Arms (+125% Bend Strength) | Flush 14x3.5mm FPV Strap Loops",
+                    cradleFlatEasyPaReinforced,
+                    Color.FromArgb(95, 195, 140));
             }
 
             Console.WriteLine("2. Building Mount 1: Orbea Wild LT 'Stealth Fairing' Number-Plate Shield (02a) + Swept Drop Arms (02b)...");
@@ -803,13 +814,22 @@ namespace DjiNeo2OrbeaMounts
                     new PlateItem(cradle45EasyPaFlex, 0.0, 0.0, 0.0)
                 });
 
-            // Plate 4c: FLAT Sunlu Easy-PA Flex-Clip Cradle V2 (Lump-Free 2.8mm Rear Arms, 29-Deg Self-Supporting Nose Chin, 14x3.5mm FPV Velcro Strap Loops)
+            // Plate 4c: FLAT 72D TPU Flex-Clip Cradle (2.8mm Uniform Rear Flex Arms, 29-Deg Nose Chin, 14x3.5mm FPV Velcro Strap Loops)
             ThreeMfWriter.Save3mf(
                 Path.Combine(threeMfDir, "Plate4c_Cradle_Flat_EasyPA_FlexClip.3mf"),
-                "DJI Neo 2 - Flat Easy-PA Flex-Clip Cradle V2 (29-Deg Nose Chin, Smooth 2.8mm Arms, 14x3.5mm FPV Strap Loops)",
+                "DJI Neo 2 - Flat 72D TPU Flex-Clip Cradle (29-Deg Nose Chin, Smooth 2.8mm Arms, 14x3.5mm FPV Strap Loops)",
                 new List<PlateItem>
                 {
                     new PlateItem(cradleFlatEasyPaFlex, 0.0, 0.0, 0.0)
+                });
+
+            // Plate 4d: FLAT Sunlu Easy-PA Reinforced Cradle (Tapered 4.5->3.2mm Lump-Free Arms, 29-Deg Nose Chin, 14x3.5mm FPV Velcro Strap Loops)
+            ThreeMfWriter.Save3mf(
+                Path.Combine(threeMfDir, "Plate4d_Cradle_Flat_EasyPA_Reinforced.3mf"),
+                "DJI Neo 2 - Flat Easy-PA Reinforced Cradle (Tapered 4.5->3.2mm Arms, 29-Deg Nose Chin, 14x3.5mm FPV Strap Loops)",
+                new List<PlateItem>
+                {
+                    new PlateItem(cradleFlatEasyPaReinforced, 0.0, 0.0, 0.0)
                 });
 
             // Plate 5: Rigid PETG Fastener Reinforcement Inserts for 72D TPU Parts
