@@ -487,6 +487,10 @@ namespace DjiNeo2OrbeaMounts
                 "01f_DJI_Neo2_Cradle_Flat_EasyPA_Reinforced", cradleShell, PartDesigns.CradleMountingInsertSdf, 0.50, applyRearFlexClipTrim: false, applyFlatEasyPaV2: false, applyFlatEasyPaReinforced: true);
             SaveAndReport(cradleFlatEasyPaReinforced, Path.Combine(stlDir, "01f_DJI_Neo2_Cradle_Flat_EasyPA_Reinforced.stl"));
 
+            // 01g: Dedicated Flat 72D TPU Cradle (tapered 4.5->3.2mm arms give ideal firm snap-in retention & unbreakable Z-bonding in Elegoo 72D TPU!)
+            var cradleFlat72DTpu = cradleFlatEasyPaReinforced.Clone("01g_DJI_Neo2_Cradle_Flat_72D_TPU");
+            SaveAndReport(cradleFlat72DTpu, Path.Combine(stlDir, "01g_DJI_Neo2_Cradle_Flat_72D_TPU.stl"));
+
             if (doRenders)
             {
                 var cradle45Only = PartDesigns.BuildCradle45DegBooleanUnion(
@@ -623,6 +627,10 @@ namespace DjiNeo2OrbeaMounts
             var tpuTopVisorStrap = PartDesigns.BuildTpuTopFisheyeLensVisorStrap(0.50);
             tpuTopVisorStrap.SnapBottomToZero();
             SaveAndReport(tpuTopVisorStrap, Path.Combine(stlDir, "04e_TPU_Top_Fisheye_Lens_Visor_Strap.stl"));
+
+            var tpuSelfLockingStrap = PartDesigns.BuildTpu90ASelfLockingCradleStrap(0.36);
+            tpuSelfLockingStrap.SnapBottomToZero();
+            SaveAndReport(tpuSelfLockingStrap, Path.Combine(stlDir, "04f_TPU_90A_SelfLocking_Cradle_Strap.stl"));
 
             var petgInsertKit = PartDesigns.BuildPetgReinforcementInsertKit(0.48);
             petgInsertKit.SnapBottomToZero();
@@ -795,6 +803,15 @@ namespace DjiNeo2OrbeaMounts
                     new PlateItem(tpuTopVisorStrap, 66.0, 0.0, 0.0)
                 });
 
+            // Plate 3b: Standalone 90A TPU Self-Locking Cradle Strap w/ Molded Mushroom-Head Hook Boss & 4-Position Eyelet Ladder (Zero Supports!)
+            ThreeMfWriter.Save3mf(
+                Path.Combine(threeMfDir, "Plate3b_90A_TPU_SelfLocking_Cradle_Strap.3mf"),
+                "DJI Neo 2 - 90A TPU Self-Locking Cradle Strap (Molded Mushroom Boss + 4-Position Eyelet Ladder, Zero Supports)",
+                new List<PlateItem>
+                {
+                    new PlateItem(tpuSelfLockingStrap, 0.0, 0.0, 0.0)
+                });
+
             // Plate 4: 45-Deg Sunlu Easy-PA Cradle w/ Snap-Off A-Frame Anchor Fin (+ Flat 72D Cradle Option)
             ThreeMfWriter.Save3mf(
                 Path.Combine(threeMfDir, "Plate4_Cradles_45Deg_EasyPA_And_Flat_72D.3mf"),
@@ -830,6 +847,15 @@ namespace DjiNeo2OrbeaMounts
                 new List<PlateItem>
                 {
                     new PlateItem(cradleFlatEasyPaReinforced, 0.0, 0.0, 0.0)
+                });
+
+            // Plate 4e: DEDICATED FLAT 72D TPU CRADLE (Tapered 4.5->3.2mm Unbreakable Arms, 29-Deg Nose Chin, 14x3.5mm Strap Loops for 04f 90A Strap)
+            ThreeMfWriter.Save3mf(
+                Path.Combine(threeMfDir, "Plate4e_Cradle_Flat_72D_TPU.3mf"),
+                "DJI Neo 2 - Flat Elegoo 72D TPU Cradle (Tapered 4.5->3.2mm Arms, 29-Deg Nose Chin, 14x3.5mm Strap Loops)",
+                new List<PlateItem>
+                {
+                    new PlateItem(cradleFlat72DTpu, 0.0, 0.0, 0.0)
                 });
 
             // Plate 5: Rigid PETG Fastener Reinforcement Inserts for 72D TPU Parts

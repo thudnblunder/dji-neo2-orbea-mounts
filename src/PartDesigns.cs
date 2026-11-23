@@ -1290,6 +1290,72 @@ namespace DjiNeo2OrbeaMounts
                 new Vec3(-17.5, -51.0, -0.5), new Vec3(12.0, 58.0, 6.0), step);
         }
 
+        // 04f (NEW!): One-Piece 90A TPU Self-Locking Cradle Strap w/ Molded Mushroom-Head Hook Boss & 4-Position Eyelet Ladder
+        // Replaces FPV LiPo Velcro straps on 01e / 01f / 01g cradles (14.0 x 3.5 mm side pass-through slots).
+        // Sized specifically for the DJI Neo 2 seated in the cradle (~176 mm closed perimeter under cradle floor & over rear fuselage):
+        //   - End A: 16.4 mm wide captive stopper base (cannot pull through 14 mm slot) + molded 360-deg self-supporting 40-deg domed mushroom boss (Ø6.4mm neck, Ø9.8mm cap)
+        //   - Body: 11.8 x 2.4 mm continuous-perimeter 90A TPU band (slides effortlessly through 14.0 x 3.5 mm cradle slots)
+        //   - End B: 13.2 x 2.6 mm 4-position reinforced oval eyelet ladder (148, 159, 170, 181 mm unstretched -> tight elastic lock around 176 mm Neo 2 perimeter) + ribbed 3.2mm pull-tab
+        // Prints 100% FLAT on Z = 0.0 with ZERO supports!
+        public static MeshData BuildTpu90ASelfLockingCradleStrap(double step = 0.36)
+        {
+            Func<double, double, double, double> sdf = (x, y, z) =>
+            {
+                double xLocal = x + 108.0; // [0.0 .. 216.0]
+
+                // 1) End A: Captive stopper pad (16.4 x 25.0 x 3.2 mm — stops cleanly against left 14mm cradle slot)
+                double dBase = SdfMesher.StealthBlock3D(xLocal - 12.5, y, z - 1.6, 12.5, 8.2, 1.6, 3.5, 0.5);
+
+                // 2) Molded 360-deg self-supporting Mushroom-Head Locking Boss at (xLocal=12.0, y=0.0, z=2.6..8.2)
+                double dxS = xLocal - 12.0;
+                double rStud = Math.Sqrt(dxS * dxS + y * y);
+                double radStud;
+                if (z <= 5.2)
+                {
+                    radStud = 3.20; // Ø6.4mm solid neck
+                }
+                else if (z <= 7.2)
+                {
+                    // 40.4-deg self-supporting conical flare out to Ø9.8mm mushroom cap (zero supports!)
+                    radStud = 3.20 + 0.85 * (z - 5.2);
+                }
+                else
+                {
+                    // Smooth domed top bevel so eyelets glide easily over the head when snapping on
+                    radStud = 4.90 - 1.30 * Math.Min(1.0, (z - 7.2) / 1.0);
+                }
+                double dStud = Math.Max(rStud - radStud, Math.Max(2.4 - z, z - 8.2));
+                double dAnchor = SdfMesher.SmoothMin(dBase, dStud, 0.7);
+
+                // 3) Main Flexible Strap Band (11.8 mm wide x 2.4 mm thick)
+                double dBand = SdfMesher.StealthBlock3D(xLocal - 88.0, y, z - 1.2, 70.0, 5.9, 1.2, 2.0, 0.4);
+
+                // 4) End B: Reinforced 4-Eyelet Ladder + Tapered Pull-Tab (13.2 mm wide x 2.6 mm thick — fits through 14.0 x 3.5 mm slots!)
+                double dLadder = SdfMesher.StealthBlock3D(xLocal - 182.5, y, z - 1.3, 32.5, 6.6, 1.3, 4.5, 0.4);
+
+                // 5) Raised tactile thumb grip ribs on pull-tab (total height 3.2 mm < 3.5 mm slot height!)
+                double dRib1 = SdfMesher.RoundedBox3D(xLocal - 203.5, y, z - 2.7, 1.1, 4.4, 0.5, 0.3);
+                double dRib2 = SdfMesher.RoundedBox3D(xLocal - 207.5, y, z - 2.7, 1.1, 4.0, 0.5, 0.3);
+
+                double body = SdfMesher.SmoothMin(dAnchor, Math.Min(dBand, dLadder), 0.6);
+                body = Math.Min(body, Math.Min(dRib1, dRib2));
+
+                // 6) Subtract 4 reinforced oval locking eyelets (7.2 x 6.4 mm, centered at xLocal = 160, 171, 182, 193)
+                double holes = 1e9;
+                double[] eyeXs = new double[] { 160.0, 171.0, 182.0, 193.0 };
+                for (int i = 0; i < eyeXs.Length; i++)
+                {
+                    double dEye = SdfMesher.Box2D(xLocal - eyeXs[i], y, 3.6, 3.2, 3.1);
+                    holes = Math.Min(holes, dEye);
+                }
+
+                return Math.Max(body, -holes);
+            };
+
+            return SdfMesher.ExtractMesh("04f_TPU_90A_SelfLocking_Cradle_Strap", sdf,
+                new Vec3(-109.5, -9.5, -0.5), new Vec3(109.0, 9.5, 9.0), step);
+        }
+
         // =========================================================================
         // 05. RIGID PETG FASTENER REINFORCEMENT INSERT KIT FOR 72D TPU PRINTS
         // =========================================================================
