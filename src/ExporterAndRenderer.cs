@@ -640,6 +640,10 @@ namespace DjiNeo2OrbeaMounts
             tpuSelfLockingStrap.SnapBottomToZero();
             SaveAndReport(tpuSelfLockingStrap, Path.Combine(stlDir, "04f_TPU_90A_SelfLocking_Cradle_Strap.stl"));
 
+            var tpuDecoupledPuck = PartDesigns.BuildTpuDecoupledShearIsolatorPuck(0.36);
+            tpuDecoupledPuck.SnapBottomToZero();
+            SaveAndReport(tpuDecoupledPuck, Path.Combine(stlDir, "04g_TPU_Decoupled_Shear_Isolator_Puck.stl"));
+
             var petgInsertKit = PartDesigns.BuildPetgReinforcementInsertKit(0.48);
             petgInsertKit.SnapBottomToZero();
             SaveAndReport(petgInsertKit, Path.Combine(stlDir, "05_PETG_Reinforcement_Inserts_For_72D_TPU.stl"));
@@ -828,6 +832,15 @@ namespace DjiNeo2OrbeaMounts
                 new List<PlateItem>
                 {
                     new PlateItem(tpuSelfLockingStrap, 0.0, 0.0, 0.0)
+                });
+
+            // Plate 3c: True 100% Decoupled 10.0mm 90A TPU Shear-Isolator Puck (4x Cradle Bolts + 2x Bridge Bolts, Zero Steel-to-Steel Path!)
+            ThreeMfWriter.Save3mf(
+                Path.Combine(threeMfDir, "Plate3c_90A_TPU_Decoupled_Shear_Isolator_Puck.3mf"),
+                "DJI Neo 2 - 10mm Decoupled 90A TPU Shear-Isolator Puck (Zero Steel-to-Steel Path, Zero Supports)",
+                new List<PlateItem>
+                {
+                    new PlateItem(tpuDecoupledPuck, 0.0, 0.0, 0.0)
                 });
 
             // Plate 4: 45-Deg Sunlu Easy-PA Cradle w/ Snap-Off A-Frame Anchor Fin (+ Flat 72D Cradle Option)

@@ -1518,6 +1518,54 @@ namespace DjiNeo2OrbeaMounts
                 new Vec3(-122.5, -8.5, -0.5), new Vec3(122.5, 8.5, 9.0), step);
         }
 
+        // 04g (NEW!): True 100% Decoupled 10.0mm 90A TPU Shear-Isolator Puck (Zero Steel-to-Steel Path!)
+        // Drops directly into 03a Over-Stem Bridge's 48.6x26.6x3.5mm recessed pocket & mates with 01g Cradle's 6-hole pattern (zero re-printing!):
+        //   - 4x Square Holes (+-7.5, +-7.5mm): Cradle -> Puck via 4x M4x10mm bolts from bottom recessed Ø9.6x4.6mm counterbores (zero contact with 03a!)
+        //   - 2x Centerline Holes (+-15.0, 0.0mm): Puck -> Bridge via 2x M4x12mm bolts from under 03a into top recessed 5.2mm-deep M4 Nyloc/hex pockets (zero contact with 01g!)
+        //   - Mid-height perimeter shear bellows groove (Z=4.4..6.4mm) + central open damping cell -> genuine 3-axis elastomer shear & compression isolation!
+        // Prints 100% FLAT on Z = 0.0 with ZERO supports (3 walls, 25-30% Gyroid in 90A TPU)!
+        public static MeshData BuildTpuDecoupledShearIsolatorPuck(double step = 0.36)
+        {
+            Func<double, double, double, double> sdf = (x, y, z) =>
+            {
+                double ax = Math.Abs(x);
+                double ay = Math.Abs(y);
+
+                // Main 48.0 x 26.0 x 10.0 mm stadium block (fits 03a recessed bezel with 0.3mm side clearance)
+                double body = SdfMesher.RoundedBox3D(x, y, z - 5.0, 24.0, 13.0, 5.0, 4.0);
+
+                // Mid-height perimeter shear-flex bellows groove (Z in [4.4, 6.4], 1.8mm deep, interrupted around all 6 bolt columns)
+                double dOuterPerim = SdfMesher.Box2D(x, y, 24.0, 13.0, 4.0);
+                double dBellows = Math.Max(-dOuterPerim - 1.8, Math.Abs(z - 5.4) - 1.0);
+                double dBoltBosses = 1e9;
+                dBoltBosses = Math.Min(dBoltBosses, Math.Sqrt((ax - 7.5) * (ax - 7.5) + (ay - 7.5) * (ay - 7.5)) - 5.8);
+                dBoltBosses = Math.Min(dBoltBosses, Math.Sqrt((ax - 15.0) * (ax - 15.0) + y * y) - 5.8);
+                dBellows = Math.Max(dBellows, -dBoltBosses);
+
+                double cut = dBellows;
+
+                // Central open damping cell (r = 3.4mm through-hole)
+                cut = Math.Min(cut, Math.Sqrt(x * x + y * y) - 3.4);
+
+                // 4x Square Holes (+-7.5, +-7.5): M4 through-bore + bottom Ø9.6mm x 4.6mm deep counterbore for M4x10mm bolt head + washer (Cradle -> Puck)
+                double rSq = Math.Sqrt((ax - 7.5) * (ax - 7.5) + (ay - 7.5) * (ay - 7.5));
+                double dSqBore = rSq - 2.15;
+                double dSqCbore = Math.Max(rSq - 4.80, z - 4.60);
+                cut = Math.Min(cut, Math.Min(dSqBore, dSqCbore));
+
+                // 2x Centerline Holes (+-15.0, 0.0): M4 through-bore + top 5.2mm-deep captive M4 Nyloc/hex nut pocket (Z=4.8..10.0, Puck -> Bridge)
+                double rCtr = Math.Sqrt((ax - 15.0) * (ax - 15.0) + y * y);
+                double dCtrBore = rCtr - 2.15;
+                double dCtrNut = Math.Max(SdfMesher.Hexagon2D(ax - 15.0, y, 7.25), 4.80 - z);
+                cut = Math.Min(cut, Math.Min(dCtrBore, dCtrNut));
+
+                return Math.Max(body, -cut);
+            };
+
+            return SdfMesher.ExtractMesh("04g_TPU_Decoupled_Shear_Isolator_Puck", sdf,
+                new Vec3(-25.0, -14.0, -0.5), new Vec3(25.0, 14.0, 10.6), step);
+        }
+
         // =========================================================================
         // 05. RIGID PETG FASTENER REINFORCEMENT INSERT KIT FOR 72D TPU PRINTS
         // =========================================================================
