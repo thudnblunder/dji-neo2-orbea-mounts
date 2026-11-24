@@ -668,8 +668,8 @@ namespace DjiNeo2OrbeaMounts
 
             Func<double, double, double, double> singleArmSdf = (x, y, z) =>
             {
-                // 1) Top Saddle Mounting Pad: X in [-15.5, +16.0], Y in [0.0, 9.5] (beefed up to 9.5mm tall, zero top-edge scalloping!)
-                double dTopPad2D = SdfMesher.ChamferBox2D(x - 0.25, y - 4.75, 15.75, 4.75, 2.0);
+                // 1) Top Saddle Mounting Pad: X in [-28.5, +28.5], Y in [0.0, 9.5] (matches carbon-safe outboard ±22.5mm clamp flanges!)
+                double dTopPad2D = SdfMesher.ChamferBox2D(x, y - 4.75, 28.5, 4.75, 2.2);
 
                 // 2) Front Raked Plate Flange: centered at (px0, py0), length +-18.5mm along (ux, uy), thickness 9.0mm behind plate backplane
                 double dxp = x - px0, dyp = y - py0;
@@ -678,22 +678,22 @@ namespace DjiNeo2OrbeaMounts
                 double dFlange2D = SdfMesher.ChamferBox2D(sAlong, sNormal + 4.5, 18.5, 4.5, 2.0);
 
                 // 3) Swept Dual-Chord Truss Strut connecting Top Pad to Front Raked Flange
-                // Upper tension chord: from (8.0, 5.2) to (u1x, u1y), radius 4.2mm (8.4mm thick chord!)
+                // Upper tension chord: from (20.0, 5.2) to (u1x, u1y), radius 4.2mm (8.4mm thick chord!)
                 double u1x = px0 + 11.5 * ux - 4.2 * nx, u1y = py0 + 11.5 * uy - 4.2 * ny;
-                double dChordTop = Capsule2D(x, y, 8.0, 5.2, u1x, u1y, 4.2);
+                double dChordTop = Capsule2D(x, y, 20.0, 5.2, u1x, u1y, 4.2);
 
-                // Lower compression arch chord: from (-4.0, 4.2) -> mid-arch (22.0, -5.5) -> lower flange (l1x, l1y), radius 4.2mm
+                // Lower compression arch chord: from (16.0, 4.2) -> mid-arch (32.0, -6.5) -> lower flange (l1x, l1y), radius 4.2mm (clears outboard front clamp flange!)
                 double l1x = px0 - 11.5 * ux - 4.2 * nx, l1y = py0 - 11.5 * uy - 4.2 * ny;
-                double dChordBotA = Capsule2D(x, y, -4.0, 4.2, 22.0, -5.5, 4.2);
-                double dChordBotB = Capsule2D(x, y, 22.0, -5.5, l1x, l1y, 4.2);
+                double dChordBotA = Capsule2D(x, y, 16.0, 4.2, 32.0, -6.5, 4.2);
+                double dChordBotB = Capsule2D(x, y, 32.0, -6.5, l1x, l1y, 4.2);
 
                 // Web fill between chords
-                double dWeb = Triangle2D(x, y, 6.0, 4.8, u1x, u1y, l1x, l1y);
+                double dWeb = Triangle2D(x, y, 18.0, 4.8, u1x, u1y, l1x, l1y);
                 double profile2D = SdfMesher.SmoothMin(Math.Min(dTopPad2D, dFlange2D), Math.Min(dChordTop, Math.Min(dChordBotA, dChordBotB)), 2.2);
                 profile2D = Math.Min(profile2D, dWeb);
 
-                // Continuous CSG trim flush against top of C-clip saddle (Y >= 0 for X < 14.5) and flush against back of Number Plate (sNormal <= 0.0)!
-                double dSaddleClear = Math.Max(x - 14.5, y - 0.0);
+                // Continuous CSG trim flush against top of C-clip saddle (Y >= 0 for X < 27.5) and flush against back of Number Plate (sNormal <= 0.0)!
+                double dSaddleClear = Math.Max(x - 27.5, y - 0.0);
                 profile2D = Math.Max(profile2D, -dSaddleClear);
                 profile2D = Math.Max(profile2D, sNormal);
 
@@ -705,17 +705,15 @@ namespace DjiNeo2OrbeaMounts
                 // Subtract features:
                 double cut = 1e9;
 
-                // (A) Centered Stealth Truss Slot along the arm's neutral axis from (24.0, -2.5) to (36.5, -9.5), radius 2.8mm
-                // Guaranteed >= 4.5mm solid upper tension chord and >= 4.5mm solid lower compression arch with ZERO thin slivers!
-                double dTrussWindow = Capsule2D(x, y, 24.0, -2.5, 36.5, -9.5, 2.8);
+                // (A) Centered Stealth Truss Slot along the arm's neutral axis from (28.5, -2.5) to (39.0, -9.5), radius 2.6mm
+                double dTrussWindow = Capsule2D(x, y, 28.5, -2.5, 39.0, -9.5, 2.6);
                 dTrussWindow = Math.Max(dTrussWindow, profile2D + 4.5);
                 cut = Math.Min(cut, dTrussWindow);
 
-                // (B) Top Saddle M4 Bolt Slots (at X = -9.0 and X = +9.0, running along Y, centered at Z = 7.5mm, slotted +-1.2mm in Z)
-                // Clean through-bores (d = 4.3mm -> 5.3mm solid walls on both sides in Z, zero top-edge notches! Mount with M4x16 button-head + washer on top)
+                // (B) Carbon-Safe Outboard Top Saddle M4 Bolt Slots (at X = -22.5 and X = +22.5, slotted +-1.2mm in Z)
                 for (int sx = -1; sx <= 1; sx += 2)
                 {
-                    double bx = sx * 9.0;
+                    double bx = sx * 22.5;
                     double dBore = Math.Max(SdfMesher.SlotY2D(x, z, bx, 6.3, 8.7, 2.15), Math.Max(-1.0 - y, y - 10.5));
                     cut = Math.Min(cut, dBore);
                 }
@@ -736,7 +734,7 @@ namespace DjiNeo2OrbeaMounts
             };
 
             var single = SdfMesher.ExtractMesh("Stealth_Drop_Arm", singleArmSdf,
-                new Vec3(-17.0, -32.0, -0.6), new Vec3(62.0, 11.0, 15.6), step);
+                new Vec3(-30.0, -32.0, -0.6), new Vec3(62.0, 11.0, 15.6), step);
 
             var pair = new MeshData("02b_Orbea_Stealth_NumberPlate_Drop_Arms_Pair");
             var armL = single.Clone("Drop_Arm_L"); armL.Translate(0.0, 22.0, 0.0);
@@ -779,9 +777,8 @@ namespace DjiNeo2OrbeaMounts
                 double ax = Math.Abs(x);
                 double ay = Math.Abs(y);
 
-                // Octagonal stealth wing footprint: X in [-27, +27] at center, tapering crisply at wings Y in [-42, +42]
-                double halfX = ay <= 21.0 ? 27.5 : Math.Max(15.5, 27.5 - (ay - 21.0) * 0.58);
-                double dMain2D = SdfMesher.ChamferBox2D(x, y, halfX, 41.5, 7.5);
+                // Octagonal stealth wing footprint: X in [-28.5, +28.5] across full wing span Y in [-41.5, +41.5] to support carbon-safe outboard ±22.5mm clamp bolts!
+                double dMain2D = SdfMesher.ChamferBox2D(x, y, 28.5, 41.5, 6.0);
 
                 // Top profile with sharp angular step from center isolator bezel (Z = 14.0) down to faceted clamp wings (Z = 8.5)
                 double zTop = ay <= 20.5 ? 14.0 : (ay >= 24.5 ? 8.5 : 14.0 - (ay - 20.5) * (5.5 / 4.0));
@@ -809,9 +806,9 @@ namespace DjiNeo2OrbeaMounts
                 double dPuckPocket = Math.Max(SdfMesher.Box2D(x, y, 24.3, 13.3, 4.1), 10.5 - z);
                 cut = Math.Min(cut, dPuckPocket);
 
-                // (B) Slotted Lateral M4 Mounting Channels on Left & Right Wings (X = +-9.0, Y in [25.0..36.0] -> 50 to 72mm span!)
-                double dWingSlot = SdfMesher.SlotY2D(ax, ay, 9.0, 25.0, 36.0, 2.15);
-                double dWingCbore = Math.Max(SdfMesher.SlotY2D(ax, ay, 9.0, 25.0, 36.0, 4.15), 4.5 - z);
+                // (B) Carbon-Safe Outboard Slotted Lateral M4 Mounting Channels on Left & Right Wings (X = +-22.5, Y in [25.0..36.0] -> 50 to 72mm span!)
+                double dWingSlot = SdfMesher.SlotY2D(ax, ay, 22.5, 25.0, 36.0, 2.15);
+                double dWingCbore = Math.Max(SdfMesher.SlotY2D(ax, ay, 22.5, 25.0, 36.0, 4.15), 4.5 - z);
                 cut = Math.Min(cut, Math.Min(dWingSlot, dWingCbore));
 
                 // (C) Center Cradle + TPU Isolator M4 Mounting Holes + Underside Arch Captive M4 Hex Nut Pockets (Z in [5.5, 8.6], leaving 1.9mm solid bridge below Z=10.5!)
@@ -821,7 +818,7 @@ namespace DjiNeo2OrbeaMounts
                 return Math.Max(body, -cut);
             };
 
-            return SdfMesher.ExtractMesh("03a_Orbea_Stealth_OverStem_Bridge", sdf, new Vec3(-29.0, -43.0, -0.6), new Vec3(43.5, 43.0, 17.5), step);
+            return SdfMesher.ExtractMesh("03a_Orbea_Stealth_OverStem_Bridge", sdf, new Vec3(-30.0, -43.0, -0.6), new Vec3(43.5, 43.0, 17.5), step);
         }
 
         // 03b & 03f: Restyled Faceted "Orbea OC" Swinging M4 Pin-Hinged Clamshell Handlebar Clamps (Zero Plastic Flexing!)
@@ -841,7 +838,9 @@ namespace DjiNeo2OrbeaMounts
                 double dOct = SdfMesher.ChamferBox2D(x, y, rOut, rOut, rOut * 0.52);
                 double dRing2D = Math.Max(rIn - r, Math.Max(r - (rOut + 0.6), dOct));
 
-                double dSaddle2D = SdfMesher.ChamferBox2D(x, y - (ySaddleTop * 0.5 + 3.0), 14.8, ySaddleTop * 0.5 - 3.0, 3.2);
+                // Carbon-Safe Outboard Top Saddle Flange: X in [-28.5, +28.5], Y in [ySaddleTop - 7.5, ySaddleTop]
+                // Bolt centers at X = +-22.5mm sit completely outboard of the Ø35mm carbon bar (r=17.5mm) so over-long screws exit into empty air!
+                double dSaddle2D = SdfMesher.ChamferBox2D(x, y - (ySaddleTop - 3.75), 28.5, 3.75, 2.2);
                 dSaddle2D = Math.Max(dSaddle2D, rIn - r);
 
                 double dHingeCyl2D = Math.Sqrt((x - pivotX) * (x - pivotX) + (y - pivotY) * (y - pivotY)) - 5.2;
@@ -850,7 +849,7 @@ namespace DjiNeo2OrbeaMounts
 
                 double dRearLug2D = Math.Max(SdfMesher.ChamferBox2D(x - (rIn + 5.2), y - 5.1, 6.5, 4.4, 2.2), rIn - r);
 
-                double upperMain2D = Math.Max(SdfMesher.SmoothMin(Math.Min(dRing2D, dSaddle2D), dRearLug2D, 1.4), 0.6 - y);
+                double upperMain2D = Math.Max(SdfMesher.SmoothMin(SdfMesher.SmoothMin(dRing2D, dSaddle2D, 2.0), dRearLug2D, 1.4), 0.6 - y);
                 double profile2D = Math.Max(Math.Min(upperMain2D, dFront2D), rIn - r);
 
                 double dz = Math.Abs(z - 7.5) - 7.5;
@@ -866,10 +865,11 @@ namespace DjiNeo2OrbeaMounts
                 double dHingeNut = Math.Max(SdfMesher.Hexagon2D(x - pivotX, y - pivotY, 7.18), z - 3.4);
                 cut = Math.Min(cut, Math.Min(dHingePinBore, dHingeNut));
 
+                // Carbon-Safe Outboard Top Saddle Holes (X = +-22.5mm): open bottom through-bores exit into empty air (impossible to hit carbon bar!)
                 for (int sx = -1; sx <= 1; sx += 2)
                 {
-                    double bx = sx * 9.0;
-                    double dTopBore = Math.Max(Math.Sqrt((x - bx) * (x - bx) + (z - 7.5) * (z - 7.5)) - 2.15, Math.Max((rIn - 1.0) - y, y - (ySaddleTop + 1.0)));
+                    double bx = sx * 22.5;
+                    double dTopBore = Math.Max(Math.Sqrt((x - bx) * (x - bx) + (z - 7.5) * (z - 7.5)) - 2.15, Math.Max((ySaddleTop - 8.5) - y, y - (ySaddleTop + 1.0)));
                     double dNutSlot = Math.Max(Math.Max(Math.Abs(x - bx) - 3.60, Math.Abs(y - (ySaddleTop - 4.45)) - 1.75), z - 11.1);
                     cut = Math.Min(cut, Math.Min(dTopBore, dNutSlot));
                 }
@@ -917,7 +917,7 @@ namespace DjiNeo2OrbeaMounts
             };
 
             var upperMesh = SdfMesher.ExtractMesh("Upper_Saddle", upperHalfSdf,
-                new Vec3(pivotX - 6.0, -6.0, -0.5), new Vec3(pinchX + 6.5, ySaddleTop + 1.0, 15.5), step);
+                new Vec3(Math.Min(pivotX - 6.0, -30.0), -6.0, -0.5), new Vec3(Math.Max(pinchX + 6.5, 30.0), ySaddleTop + 1.0, 15.5), step);
             var lowerMesh = SdfMesher.ExtractMesh("Lower_Swinging_Jaw", lowerHalfSdf,
                 new Vec3(pivotX - 6.0, -(rOut + 1.5), -0.5), new Vec3(pinchX + 6.5, 6.0, 15.5), step);
 
@@ -969,7 +969,9 @@ namespace DjiNeo2OrbeaMounts
                 double dOct = SdfMesher.ChamferBox2D(x, y, rOut, rOut, rOut * 0.52);
                 double dRing2D = Math.Max(rIn - r, Math.Max(r - (rOut + 0.6), dOct));
 
-                double dSaddle2D = SdfMesher.ChamferBox2D(x, y - (ySaddleTop * 0.5 + 3.0), 14.8, ySaddleTop * 0.5 - 3.0, 3.2);
+                // Carbon-Safe Outboard Top Saddle Flange: X in [-28.5, +28.5], Y in [ySaddleTop - 7.5, ySaddleTop]
+                // Bolt centers at X = +-22.5mm sit completely outboard of the Ø35mm carbon bar (r=17.5mm) so over-long screws exit into empty air!
+                double dSaddle2D = SdfMesher.ChamferBox2D(x, y - (ySaddleTop - 3.75), 28.5, 3.75, 2.2);
                 dSaddle2D = Math.Max(dSaddle2D, rIn - r);
 
                 double dHingeCyl2D = Math.Sqrt((x - pivotX) * (x - pivotX) + (y - pivotY) * (y - pivotY)) - 5.2;
@@ -978,7 +980,7 @@ namespace DjiNeo2OrbeaMounts
 
                 double dRearLug2D = Math.Max(SdfMesher.ChamferBox2D(x - (rIn + 5.2), y - 5.1, 6.5, 4.4, 2.2), rIn - r);
 
-                double upperMain2D = Math.Max(SdfMesher.SmoothMin(Math.Min(dRing2D, dSaddle2D), dRearLug2D, 1.4), 0.6 - y);
+                double upperMain2D = Math.Max(SdfMesher.SmoothMin(SdfMesher.SmoothMin(dRing2D, dSaddle2D, 2.0), dRearLug2D, 1.4), 0.6 - y);
                 double profile2D = Math.Max(Math.Min(upperMain2D, dFront2D), rIn - r);
 
                 double dz = Math.Abs(z - 7.5) - 7.5;
@@ -997,14 +999,16 @@ namespace DjiNeo2OrbeaMounts
                 double dHingeInsert = Math.Max(rHinge - 2.80, z - 5.8);
                 cut = Math.Min(cut, Math.Min(dHingePinBore, dHingeInsert));
 
-                // Top saddle (2x): Ø5.60mm x 6.4mm deep heat-set pilots (M4x4, M4x5, or M4x6 inserts) + 0.6mm lead-in bevel
+                // Carbon-Safe Outboard Top Saddle (2x at X = +-22.5mm):
+                // Top-entry Ø5.60mm x 6.0mm deep heat-set pilots + Ø4.3mm open exit bore out bottom into empty air (impossible to hit carbon bar!)
                 for (int sx = -1; sx <= 1; sx += 2)
                 {
-                    double bx = sx * 9.0;
+                    double bx = sx * 22.5;
                     double rTop = Math.Sqrt((x - bx) * (x - bx) + (z - 7.5) * (z - 7.5));
-                    double dTopInsert = Math.Max(rTop - 2.80, Math.Max((ySaddleTop - 6.4) - y, y - (ySaddleTop + 1.0)));
+                    double dTopThrough = Math.Max(rTop - 2.15, Math.Max((ySaddleTop - 8.5) - y, y - (ySaddleTop + 1.0)));
+                    double dTopInsert = Math.Max(rTop - 2.80, Math.Max((ySaddleTop - 6.0) - y, y - (ySaddleTop + 1.0)));
                     double dTopLead = Math.Max(rTop - 3.20, (ySaddleTop - 0.6) - y);
-                    cut = Math.Min(cut, Math.Min(dTopInsert, dTopLead));
+                    cut = Math.Min(cut, Math.Min(dTopThrough, Math.Min(dTopInsert, dTopLead)));
                 }
 
                 // Rear pinch: Ø4.3mm through-bore + reverse-installed Ø5.60mm heat-set pilot from TOP (y = 3.0..9.5)
@@ -1053,7 +1057,7 @@ namespace DjiNeo2OrbeaMounts
             };
 
             var upperMesh = SdfMesher.ExtractMesh("Upper_Saddle_HeatSet", upperHalfSdf,
-                new Vec3(pivotX - 6.0, -6.0, -0.5), new Vec3(pinchX + 6.5, ySaddleTop + 1.0, 15.5), step);
+                new Vec3(Math.Min(pivotX - 6.0, -30.0), -6.0, -0.5), new Vec3(Math.Max(pinchX + 6.5, 30.0), ySaddleTop + 1.0, 15.5), step);
             var lowerMesh = SdfMesher.ExtractMesh("Lower_Swinging_Jaw_HeatSet", lowerHalfSdf,
                 new Vec3(pivotX - 6.0, -(rOut + 1.5), -0.5), new Vec3(pinchX + 6.5, 6.0, 15.5), step);
             // Proper 180-deg rigid rotation around Y-axis: (x, y, z) -> (-x, y, 15.0 - z), det = +1

@@ -746,8 +746,8 @@ namespace DjiNeo2OrbeaMounts
                 "Orbea Wild LT - Stealth Number-Plate Shield & Swept Drop Arms (Zero Supports)",
                 new List<PlateItem>
                 {
-                    new PlateItem(numberPlateShield, -35.0, 0.0, 0.0),
-                    new PlateItem(numberPlateDropArms, 58.0, 0.0, 0.0)
+                    new PlateItem(numberPlateShield, -42.0, 0.0, 0.0),
+                    new PlateItem(numberPlateDropArms, 64.0, 0.0, 0.0)
                 });
 
             // Plate 1b: Stealth Number-Plate Shield w/ Fully-Embedded Print-Pause M4 DIN 934 Nuts + Drop Arms
@@ -756,8 +756,8 @@ namespace DjiNeo2OrbeaMounts
                 "Orbea Wild LT - Stealth Number-Plate Shield (Pause-Embed M4 Nuts: Z=4.6mm & Z=8.4mm) & Drop Arms",
                 new List<PlateItem>
                 {
-                    new PlateItem(numberPlateShieldPause, -35.0, 0.0, 0.0),
-                    new PlateItem(numberPlateDropArms, 58.0, 0.0, 0.0)
+                    new PlateItem(numberPlateShieldPause, -42.0, 0.0, 0.0),
+                    new PlateItem(numberPlateDropArms, 64.0, 0.0, 0.0)
                 });
 
             // Plate 2: Over-Stem Stealth Bridge + Hinged 35mm Handlebar Clamshells (For 1mm TPU Sleeves)
