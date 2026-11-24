@@ -579,11 +579,11 @@ namespace DjiNeo2OrbeaMounts
             heatSetClampsDirect.SnapBottomToZero();
             SaveAndReport(heatSetClampsDirect, Path.Combine(stlDir, "03f_Orbea_Stealth_Clamshells_HeatSet_M4_Direct_35mm.stl"));
 
-            var pauseNylocClampsForTpu = PartDesigns.BuildHandlebarHingedClamshellPairPauseNyloc(37.0, "03g_Orbea_Stealth_Clamshells_PauseNyloc_M4_For_TPU", 0.65);
+            var pauseNylocClampsForTpu = PartDesigns.BuildHandlebarHingedClamshellPairPauseNyloc(37.0, "03g_Orbea_Stealth_Clamshells_PauseNyloc_M4_For_TPU", 0.48);
             pauseNylocClampsForTpu.SnapBottomToZero();
             SaveAndReport(pauseNylocClampsForTpu, Path.Combine(stlDir, "03g_Orbea_Stealth_Clamshells_PauseNyloc_M4_For_TPU.stl"));
 
-            var pauseNylocClampsDirect = PartDesigns.BuildHandlebarHingedClamshellPairPauseNyloc(35.0, "03h_Orbea_Stealth_Clamshells_PauseNyloc_M4_Direct_35mm", 0.65);
+            var pauseNylocClampsDirect = PartDesigns.BuildHandlebarHingedClamshellPairPauseNyloc(35.0, "03h_Orbea_Stealth_Clamshells_PauseNyloc_M4_Direct_35mm", 0.48);
             pauseNylocClampsDirect.SnapBottomToZero();
             SaveAndReport(pauseNylocClampsDirect, Path.Combine(stlDir, "03h_Orbea_Stealth_Clamshells_PauseNyloc_M4_Direct_35mm.stl"));
 

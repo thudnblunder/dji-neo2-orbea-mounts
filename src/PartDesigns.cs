@@ -1117,8 +1117,10 @@ namespace DjiNeo2OrbeaMounts
 
             Func<double, double, double, double, double, double, double> dropInNylocPocketSdf = (x, y, z, cx, yMin, yMax) =>
             {
-                double dHexXZ = SdfMesher.Hexagon2D(z - 7.5, x - cx, 7.30);
-                double dDropChuteXZ = Math.Max(Math.Abs(x - cx) - 4.22, Math.Max(7.2 - z, z - 11.35));
+                // Tuned snug for measured 4.29mm x 6.83mm M4 Nyloc nuts:
+                // 7.00mm across flats (+0.17mm clearance, Z=4.00..11.00mm) + 8.08mm drop chute (corners=7.89mm -> +0.19mm) + Z<=11.15mm ceiling (Pause @ Z=11.20mm!)
+                double dHexXZ = SdfMesher.Hexagon2D(z - 7.5, x - cx, 7.00);
+                double dDropChuteXZ = Math.Max(Math.Abs(x - cx) - 4.04, Math.Max(7.3 - z, z - 11.15));
                 double dNylocXZ = Math.Min(dHexXZ, dDropChuteXZ);
                 return Math.Max(dNylocXZ, Math.Max(yMin - y, y - yMax));
             };
@@ -1129,7 +1131,7 @@ namespace DjiNeo2OrbeaMounts
                 double dOct = SdfMesher.ChamferBox2D(x, y, rOut, rOut, rOut * 0.52);
                 double dRing2D = Math.Max(rIn - r, Math.Max(r - (rOut + 0.6), dOct));
 
-                // Carbon-Safe Outboard Top Saddle Flange beefed to 9.5mm thick (Y in [ySaddleTop-9.5, ySaddleTop]) & X in [-29.5, +29.5] for 5.0mm M4 Nyloc nuts!
+                // Carbon-Safe Outboard Top Saddle Flange (9.5mm thick, X in [-29.5, +29.5]): 2.60mm top bearing wall + 4.50mm Nyloc pocket + 2.40mm bottom wall!
                 double dSaddle2D = SdfMesher.ChamferBox2D(x, y - (ySaddleTop - 4.75), 29.5, 4.75, 2.2);
                 dSaddle2D = Math.Max(dSaddle2D, rIn - r);
 
@@ -1137,7 +1139,7 @@ namespace DjiNeo2OrbeaMounts
                 double dHingeWeb2D = Math.Max(SdfMesher.ChamferBox2D(x - (pivotX * 0.5 - 4.0), y - 2.5, 6.0, 4.5, 1.8), rIn - r);
                 double dFront2D = SdfMesher.SmoothMin(dHingeCyl2D, dHingeWeb2D, 1.2);
 
-                // Rear Pinch Lug raised slightly to Y=10.0mm to comfortably enclose the 5.30mm M4 Nyloc pocket with solid 2.2mm floor + 1.9mm roof
+                // Rear Pinch Lug (Y in [0.6..10.0]): 2.40mm solid floor + 4.50mm Nyloc pocket + 2.50mm solid roof
                 double dRearLug2D = Math.Max(SdfMesher.ChamferBox2D(x - (rIn + 5.2), y - 5.35, 6.5, 4.65, 2.2), rIn - r);
 
                 double upperMain2D = Math.Max(SdfMesher.SmoothMin(SdfMesher.SmoothMin(dRing2D, dSaddle2D, 2.0), dRearLug2D, 1.4), 0.6 - y);
@@ -1152,23 +1154,23 @@ namespace DjiNeo2OrbeaMounts
                 double dKnuckleCut = Math.Max(Math.Max(x - (-rIn + 0.5), y - 5.5), 7.35 - z);
                 cut = Math.Min(cut, dKnuckleCut);
 
-                // Front hinge: M4 through-bore + bottom-entry captive M4 Nyloc hex pocket (Z = 0.0..5.30mm -> 2.05mm solid bearing wall!)
-                double dHingePinBore = Math.Sqrt((x - pivotX) * (x - pivotX) + (y - pivotY) * (y - pivotY)) - 2.15;
-                double dHingeNyloc = Math.Max(SdfMesher.Hexagon2D(x - pivotX, y - pivotY, 7.25), z - 5.30);
+                // Front hinge: snug Ø4.04mm M4 through-bore + bottom-entry captive M4 Nyloc hex pocket (7.00mm flats, Z=0.0..4.50mm -> 2.85mm solid bearing wall!)
+                double dHingePinBore = Math.Sqrt((x - pivotX) * (x - pivotX) + (y - pivotY) * (y - pivotY)) - 2.02;
+                double dHingeNyloc = Math.Max(SdfMesher.Hexagon2D(x - pivotX, y - pivotY, 7.00), z - 4.50);
                 cut = Math.Min(cut, Math.Min(dHingePinBore, dHingeNyloc));
 
-                // Outboard Top Saddle (2x at X = +-22.5mm): Pause-Embed M4 Nyloc pockets (Z <= 11.35mm) + open carbon-safe through-bores!
+                // Outboard Top Saddle (2x at X = +-22.5mm): Pause-Embed 4.50mm-wide M4 Nyloc pockets (Z <= 11.15mm) + snug Ø4.04mm open carbon-safe through-bores!
                 for (int sx = -1; sx <= 1; sx += 2)
                 {
                     double bx = sx * 22.5;
-                    double dTopBore = Math.Max(Math.Sqrt((x - bx) * (x - bx) + (z - 7.5) * (z - 7.5)) - 2.15, Math.Max((ySaddleTop - 10.5) - y, y - (ySaddleTop + 1.0)));
-                    double dTopNyloc = dropInNylocPocketSdf(x, y, z, bx, ySaddleTop - 7.50, ySaddleTop - 2.20);
+                    double dTopBore = Math.Max(Math.Sqrt((x - bx) * (x - bx) + (z - 7.5) * (z - 7.5)) - 2.02, Math.Max((ySaddleTop - 10.5) - y, y - (ySaddleTop + 1.0)));
+                    double dTopNyloc = dropInNylocPocketSdf(x, y, z, bx, ySaddleTop - 7.10, ySaddleTop - 2.60);
                     cut = Math.Min(cut, Math.Min(dTopBore, dTopNyloc));
                 }
 
-                // Rear Pinch Lug (X = pinchX): Pause-Embed M4 Nyloc pocket (Z <= 11.35mm) + M4 through-bore!
-                double dPinchBore = Math.Sqrt((x - pinchX) * (x - pinchX) + (z - 7.5) * (z - 7.5)) - 2.15;
-                double dPinchNyloc = dropInNylocPocketSdf(x, y, z, pinchX, 2.80, 8.10);
+                // Rear Pinch Lug (X = pinchX): Pause-Embed 4.50mm-wide M4 Nyloc pocket (Z <= 11.15mm) + snug Ø4.04mm M4 through-bore!
+                double dPinchBore = Math.Sqrt((x - pinchX) * (x - pinchX) + (z - 7.5) * (z - 7.5)) - 2.02;
+                double dPinchNyloc = dropInNylocPocketSdf(x, y, z, pinchX, 3.00, 7.50);
                 cut = Math.Min(cut, Math.Min(dPinchBore, dPinchNyloc));
 
                 return Math.Max(body3D, -cut);
@@ -1197,12 +1199,12 @@ namespace DjiNeo2OrbeaMounts
                 double dLowerKnuckleCut = Math.Max(Math.Max(x - (-rIn + 0.5), -5.5 - y), z - 7.65);
                 cut = Math.Min(cut, dLowerKnuckleCut);
 
-                double dHingePinBore = Math.Sqrt((x - pivotX) * (x - pivotX) + (y - pivotY) * (y - pivotY)) - 2.15;
+                double dHingePinBore = Math.Sqrt((x - pivotX) * (x - pivotX) + (y - pivotY) * (y - pivotY)) - 2.02;
                 cut = Math.Min(cut, dHingePinBore);
 
                 double rPinch = Math.Sqrt((x - pinchX) * (x - pinchX) + (z - 7.5) * (z - 7.5));
-                double dPinchBore = rPinch - 2.15;
-                double dPinchHead = Math.Max(rPinch - 4.15, y - (-5.2));
+                double dPinchBore = rPinch - 2.02;
+                double dPinchHead = Math.Max(rPinch - 4.05, y - (-5.2));
                 cut = Math.Min(cut, Math.Min(dPinchBore, dPinchHead));
 
                 return Math.Max(body3D, -cut);
