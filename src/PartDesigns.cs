@@ -1167,9 +1167,9 @@ namespace DjiNeo2OrbeaMounts
                 double dKnuckleCut = Math.Max(Math.Max(x - (-rIn + 0.5), y - 5.5), 7.35 - z);
                 cut = Math.Min(cut, dKnuckleCut);
 
-                // Front hinge: snug Ø4.04mm M4 through-bore + bottom-entry captive M4 Nyloc hex pocket (6.90mm crisp flats, Z=0.0..4.50mm -> 2.85mm solid bearing wall!)
+                // Front hinge: snug Ø4.04mm M4 through-bore + flush bottom-entry captive M4 Nyloc hex pocket (6.90mm crisp flats, Z=0.0..4.10mm -> 3.25mm solid bearing wall!)
                 double dHingePinBore = Math.Sqrt((x - pivotX) * (x - pivotX) + (y - pivotY) * (y - pivotY)) - 2.02;
-                double dHingeNyloc = Math.Max(SdfMesher.Hexagon2D(x - pivotX, y - pivotY, 6.90), z - 4.50);
+                double dHingeNyloc = Math.Max(SdfMesher.Hexagon2D(x - pivotX, y - pivotY, 6.90), z - 4.10);
                 cut = Math.Min(cut, Math.Min(dHingePinBore, dHingeNyloc));
 
                 // Outboard Top Saddle (2x at X = +-22.5mm): Pause-Embed 4.50mm-wide M4 Nyloc pockets (Z <= 11.15mm) + snug Ø4.04mm open carbon-safe through-bores!
@@ -1212,8 +1212,11 @@ namespace DjiNeo2OrbeaMounts
                 double dLowerKnuckleCut = Math.Max(Math.Max(x - (-rIn + 0.5), -5.5 - y), z - 7.65);
                 cut = Math.Min(cut, dLowerKnuckleCut);
 
-                double dHingePinBore = Math.Sqrt((x - pivotX) * (x - pivotX) + (y - pivotY) * (y - pivotY)) - 2.02;
-                cut = Math.Min(cut, dHingePinBore);
+                double rHingeLower = Math.Sqrt((x - pivotX) * (x - pivotX) + (y - pivotY) * (y - pivotY));
+                double dHingePinBore = rHingeLower - 2.02;
+                // Flush Ø8.0mm x 2.50mm deep M4 button-head counterbore (z in [12.50..15.00] -> sits flat on Z=0.0..2.50 when rotated for printing, 4.85mm solid wall!)
+                double dHingeHeadCbore = Math.Max(rHingeLower - 4.00, 12.50 - z);
+                cut = Math.Min(cut, Math.Min(dHingePinBore, dHingeHeadCbore));
 
                 double rPinch = Math.Sqrt((x - pinchX) * (x - pinchX) + (z - 7.5) * (z - 7.5));
                 double dPinchBore = rPinch - 2.02;
