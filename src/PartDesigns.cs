@@ -202,7 +202,13 @@ namespace DjiNeo2OrbeaMounts
                         double z = oz + iz * step;
                         if (applyFlatEasyPaReinforced)
                         {
-                            // 1) Tapered reinforced lump-free rear flank shave for Easy-PA:
+                            // 0) Plug the leftover circular side-lanyard hollow at the base of the rear arms (X=53, Z=6, r=5.5mm) before outer trim!
+                            if (x >= 46.5 && x <= 59.5 && ay >= 16.2 && z >= 0.0 && z <= 12.5)
+                            {
+                                float dPlug = (float)RearArmBaseHolePlugSdf(x, y, z);
+                                if (dPlug < grid[ix, iy, iz]) grid[ix, iy, iz] = dPlug;
+                            }
+                            // 1) Tapered reinforced lump-free rear flank shave for Easy-PA / 72D TPU:
                             //    4.5mm thick root (|Y|=21.1 at Z<=12) tapering smoothly to 3.2mm upper hook (|Y|=19.8 at Z=38) -> +125% stronger at bend zone!
                             if (x >= 43.0 && ay >= 18.0)
                             {
@@ -226,6 +232,12 @@ namespace DjiNeo2OrbeaMounts
                         }
                         else if (applyFlatEasyPaV2)
                         {
+                            // 0) Plug the leftover circular side-lanyard hollow at the base of the rear arms before outer trim!
+                            if (x >= 46.5 && x <= 59.5 && ay >= 16.2 && z >= 0.0 && z <= 12.5)
+                            {
+                                float dPlug = (float)RearArmBaseHolePlugSdf(x, y, z);
+                                if (dPlug < grid[ix, iy, iz]) grid[ix, iy, iz] = dPlug;
+                            }
                             // 1) Smooth, lump-free rear flank shave (removes ALL Ø10.5mm bosses + lower shoulders down to Z=0 -> uniform 2.8mm flex arms!)
                             if (x >= 43.0 && ay >= 17.5)
                             {
@@ -364,6 +376,16 @@ namespace DjiNeo2OrbeaMounts
             double dSlot2D = SdfMesher.Box2D(x - 6.5, ay - 20.05, 7.0, 1.75, 0.9);
             double dSlotZ = Math.Max(-1.0 - z, z - 7.5);
             return Math.Max(dSlot2D, dSlotZ);
+        }
+
+        // Solid cylinder plug filling the leftover circular side-lanyard hollow at the base of the rear arms (X=53.0, Z=6.0, r=5.5mm, |Y| in [16.8..21.3])
+        // Stays strictly outside the |Y|=16.6mm inner drone pocket and gets shaved 100% flush by the outer rear flank trim!
+        public static double RearArmBaseHolePlugSdf(double x, double y, double z)
+        {
+            double ay = Math.Abs(y);
+            double rHole = Math.Sqrt((x - 53.0) * (x - 53.0) + (z - 6.0) * (z - 6.0));
+            double dY = Math.Max(16.8 - ay, ay - 21.3);
+            return Math.Max(rHole - 5.5, dY);
         }
 
         // True Watertight CSG Boolean Union of 45-Deg Easy-PA Cradle + Insert + Snap-Off Anchor Fin (01b or 01d Flex-Clip)
