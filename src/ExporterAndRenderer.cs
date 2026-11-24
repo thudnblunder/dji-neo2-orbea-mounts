@@ -559,7 +559,7 @@ namespace DjiNeo2OrbeaMounts
             }
 
             Console.WriteLine("3. Building Mount 2: Orbea Wild LT 'Stealth OC' Over-Stem Bridge (03a) + Faceted Clamshells (03b/03c)...");
-            var stemBridge = PartDesigns.BuildOrbeaStealthOverStemBridge(0.75);
+            var stemBridge = PartDesigns.BuildOrbeaStealthOverStemBridge(0.48);
             stemBridge.SnapBottomToZero();
             SaveAndReport(stemBridge, Path.Combine(stlDir, "03a_Orbea_Stealth_OverStem_Bridge.stl"));
 

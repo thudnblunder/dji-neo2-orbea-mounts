@@ -56,6 +56,18 @@ namespace DjiNeo2OrbeaMounts
             return Math.Min(dHole, dHex3D);
         }
 
+        // Same M4 nut pocket with crisp 6.90mm flats & Ø4.04mm bore for zero-spin Nyloc/hex nuts in 72D TPU (measured 6.83mm nut!)
+        private static double M4HoleAndCrispHexNutSdf(double x, double y, double z, double hx, double hy, double zNutMin, double zNutMax)
+        {
+            double dx = x - hx;
+            double dy = y - hy;
+            double dHole = Math.Sqrt(dx * dx + dy * dy) - 2.02;
+            double dHex2D = SdfMesher.Hexagon2D(dx, dy, 6.90);
+            double dHexZ = Math.Max(zNutMin - z, z - zNutMax);
+            double dHex3D = Math.Max(dHex2D, dHexZ);
+            return Math.Min(dHole, dHex3D);
+        }
+
         // Same M4 nut pocket rotated 30 deg so hexagon flats face +-Y (compact Y extent: +-3.59mm instead of +-4.15mm)
         private static double M4HoleAndHexNutYFlatSdf(double x, double y, double z, double hx, double hy, double zNutMin, double zNutMax)
         {
@@ -829,9 +841,9 @@ namespace DjiNeo2OrbeaMounts
                 double dWingCbore = Math.Max(SdfMesher.SlotY2D(ax, ay, 22.5, 25.0, 36.0, 4.15), 4.5 - z);
                 cut = Math.Min(cut, Math.Min(dWingSlot, dWingCbore));
 
-                // (C) Center Cradle + TPU Isolator M4 Mounting Holes + Underside Arch Captive M4 Hex Nut Pockets (Z in [5.5, 8.6], leaving 1.9mm solid bridge below Z=10.5!)
-                cut = Math.Min(cut, M4HoleAndHexNutSdf(ax, ay, z, 7.50, 7.50, 5.5, 8.6));
-                cut = Math.Min(cut, M4HoleAndHexNutSdf(ax, y, z, 15.00, 0.00, 5.5, 8.6));
+                // (C) Center Cradle + TPU Isolator M4 Mounting Holes + Crisp Zero-Spin 6.90mm Underside Captive M4 Hex/Nyloc Nut Pockets
+                cut = Math.Min(cut, M4HoleAndCrispHexNutSdf(ax, ay, z, 7.50, 7.50, 5.5, 8.6));
+                cut = Math.Min(cut, M4HoleAndCrispHexNutSdf(ax, y, z, 15.00, 0.00, 5.5, 8.6));
 
                 return Math.Max(body, -cut);
             };
@@ -1117,10 +1129,11 @@ namespace DjiNeo2OrbeaMounts
 
             Func<double, double, double, double, double, double, double> dropInNylocPocketSdf = (x, y, z, cx, yMin, yMax) =>
             {
-                // Tuned snug for measured 4.29mm x 6.83mm M4 Nyloc nuts:
-                // 7.00mm across flats (+0.17mm clearance, Z=4.00..11.00mm) + 8.08mm drop chute (corners=7.89mm -> +0.19mm) + Z<=11.15mm ceiling (Pause @ Z=11.20mm!)
-                double dHexXZ = SdfMesher.Hexagon2D(z - 7.5, x - cx, 7.00);
-                double dDropChuteXZ = Math.Max(Math.Abs(x - cx) - 4.04, Math.Max(7.3 - z, z - 11.15));
+                // ZERO-SPIN Vertical-Flat Drop-In Hex Pocket for measured 4.29mm x 6.83mm M4 Nyloc nuts:
+                // Hex rotated 30 deg (point-down) so TWO PARALLEL VERTICAL FLATS (6.90mm apart -> +0.07mm snug grip!) run all the way up to Z=11.65mm!
+                // Impossible for a 7.89mm across-corners nut to spin inside a 6.90mm wide vertical channel! Pause @ Z = 11.80mm!
+                double dHexXZ = SdfMesher.Hexagon2D(x - cx, z - 7.5, 6.90);
+                double dDropChuteXZ = Math.Max(Math.Abs(x - cx) - 3.45, Math.Max(7.5 - z, z - 11.65));
                 double dNylocXZ = Math.Min(dHexXZ, dDropChuteXZ);
                 return Math.Max(dNylocXZ, Math.Max(yMin - y, y - yMax));
             };
@@ -1154,9 +1167,9 @@ namespace DjiNeo2OrbeaMounts
                 double dKnuckleCut = Math.Max(Math.Max(x - (-rIn + 0.5), y - 5.5), 7.35 - z);
                 cut = Math.Min(cut, dKnuckleCut);
 
-                // Front hinge: snug Ø4.04mm M4 through-bore + bottom-entry captive M4 Nyloc hex pocket (7.00mm flats, Z=0.0..4.50mm -> 2.85mm solid bearing wall!)
+                // Front hinge: snug Ø4.04mm M4 through-bore + bottom-entry captive M4 Nyloc hex pocket (6.90mm crisp flats, Z=0.0..4.50mm -> 2.85mm solid bearing wall!)
                 double dHingePinBore = Math.Sqrt((x - pivotX) * (x - pivotX) + (y - pivotY) * (y - pivotY)) - 2.02;
-                double dHingeNyloc = Math.Max(SdfMesher.Hexagon2D(x - pivotX, y - pivotY, 7.00), z - 4.50);
+                double dHingeNyloc = Math.Max(SdfMesher.Hexagon2D(x - pivotX, y - pivotY, 6.90), z - 4.50);
                 cut = Math.Min(cut, Math.Min(dHingePinBore, dHingeNyloc));
 
                 // Outboard Top Saddle (2x at X = +-22.5mm): Pause-Embed 4.50mm-wide M4 Nyloc pockets (Z <= 11.15mm) + snug Ø4.04mm open carbon-safe through-bores!
