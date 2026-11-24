@@ -579,6 +579,14 @@ namespace DjiNeo2OrbeaMounts
             heatSetClampsDirect.SnapBottomToZero();
             SaveAndReport(heatSetClampsDirect, Path.Combine(stlDir, "03f_Orbea_Stealth_Clamshells_HeatSet_M4_Direct_35mm.stl"));
 
+            var pauseNylocClampsForTpu = PartDesigns.BuildHandlebarHingedClamshellPairPauseNyloc(37.0, "03g_Orbea_Stealth_Clamshells_PauseNyloc_M4_For_TPU", 0.65);
+            pauseNylocClampsForTpu.SnapBottomToZero();
+            SaveAndReport(pauseNylocClampsForTpu, Path.Combine(stlDir, "03g_Orbea_Stealth_Clamshells_PauseNyloc_M4_For_TPU.stl"));
+
+            var pauseNylocClampsDirect = PartDesigns.BuildHandlebarHingedClamshellPairPauseNyloc(35.0, "03h_Orbea_Stealth_Clamshells_PauseNyloc_M4_Direct_35mm", 0.65);
+            pauseNylocClampsDirect.SnapBottomToZero();
+            SaveAndReport(pauseNylocClampsDirect, Path.Combine(stlDir, "03h_Orbea_Stealth_Clamshells_PauseNyloc_M4_Direct_35mm.stl"));
+
             var tpuSleeves = PartDesigns.BuildHandlebarTpuSleeves(0.50);
             tpuSleeves.SnapBottomToZero();
             SaveAndReport(tpuSleeves, Path.Combine(stlDir, "03d_Handlebar_35mm_TPU_Grip_Sleeves_Pair.stl"));
@@ -787,6 +795,16 @@ namespace DjiNeo2OrbeaMounts
                 {
                     new PlateItem(heatSetClampsForTpu, 0.0, 42.0, 0.0),
                     new PlateItem(heatSetClampsDirect, 0.0, -42.0, 0.0)
+                });
+
+            // Plate 2d: Pause-Embed M4 Nyloc (DIN 985) Hinged Clamshells (1 Single Pause @ Z=11.40mm | Both 37mm For TPU & 35mm Direct — delete whichever pair you don't need!)
+            ThreeMfWriter.Save3mf(
+                Path.Combine(threeMfDir, "Plate2d_PauseEmbed_Nyloc_Clamps_35mm_And_37mm.3mf"),
+                "Orbea Wild LT - Pause-Embed M4 Nyloc Clamshells (Pause @ Z=11.40mm | 37mm For TPU & 35mm Direct)",
+                new List<PlateItem>
+                {
+                    new PlateItem(pauseNylocClampsForTpu, 0.0, 42.0, 0.0),
+                    new PlateItem(pauseNylocClampsDirect, 0.0, -42.0, 0.0)
                 });
 
             // Plate 3: Complete 90A TPU 360-Deg Lens, Gimbal & Vibration Armor Suite (All 6 TPU Parts on 1 Plate!)

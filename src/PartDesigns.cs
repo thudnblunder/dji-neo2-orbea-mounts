@@ -1098,6 +1098,138 @@ namespace DjiNeo2OrbeaMounts
             return pair;
         }
 
+        // 03g & 03h: Pause-Print Embedded M4 Nyloc (DIN 985) Variant of Carbon-Safe Outboard-Flange Handlebar Clamps!
+        //   - ONE SINGLE PRINT PAUSE at Z = 11.40 mm (Layer 57 @ 0.20mm / Layer 71 @ 0.16mm):
+        //     Drop in 3x M4 DIN 985 Nyloc locknuts per clamp (6x per pair) standing on their hex flats:
+        //       * 2x Outboard Top Saddle pockets (X = +-22.5mm, Y = ySaddleTop-7.5..ySaddleTop-2.2, 5.30mm wide, nylon ring facing DOWN/-Y)
+        //       * 1x Rear Pinch Lug pocket (X = pinchX, Y = 2.8..8.1, 5.30mm wide, nylon ring facing UP/+Y)
+        //   - Bottom half of each pocket is a 60-deg self-supporting hex V-cradle (anti-rotation); upper half is a straight vertical chute for effortless drop-in!
+        //   - Front Half-Lap Hinge uses a bottom-entry captive M4 Nyloc hex pocket (Z = 0.0..5.30mm, 2.05mm solid bearing wall) — no second pause needed!
+        //   - 100% Support-Free & Carbon-Safe (outboard +-22.5mm open exit bores clear the Ø35mm carbon bar by 2.85mm!).
+        public static MeshData BuildHandlebarHingedClamshellPairPauseNyloc(double boreDiameter, string meshName, double step = 0.70)
+        {
+            double rIn = boreDiameter * 0.5;
+            double rOut = rIn + 5.6;
+            double ySaddleTop = rIn + 6.0;
+            double pivotX = -(rIn + 5.2);
+            double pivotY = 0.0;
+            double pinchX = +(rIn + 6.5);
+
+            Func<double, double, double, double, double, double, double> dropInNylocPocketSdf = (x, y, z, cx, yMin, yMax) =>
+            {
+                double dHexXZ = SdfMesher.Hexagon2D(z - 7.5, x - cx, 7.30);
+                double dDropChuteXZ = Math.Max(Math.Abs(x - cx) - 4.22, Math.Max(7.2 - z, z - 11.35));
+                double dNylocXZ = Math.Min(dHexXZ, dDropChuteXZ);
+                return Math.Max(dNylocXZ, Math.Max(yMin - y, y - yMax));
+            };
+
+            Func<double, double, double, double> upperHalfSdf = (x, y, z) =>
+            {
+                double r = Math.Sqrt(x * x + y * y);
+                double dOct = SdfMesher.ChamferBox2D(x, y, rOut, rOut, rOut * 0.52);
+                double dRing2D = Math.Max(rIn - r, Math.Max(r - (rOut + 0.6), dOct));
+
+                // Carbon-Safe Outboard Top Saddle Flange beefed to 9.5mm thick (Y in [ySaddleTop-9.5, ySaddleTop]) & X in [-29.5, +29.5] for 5.0mm M4 Nyloc nuts!
+                double dSaddle2D = SdfMesher.ChamferBox2D(x, y - (ySaddleTop - 4.75), 29.5, 4.75, 2.2);
+                dSaddle2D = Math.Max(dSaddle2D, rIn - r);
+
+                double dHingeCyl2D = Math.Sqrt((x - pivotX) * (x - pivotX) + (y - pivotY) * (y - pivotY)) - 5.2;
+                double dHingeWeb2D = Math.Max(SdfMesher.ChamferBox2D(x - (pivotX * 0.5 - 4.0), y - 2.5, 6.0, 4.5, 1.8), rIn - r);
+                double dFront2D = SdfMesher.SmoothMin(dHingeCyl2D, dHingeWeb2D, 1.2);
+
+                // Rear Pinch Lug raised slightly to Y=10.0mm to comfortably enclose the 5.30mm M4 Nyloc pocket with solid 2.2mm floor + 1.9mm roof
+                double dRearLug2D = Math.Max(SdfMesher.ChamferBox2D(x - (rIn + 5.2), y - 5.35, 6.5, 4.65, 2.2), rIn - r);
+
+                double upperMain2D = Math.Max(SdfMesher.SmoothMin(SdfMesher.SmoothMin(dRing2D, dSaddle2D, 2.0), dRearLug2D, 1.4), 0.6 - y);
+                double profile2D = Math.Max(Math.Min(upperMain2D, dFront2D), rIn - r);
+
+                double dz = Math.Abs(z - 7.5) - 7.5;
+                double dSideBevel = (profile2D + dz + 1.0) * 0.70710678;
+                double body3D = Math.Max(Math.Max(profile2D, dz), dSideBevel);
+
+                double cut = 1e9;
+                // 100% Support-Free Half-Lap Hinge: upper jaw knuckle occupies Z = 0.0..7.35mm (flat on build plate!)
+                double dKnuckleCut = Math.Max(Math.Max(x - (-rIn + 0.5), y - 5.5), 7.35 - z);
+                cut = Math.Min(cut, dKnuckleCut);
+
+                // Front hinge: M4 through-bore + bottom-entry captive M4 Nyloc hex pocket (Z = 0.0..5.30mm -> 2.05mm solid bearing wall!)
+                double dHingePinBore = Math.Sqrt((x - pivotX) * (x - pivotX) + (y - pivotY) * (y - pivotY)) - 2.15;
+                double dHingeNyloc = Math.Max(SdfMesher.Hexagon2D(x - pivotX, y - pivotY, 7.25), z - 5.30);
+                cut = Math.Min(cut, Math.Min(dHingePinBore, dHingeNyloc));
+
+                // Outboard Top Saddle (2x at X = +-22.5mm): Pause-Embed M4 Nyloc pockets (Z <= 11.35mm) + open carbon-safe through-bores!
+                for (int sx = -1; sx <= 1; sx += 2)
+                {
+                    double bx = sx * 22.5;
+                    double dTopBore = Math.Max(Math.Sqrt((x - bx) * (x - bx) + (z - 7.5) * (z - 7.5)) - 2.15, Math.Max((ySaddleTop - 10.5) - y, y - (ySaddleTop + 1.0)));
+                    double dTopNyloc = dropInNylocPocketSdf(x, y, z, bx, ySaddleTop - 7.50, ySaddleTop - 2.20);
+                    cut = Math.Min(cut, Math.Min(dTopBore, dTopNyloc));
+                }
+
+                // Rear Pinch Lug (X = pinchX): Pause-Embed M4 Nyloc pocket (Z <= 11.35mm) + M4 through-bore!
+                double dPinchBore = Math.Sqrt((x - pinchX) * (x - pinchX) + (z - 7.5) * (z - 7.5)) - 2.15;
+                double dPinchNyloc = dropInNylocPocketSdf(x, y, z, pinchX, 2.80, 8.10);
+                cut = Math.Min(cut, Math.Min(dPinchBore, dPinchNyloc));
+
+                return Math.Max(body3D, -cut);
+            };
+
+            Func<double, double, double, double> lowerHalfSdf = (x, y, z) =>
+            {
+                double r = Math.Sqrt(x * x + y * y);
+                double dOct = SdfMesher.ChamferBox2D(x, y, rOut, rOut, rOut * 0.52);
+                double dRing2D = Math.Max(rIn - r, Math.Max(r - (rOut + 0.6), dOct));
+
+                double dHingeCyl2D = Math.Sqrt((x - pivotX) * (x - pivotX) + (y - pivotY) * (y - pivotY)) - 5.2;
+                double dHingeWeb2D = Math.Max(SdfMesher.ChamferBox2D(x - (pivotX * 0.5 - 4.0), y + 2.5, 6.0, 4.5, 1.8), rIn - r);
+                double dFront2D = SdfMesher.SmoothMin(dHingeCyl2D, dHingeWeb2D, 1.2);
+
+                double dRearLug2D = Math.Max(SdfMesher.ChamferBox2D(x - (rIn + 5.2), y + 5.1, 6.5, 4.4, 2.2), rIn - r);
+
+                double lowerMain2D = Math.Max(SdfMesher.SmoothMin(dRing2D, dRearLug2D, 1.4), y - (-0.6));
+                double profile2D = Math.Max(Math.Min(lowerMain2D, dFront2D), rIn - r);
+
+                double dz = Math.Abs(z - 7.5) - 7.5;
+                double dSideBevel = (profile2D + dz + 1.0) * 0.70710678;
+                double body3D = Math.Max(Math.Max(profile2D, dz), dSideBevel);
+
+                double cut = 1e9;
+                double dLowerKnuckleCut = Math.Max(Math.Max(x - (-rIn + 0.5), -5.5 - y), z - 7.65);
+                cut = Math.Min(cut, dLowerKnuckleCut);
+
+                double dHingePinBore = Math.Sqrt((x - pivotX) * (x - pivotX) + (y - pivotY) * (y - pivotY)) - 2.15;
+                cut = Math.Min(cut, dHingePinBore);
+
+                double rPinch = Math.Sqrt((x - pinchX) * (x - pinchX) + (z - 7.5) * (z - 7.5));
+                double dPinchBore = rPinch - 2.15;
+                double dPinchHead = Math.Max(rPinch - 4.15, y - (-5.2));
+                cut = Math.Min(cut, Math.Min(dPinchBore, dPinchHead));
+
+                return Math.Max(body3D, -cut);
+            };
+
+            var upperMesh = SdfMesher.ExtractMesh("Upper_Saddle_PauseNyloc", upperHalfSdf,
+                new Vec3(Math.Min(pivotX - 6.0, -31.0), -6.0, -0.5), new Vec3(Math.Max(pinchX + 6.5, 31.0), ySaddleTop + 1.0, 15.5), step);
+            var lowerMesh = SdfMesher.ExtractMesh("Lower_Swinging_Jaw_PauseNyloc", lowerHalfSdf,
+                new Vec3(pivotX - 6.0, -(rOut + 1.5), -0.5), new Vec3(pinchX + 6.5, 6.0, 15.5), step);
+            for (int i = 0; i < lowerMesh.Vertices.Count; i++)
+            {
+                var v = lowerMesh.Vertices[i];
+                lowerMesh.Vertices[i] = new Vec3(-v.X, v.Y - 12.5, 15.0 - v.Z);
+            }
+
+            var single = new MeshData("Hinged_Clamshell_PauseNyloc_Unit");
+            single.Append(upperMesh);
+            single.Append(lowerMesh);
+
+            var pair = new MeshData(meshName);
+            var left = single.Clone(meshName + "_L"); left.Translate(-39.0, 0, 0);
+            var right = single.Clone(meshName + "_R"); right.Translate(39.0, 0, 0);
+            pair.Append(left);
+            pair.Append(right);
+            return pair;
+        }
+
         public static MeshData BuildHandlebarTpuSleeves(double step = 0.30)
         {
             Func<double, double, double, double> singleSleeveSdf = (x, y, z) =>
