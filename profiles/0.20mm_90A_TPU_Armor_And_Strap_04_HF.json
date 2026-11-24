@@ -1,0 +1,151 @@
+{
+    "type": "process",
+    "from": "User",
+    "inherits": "0.20mm Standard @BBL P2S",
+    "name": "0.20mm MTB 90A TPU Puck & Strap - 0.4HF",
+    "print_settings_id": "0.20mm MTB 90A TPU Puck & Strap - 0.4HF",
+    "version": "2.9.0.74",
+    "print_extruder_id": [
+        "1",
+        "1",
+        "1"
+    ],
+    "print_extruder_variant": [
+        "Direct Drive Standard",
+        "Direct Drive High Flow",
+        "Direct Drive E3D High Flow"
+    ],
+    "layer_height": "0.2",
+    "initial_layer_print_height": "0.2",
+    "line_width": "0.42",
+    "initial_layer_line_width": "0.46",
+    "outer_wall_line_width": "0.42",
+    "inner_wall_line_width": "0.45",
+    "sparse_infill_line_width": "0.45",
+    "internal_solid_infill_line_width": "0.44",
+    "top_surface_line_width": "0.42",
+    "wall_loops": "3",
+    "wall_generator": "arachne",
+    "wall_sequence": "inner wall/outer wall",
+    "precise_outer_wall": "1",
+    "top_shell_layers": "4",
+    "bottom_shell_layers": "4",
+    "top_shell_thickness": "0.8",
+    "bottom_shell_thickness": "0.8",
+    "sparse_infill_density": "25%",
+    "sparse_infill_pattern": "gyroid",
+    "infill_wall_overlap": "25%",
+    "seam_position": "aligned",
+    "staggered_inner_seams": "1",
+    "xy_hole_compensation": "0.05",
+    "elefant_foot_compensation": "0.15",
+    "enable_support": "0",
+    "brim_type": "no_brim",
+    "reduce_crossing_wall": "1",
+    "max_travel_detour_distance": "100%",
+    "initial_layer_speed": [
+        "25",
+        "25",
+        "25"
+    ],
+    "initial_layer_infill_speed": [
+        "35",
+        "35",
+        "35"
+    ],
+    "outer_wall_speed": [
+        "40",
+        "40",
+        "40"
+    ],
+    "inner_wall_speed": [
+        "50",
+        "50",
+        "50"
+    ],
+    "sparse_infill_speed": [
+        "55",
+        "55",
+        "55"
+    ],
+    "internal_solid_infill_speed": [
+        "50",
+        "50",
+        "50"
+    ],
+    "top_surface_speed": [
+        "35",
+        "35",
+        "35"
+    ],
+    "gap_infill_speed": [
+        "40",
+        "40",
+        "40"
+    ],
+    "enable_overhang_speed": [
+        "1",
+        "1",
+        "1"
+    ],
+    "overhang_1_4_speed": [
+        "30",
+        "30",
+        "30"
+    ],
+    "overhang_2_4_speed": [
+        "22",
+        "22",
+        "22"
+    ],
+    "overhang_3_4_speed": [
+        "18",
+        "18",
+        "18"
+    ],
+    "overhang_4_4_speed": [
+        "12",
+        "12",
+        "12"
+    ],
+    "bridge_speed": [
+        "25",
+        "25",
+        "25"
+    ],
+    "travel_speed": [
+        "350",
+        "350",
+        "350"
+    ],
+    "default_acceleration": [
+        "2000",
+        "2000",
+        "2000"
+    ],
+    "outer_wall_acceleration": [
+        "1500",
+        "1500",
+        "1500"
+    ],
+    "inner_wall_acceleration": [
+        "2000",
+        "2000",
+        "2000"
+    ],
+    "top_surface_acceleration": [
+        "1500",
+        "1500",
+        "1500"
+    ],
+    "initial_layer_acceleration": [
+        "500",
+        "500",
+        "500"
+    ],
+    "travel_acceleration": [
+        "4000",
+        "4000",
+        "4000"
+    ]
+}
