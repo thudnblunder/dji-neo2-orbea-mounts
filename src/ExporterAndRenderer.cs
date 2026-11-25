@@ -922,6 +922,10 @@ namespace DjiNeo2OrbeaMounts
             tpuGimbalLockClip.SnapBottomToZero();
             SaveAndReport(tpuGimbalLockClip, Path.Combine(stlDir, "04i_TPU_90A_Gimbal_Lock_Clip.stl"));
 
+            var tpuSpiralGimbalCushion = PartDesigns.BuildTpu90ASpiralGimbalCushion(0.20);
+            tpuSpiralGimbalCushion.SnapBottomToZero();
+            SaveAndReport(tpuSpiralGimbalCushion, Path.Combine(stlDir, "04j_TPU_90A_Spiral_Gimbal_Cushion.stl"));
+
             // Plate 3d: 90A TPU Nose-to-Tail Over-Top Strap (Pre-Rotated 45-Deg for 256x256 P2S Bed!)
             ThreeMfWriter.Save3mf(
                 Path.Combine(threeMfDir, "Plate3d_90A_TPU_NoseToTail_OverTop_Strap.3mf"),
@@ -938,6 +942,15 @@ namespace DjiNeo2OrbeaMounts
                 new List<PlateItem>
                 {
                     new PlateItem(tpuGimbalLockClip, 0.0, 0.0, 0.0)
+                });
+
+            // Plate 3f: Flat-Printed Snap-In 3-Strand Spiral 90A TPU Gimbal Cushion (Permanent Cradle Nose Insert, Zero Supports!)
+            ThreeMfWriter.Save3mf(
+                Path.Combine(threeMfDir, "Plate3f_90A_TPU_Spiral_Gimbal_Cushion.3mf"),
+                "DJI Neo 2 - Flat-Printed 3-Strand Spiral 90A TPU Gimbal Cushion (Ø14mm Open Lens Ring, Zero Supports)",
+                new List<PlateItem>
+                {
+                    new PlateItem(tpuSpiralGimbalCushion, 0.0, 0.0, 0.0)
                 });
 
             // Plate 4f: Hybrid 90A TPU Exo-Cradle (Integrated Gimbal Vault, Belly/Heatsink Armor, Nose-to-Tail Strap Loops, Underside Spine Recess)

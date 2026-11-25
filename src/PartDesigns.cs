@@ -2003,5 +2003,66 @@ namespace DjiNeo2OrbeaMounts
             return SdfMesher.ExtractMesh("04i_TPU_90A_Gimbal_Lock_Clip", sdf,
                 new Vec3(-16.5, -12.5, -0.4), new Vec3(16.5, 18.5, 16.2), step);
         }
+
+        // =========================================================================
+        // 04j: FLAT-PRINTED SNAP-IN 3-STRAND SPIRAL GIMBAL CUSHION (90A TPU!)
+        //   - Prints 100% FLAT on Z=0 with ZERO supports (~8 min!), then flips over so the
+        //     6.2mm outer standoff rim seats against the inside front wall of 01h/01i/01g's nose vault!
+        //   - Center Hollow Bezel Ring (Ø14.0mm open lens hole -> ZERO lens glass contact!) floats
+        //     4.2mm in open air on 3 silky-soft 1.2mm-wide 90A TPU spiral flexure strands!
+        //   - Automatically stabilizes gimbal pitch & roll every time you drop the Neo 2 into the cradle
+        //     with zero loose parts to lose on the trail!
+        // =========================================================================
+        public static MeshData BuildTpu90ASpiralGimbalCushion(double step = 0.20)
+        {
+            Func<double, double, double, double> sdf = (x, y, z) =>
+            {
+                double r = Math.Sqrt(x * x + y * y);
+
+                // 1) Outer Standoff Rim: 29.6 x 26.8 mm rounded stadium (fits cleanly inside 01h/01i/01g nose vault!)
+                //    Full Z = 0.0..6.2mm height gives 4.4mm open compression space behind the 1.8mm spiral face!
+                double dOuterBox = SdfMesher.Box2D(x, y, 14.8, 13.4, 8.5);
+                double dInnerCav = SdfMesher.Box2D(x, y, 12.8, 11.4, 6.8);
+                double dRim = Math.Max(Math.Max(dOuterBox, -dInnerCav), Math.Max(0.0 - z, z - 6.2));
+
+                // 2) Center Hollow Gimbal-Bezel Cushion Ring (r in [7.0..8.4mm] -> Ø14.0mm open center clears lens glass!)
+                //    Sits flat on Z = 0.0..1.8mm (smooth build-plate face gently contacts camera bezel when flipped!)
+                double dRing2D = Math.Max(7.0 - r, r - 8.4);
+                double dRing = Math.Max(dRing2D, Math.Max(0.0 - z, z - 1.8));
+
+                // 3) 3-Strand Archimedean Spiral Flexure Arms (1.2mm wide x 1.6mm tall, sweeping 88 deg from r=8.0 to r=12.6mm)
+                //    Evaluated via 12-segment piecewise Capsule2D per strand for exact, crisp SDF thickness!
+                double dSpirals2D = 1e9;
+                const int nSeg = 14;
+                const double rStart = 7.8;
+                const double rEnd = 14.5;
+                const double sweepRad = 1.54; // ~88 deg
+                for (int k = 0; k < 3; k++)
+                {
+                    double baseAng = k * (2.0 * Math.PI / 3.0);
+                    double prevX = rStart * Math.Cos(baseAng);
+                    double prevY = rStart * Math.Sin(baseAng);
+                    for (int s = 1; s <= nSeg; s++)
+                    {
+                        double u = (double)s / nSeg;
+                        double rk = rStart + (rEnd - rStart) * u;
+                        double ak = baseAng + sweepRad * u;
+                        double curX = rk * Math.Cos(ak);
+                        double curY = rk * Math.Sin(ak);
+                        double dSeg = Capsule2D(x, y, prevX, prevY, curX, curY, 0.62); // 1.24mm strand width
+                        if (dSeg < dSpirals2D) dSpirals2D = dSeg;
+                        prevX = curX;
+                        prevY = curY;
+                    }
+                }
+                // Clip spirals cleanly inside outer box and outside the Ø14.0mm open lens hole
+                double dSpirals = Math.Max(Math.Max(dSpirals2D, Math.Max(dOuterBox, 7.0 - r)), Math.Max(0.0 - z, z - 1.6));
+
+                return Math.Min(dRim, Math.Min(dRing, dSpirals));
+            };
+
+            return SdfMesher.ExtractMesh("04j_TPU_90A_Spiral_Gimbal_Cushion", sdf,
+                new Vec3(-15.6, -14.2, -0.3), new Vec3(15.6, 14.2, 6.8), step);
+        }
     }
 }
