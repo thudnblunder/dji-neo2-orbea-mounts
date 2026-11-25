@@ -1483,13 +1483,9 @@ namespace DjiNeo2OrbeaMounts
                 new Vec3(-17.5, -51.0, -0.5), new Vec3(12.0, 58.0, 6.0), step);
         }
 
-        // 04f (V2 - Mid-Base Prop-Gap Routing): One-Piece 90A TPU Self-Locking Cradle Strap w/ Dual Molded Mushroom Bosses & Eyelets
-        // Sized specifically for the MID-BASE (X=+6.5mm) 14.0 x 3.5 mm strap loops between the DJI Neo 2's front & rear propeller guards!
-        // Works without passing under the 04a TPU isolator puck (zero unbolting!):
-        //   - End A (xLocal=10..36mm): Captive Left-Tie-Bar button-loop anchor (single oval eyelet at xLocal=10 snaps onto Left Anchor Boss at xLocal=36 around left 3x6mm tie bar!)
-        //   - Top-Center Main Locking Boss (xLocal=90mm): Sits on top of the Neo 2 fuselage right between the prop guards for easy 1-thumb latching
-        //   - End B (xLocal=196..242mm): 4 reinforced oval eyelets (106, 117, 128, 139 mm from Main Boss -> wraps down through Right slot, under Right tie bar & back up to lock!) + ribbed 3.2mm pull-tab
-        // Prints 100% FLAT on Z = 0.0 (242 mm long, fits 256 mm P2S bed) with ZERO supports!
+        // 04f (V3 - Supple 1.6mm Band, Generous 38mm Short Loop, Effortless Ø7.8mm Boss + 11.2x6.4mm Eyelets):
+        // Mid-Base (X=+6.5mm) 14.0 x 3.5 mm strap loops between the DJI Neo 2's front & rear propeller guards!
+        // Prints 100% FLAT on Z = 0.0 (248 mm long, fits 256 mm P2S bed) with ZERO supports!
         public static MeshData BuildTpu90ASelfLockingCradleStrap(double step = 0.36)
         {
             Func<double, double, double, double, double> mushroomBossSdf = (xLocal, y, z, cx) =>
@@ -1497,56 +1493,52 @@ namespace DjiNeo2OrbeaMounts
                 double dxS = xLocal - cx;
                 double rStud = Math.Sqrt(dxS * dxS + y * y);
                 double radStud;
-                if (z <= 5.2)
+                if (z <= 4.4)
                 {
-                    radStud = 3.20; // Ø6.4mm solid neck
+                    radStud = 2.80; // Ø5.6mm solid neck
                 }
-                else if (z <= 7.2)
+                else if (z <= 5.9)
                 {
-                    radStud = 3.20 + 0.85 * (z - 5.2); // 40.4-deg self-supporting conical flare to Ø9.8mm cap
+                    radStud = 2.80 + 0.733 * (z - 4.4); // 40-deg self-supporting conical flare to Ø7.8mm cap
                 }
                 else
                 {
-                    radStud = 4.90 - 1.30 * Math.Min(1.0, (z - 7.2) / 1.0); // Smooth domed top bevel
+                    radStud = 3.90 - 1.10 * Math.Min(1.0, (z - 5.9) / 1.1); // Smooth domed top bevel
                 }
-                return Math.Max(rStud - radStud, Math.Max(2.2 - z, z - 8.2));
+                return Math.Max(rStud - radStud, Math.Max(1.4 - z, z - 7.0));
             };
 
             Func<double, double, double, double> sdf = (x, y, z) =>
             {
-                double xLocal = x + 121.0; // [0.0 .. 242.0]
+                double xLocal = x + 124.0; // [0.0 .. 248.0]
 
-                // 1) End A: Left Anchor Eyelet Tab (xLocal in [0..26], 13.2 mm wide x 2.6 mm thick — fits cleanly through 14.0 x 3.5 mm slot!)
-                double dEndA = SdfMesher.StealthBlock3D(xLocal - 13.0, y, z - 1.3, 13.0, 6.6, 1.3, 4.5, 0.4);
+                // 1) Supple 1.6mm-thick continuous strap band (3.4x more flexible than 2.4mm!)
+                double dEndA = SdfMesher.StealthBlock3D(xLocal - 13.0, y, z - 0.8, 13.0, 6.6, 0.8, 4.5, 0.25);
+                double dBand = SdfMesher.StealthBlock3D(xLocal - 104.0, y, z - 0.8, 86.0, 6.0, 0.8, 2.0, 0.25);
+                double dLadder = SdfMesher.StealthBlock3D(xLocal - 216.0, y, z - 0.8, 32.0, 6.6, 0.8, 4.5, 0.25);
 
-                // 2) Main Flexible Strap Band (xLocal in [18..194], 11.8 mm wide x 2.4 mm thick)
-                double dBand = SdfMesher.StealthBlock3D(xLocal - 106.0, y, z - 1.2, 88.0, 5.9, 1.2, 2.0, 0.4);
+                // 2) Generous 38mm short-loop anchor (xLocal=10 eyelet -> xLocal=48 boss) + Top-Center Main Boss (xLocal=102)
+                double dPad1 = SdfMesher.StealthBlock3D(xLocal - 48.0, y, z - 1.0, 7.5, 6.6, 1.0, 3.0, 0.25);
+                double dPad2 = SdfMesher.StealthBlock3D(xLocal - 102.0, y, z - 1.0, 7.5, 6.6, 1.0, 3.0, 0.25);
+                double dBoss1 = mushroomBossSdf(xLocal, y, z, 48.0);
+                double dBoss2 = mushroomBossSdf(xLocal, y, z, 102.0);
 
-                // 3) Reinforced boss pads at xLocal = 36 (Left Anchor Boss) and xLocal = 90 (Top-Center Main Locking Boss)
-                double dPad1 = SdfMesher.StealthBlock3D(xLocal - 36.0, y, z - 1.5, 8.5, 7.2, 1.5, 3.0, 0.4);
-                double dPad2 = SdfMesher.StealthBlock3D(xLocal - 90.0, y, z - 1.5, 8.5, 7.2, 1.5, 3.0, 0.4);
-                double dBoss1 = mushroomBossSdf(xLocal, y, z, 36.0);
-                double dBoss2 = mushroomBossSdf(xLocal, y, z, 90.0);
-
-                // 4) End B: Reinforced 4-Eyelet Ladder + Tapered Pull-Tab (xLocal in [186..242], 13.2 mm wide x 2.6 mm thick — fits through 14.0 x 3.5 mm slots!)
-                double dLadder = SdfMesher.StealthBlock3D(xLocal - 214.0, y, z - 1.3, 28.0, 6.6, 1.3, 4.5, 0.4);
-
-                // 5) Raised tactile thumb grip ribs on pull-tab (total height 3.2 mm < 3.5 mm slot height!)
-                double dRib1 = SdfMesher.RoundedBox3D(xLocal - 235.5, y, z - 2.7, 1.0, 4.2, 0.5, 0.3);
-                double dRib2 = SdfMesher.RoundedBox3D(xLocal - 238.8, y, z - 2.7, 1.0, 3.6, 0.5, 0.3);
+                // 3) Raised tactile thumb grip ribs on pull-tab
+                double dRib1 = SdfMesher.RoundedBox3D(xLocal - 243.0, y, z - 2.0, 1.0, 4.2, 0.5, 0.3);
+                double dRib2 = SdfMesher.RoundedBox3D(xLocal - 246.0, y, z - 2.0, 1.0, 3.6, 0.5, 0.3);
 
                 double baseBand = Math.Min(Math.Min(dEndA, dBand), dLadder);
                 double pads = Math.Min(dPad1, dPad2);
                 double bosses = Math.Min(dBoss1, dBoss2);
-                double body = SdfMesher.SmoothMin(Math.Min(baseBand, pads), bosses, 0.7);
+                double body = SdfMesher.SmoothMin(Math.Min(baseBand, pads), bosses, 0.5);
                 body = Math.Min(body, Math.Min(dRib1, dRib2));
 
-                // 6) Subtract 1 Left Anchor Eyelet (xLocal=10) + 4 Right Locking Eyelets (xLocal = 196, 207, 218, 229)
+                // 4) Generous 11.2 x 6.4 mm elongated oval eyelets (effortless 1-thumb pop over Ø7.8mm cap, locks cleanly on Ø5.6mm stem!)
                 double holes = 1e9;
-                double[] eyeXs = new double[] { 10.0, 196.0, 207.0, 218.0, 229.0 };
+                double[] eyeXs = new double[] { 10.0, 194.0, 208.0, 222.0, 236.0 };
                 for (int i = 0; i < eyeXs.Length; i++)
                 {
-                    double dEye = SdfMesher.Box2D(xLocal - eyeXs[i], y, 3.6, 3.2, 3.1);
+                    double dEye = SdfMesher.Box2D(xLocal - eyeXs[i], y, 5.6, 3.2, 3.15);
                     holes = Math.Min(holes, dEye);
                 }
 
@@ -1554,7 +1546,7 @@ namespace DjiNeo2OrbeaMounts
             };
 
             return SdfMesher.ExtractMesh("04f_TPU_90A_SelfLocking_Cradle_Strap", sdf,
-                new Vec3(-122.5, -8.5, -0.5), new Vec3(122.5, 8.5, 9.0), step);
+                new Vec3(-125.5, -8.0, -0.5), new Vec3(125.5, 8.0, 7.8), step);
         }
 
         // 04g (V5): True Dual-Clearance Outboard C-Bow Hairpin Leaf-Spring 90A TPU Suspension Puck (Side-Printed, Zero Supports!)
@@ -1885,12 +1877,11 @@ namespace DjiNeo2OrbeaMounts
         }
 
         // =========================================================================
-        // 04h: NOSE-TO-TAIL 90A TPU SELF-LOCKING OVER-TOP STRAP W/ FISHEYE SHIELD
-        //   - Runs straight down the Neo 2 centerline (Y=0) — ZERO prop-guard squeezing!
-        //   - Anchors permanently around 01h/01i's Front Nose Chin Tie Bar, runs over the
-        //     top fuselage with an integrated non-contact Top-Fisheye Lens Shield Dome,
-        //     loops through the Rear Tail Tie Bar, and locks onto the Top-Center Mushroom Boss!
-        //   - Pre-rotated 45-deg (~232 x 232 mm) so the 304 mm strap fits 256x256 P2S bed flat!
+        // 04h (V2): SUPPLE 1.6mm NOSE-TO-TAIL 90A TPU OVER-TOP STRAP W/ FISHEYE SHIELD
+        //   - Supple 1.6mm band (3.4x more flexible!), generous 38mm Front Anchor Loop
+        //     (xLocal=10 eyelet -> xLocal=48 boss), effortless Ø7.8mm cap / Ø5.6mm stem
+        //     buttons + 11.2 x 6.4 mm elongated oval eyelets (5-position rear ladder)!
+        //   - Pre-rotated 45-deg (~240 x 240 mm) so the 318 mm strap fits 256x256 P2S bed!
         // =========================================================================
         public static MeshData BuildTpu90ANoseToTailStrap(double step = 0.36)
         {
@@ -1899,55 +1890,53 @@ namespace DjiNeo2OrbeaMounts
                 double dxS = xLocal - cx;
                 double rStud = Math.Sqrt(dxS * dxS + y * y);
                 double radStud;
-                if (z <= 5.2)
-                    radStud = 3.60;
-                else if (z <= 6.2)
-                    radStud = 3.60 + (z - 5.2) * 1.20;
-                else if (z <= 7.4)
-                    radStud = 4.80;
+                if (z <= 4.4)
+                    radStud = 2.80; // Ø5.6mm solid neck
+                else if (z <= 5.9)
+                    radStud = 2.80 + 0.733 * (z - 4.4); // 40-deg self-supporting conical flare to Ø7.8mm cap
                 else
-                    radStud = Math.Max(0.2, 4.80 - (z - 7.4) * 1.40);
-                return Math.Max(rStud - radStud, Math.Max(1.8 - z, z - 8.4));
+                    radStud = Math.Max(0.2, 3.90 - 1.10 * Math.Min(1.0, (z - 5.9) / 1.1));
+                return Math.Max(rStud - radStud, Math.Max(1.4 - z, z - 7.0));
             };
 
             Func<double, double, double, double> sdf = (px, py, pz) =>
             {
-                // Rotate -45 deg into strap-local coords (xLocal in [0..304], yLocal in [-12..+12], z in [0..8.4])
+                // Rotate -45 deg into strap-local coords (xLocal in [0..318], yLocal in [-12..+12], z in [0..7.0])
                 const double invSqrt2 = 0.7071067811865475;
-                double xLocal = (px + py) * invSqrt2 + 152.0;
+                double xLocal = (px + py) * invSqrt2 + 159.0;
                 double y = (-px + py) * invSqrt2;
                 double z = pz;
 
-                // 1) Main 15.4mm wide x 2.4mm thick continuous 90A strap band (fits 16.0 x 3.8mm front & rear slots!)
-                double dBand2D = SdfMesher.Box2D(xLocal - 152.0, y, 152.0, 7.7, 3.8);
-                double dBand = Math.Max(dBand2D, Math.Max(0.0 - z, z - 2.4));
+                // 1) Supple 15.2mm wide x 1.6mm thick continuous 90A strap band (3.4x more flexible, slides cleanly through 16.0 x 3.8mm slots!)
+                double dBand2D = SdfMesher.Box2D(xLocal - 159.0, y, 159.0, 7.6, 3.8);
+                double dBand = Math.Max(dBand2D, Math.Max(0.0 - z, z - 1.6));
 
-                // 2) Integrated Top-Fisheye Lens Shield Pad (xLocal in [172..200], 22.0mm wide x 4.8mm tall)
-                double dVisorPad = SdfMesher.StealthBlock3D(xLocal - 186.0, y, z - 2.4, 14.0, 11.0, 2.4, 3.8, 1.0);
+                // 2) Integrated Top-Fisheye Lens Shield Pad (xLocal in [180..208], 22.0mm wide x 4.4mm tall)
+                double dVisorPad = SdfMesher.StealthBlock3D(xLocal - 194.0, y, z - 2.2, 14.0, 11.0, 2.2, 3.8, 0.9);
 
-                // 3) Dual 40-deg Domed Mushroom Bosses:
-                //    - Front Anchor Boss (xLocal=36) locks End A (xLocal=10) permanently around the Front Nose Tie Bar
-                //    - Top-Center Main Locking Boss (xLocal=150) sits cleanly on top of the Neo 2 for 1-thumb gloved latching!
-                double dFrontBoss = mushroomBossSdf(xLocal, y, z, 36.0);
-                double dMainBoss = mushroomBossSdf(xLocal, y, z, 150.0);
+                // 3) Dual Effortless Ø7.8mm Cap / Ø5.6mm Neck Mushroom Bosses:
+                //    - Front Anchor Boss (xLocal=48) gives generous 38mm short loop around the Front Nose Tie Bar!
+                //    - Top-Center Main Locking Boss (xLocal=160) sits cleanly on top of the Neo 2 for 1-thumb gloved latching!
+                double dFrontBoss = mushroomBossSdf(xLocal, y, z, 48.0);
+                double dMainBoss = mushroomBossSdf(xLocal, y, z, 160.0);
 
-                // 4) Ribbed 3.2mm-tall Glove Pull-Tab at End B (xLocal in [296..304])
-                double dPullTab = Math.Max(SdfMesher.Box2D(xLocal - 300.0, y, 4.0, 7.7, 2.2), Math.Max(0.0 - z, z - 3.2));
+                // 4) Ribbed 2.6mm-tall Glove Pull-Tab at End B (xLocal in [311..318])
+                double dPullTab = Math.Max(SdfMesher.Box2D(xLocal - 314.5, y, 3.5, 7.6, 2.2), Math.Max(0.0 - z, z - 2.6));
 
                 double body = Math.Min(Math.Min(dBand, dVisorPad), Math.Min(Math.Min(dFrontBoss, dMainBoss), dPullTab));
 
                 // Subtract features:
                 double cut = 1e9;
                 // A) Non-Contact Optical Dome underneath the Top-Fisheye Shield Pad (r=8.2mm -> Ø16.4mm, z <= 2.4mm)
-                double dFisheyeDome = Math.Max(Math.Sqrt((xLocal - 186.0) * (xLocal - 186.0) + y * y) - 8.2, z - 2.4);
+                double dFisheyeDome = Math.Max(Math.Sqrt((xLocal - 194.0) * (xLocal - 194.0) + y * y) - 8.2, z - 2.4);
                 cut = Math.Min(cut, dFisheyeDome);
 
-                // B) 1x Captive Front-Anchor Oval Eyelet (xLocal=10) + 4x Adjustable Rear-Locking Eyelets (xLocal=254, 266, 278, 290)
-                double[] eyeXs = new double[] { 10.0, 254.0, 266.0, 278.0, 290.0 };
+                // B) 1x Captive Front-Anchor Oval Eyelet (xLocal=10) + 5x Adjustable Rear-Locking Eyelets (11.2 x 6.4 mm, 14mm pitch!)
+                double[] eyeXs = new double[] { 10.0, 248.0, 262.0, 276.0, 290.0, 304.0 };
                 for (int i = 0; i < eyeXs.Length; i++)
                 {
                     double ex = xLocal - eyeXs[i];
-                    double dOval = SdfMesher.Box2D(ex, y, 4.4, 3.2, 3.15);
+                    double dOval = SdfMesher.Box2D(ex, y, 5.6, 3.2, 3.15);
                     cut = Math.Min(cut, dOval);
                 }
 
@@ -1955,7 +1944,7 @@ namespace DjiNeo2OrbeaMounts
             };
 
             return SdfMesher.ExtractMesh("04h_TPU_90A_NoseToTail_OverTop_Strap", sdf,
-                new Vec3(-118.0, -118.0, -0.4), new Vec3(118.0, 118.0, 8.8), step);
+                new Vec3(-124.0, -124.0, -0.4), new Vec3(124.0, 124.0, 7.6), step);
         }
     }
 }
