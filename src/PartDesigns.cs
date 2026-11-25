@@ -1932,5 +1932,76 @@ namespace DjiNeo2OrbeaMounts
             return SdfMesher.ExtractMesh("04h_TPU_90A_NoseToTail_OverTop_Strap", sdf,
                 new Vec3(-124.0, -124.0, -0.4), new Vec3(124.0, 124.0, 8.0), step);
         }
+
+        // =========================================================================
+        // 04i: LOW-PROFILE 90A TPU SNAP-IN GIMBAL LOCK CLIP (FITS INSIDE CRADLE!)
+        //   - Slides into the DJI Neo 2 front camera bay & fits completely inside 01h/01i/01g nose vault!
+        //   - Soft 90A TPU side cheek-fingers + top/bottom flex-ribs gently hug the camera barrel's outer housing
+        //     to immobilize BOTH pitch & roll against MTB rock-garden rattle!
+        //   - Deep Ø14.5mm recessed non-contact optical dome ensures NOTHING ever touches the camera lens glass!
+        //   - Low-profile textured top pull-tab pops out in 1 second before flight; prints FLAT on Z=0 with ZERO supports (~12 min)!
+        // =========================================================================
+        public static MeshData BuildTpu90AGimbalLockClip(double step = 0.24)
+        {
+            Func<double, double, double, double> sdf = (x, y, z) =>
+            {
+                // Print coordinates:
+                //   x: width across Neo 2 nose bay [-15.2..+15.2] (30.4mm outer flex-wings tapering to 24.4mm front)
+                //   y: height of camera bay [-11.5..+11.5] (23.0mm tall, +Y = top pull-tab side)
+                //   z: depth from front protective face (Z=0.0 on bed) back into camera bay (Z=15.5mm)
+                double ax = Math.Abs(x);
+                double ay = Math.Abs(y);
+
+                // 1) Tapered Outer Protective Shell (matches 01h/01i nose vault taper so it fits cleanly inside cradle!)
+                //    Half-width tapers from 12.2mm at front (z=0) to 15.0mm at back (z=15.5)
+                double zU = Math.Max(0.0, Math.Min(1.0, z / 15.5));
+                double halfW = 12.2 + 2.8 * zU;
+                double halfH = 10.6 + 0.9 * zU;
+                double dOuter2D = SdfMesher.Box2D(x, y, halfW, halfH, 3.6);
+                double dOuter = Math.Max(dOuter2D, Math.Max(0.0 - z, z - 15.5));
+
+                // 2) Compliant Outer Side-Grip Wings (gentle 0.8mm ribbed friction swell at z in [7..14] to grip inside Neo 2 nose bay)
+                double dGripRib = Math.Max(
+                    Math.Abs(ax - (halfW - 0.1)) - 0.9,
+                    Math.Max(ay - 6.0, Math.Abs(z - 10.5) - 3.5));
+
+                // 3) Low-Profile Textured Top Pull-Tab (y in [+10.0..+17.0], x in [-5.5..+5.5], z in [0.0..2.8mm] — flush on bed, zero supports!)
+                double dTab = SdfMesher.StealthBlock3D(x, y - 13.5, z - 1.4, 5.5, 4.0, 1.4, 2.2, 0.5);
+
+                double body = SdfMesher.SmoothMin(Math.Min(dOuter, dGripRib), dTab, 0.6);
+
+                // 4) Carve Interior Gimbal Bay + Compliant Camera-Barrel Lock Fingers:
+                //    - Outer hollow bay (z >= 4.2mm) leaves 2.4mm outer walls
+                double dBayInner = Math.Max(SdfMesher.Box2D(x, y, halfW - 2.3, halfH - 2.2, 2.2), 4.2 - z);
+
+                //    - Soft Gimbal-Barrel Cradle Saddle (z in [3.5..14.0]): hugs camera barrel sides (17.2mm) & top/bottom (16.6mm)
+                //      Leave 2 compliant curved side cheeks + top/bottom pads inside the bay by subtracting a central barrel cavity!
+                double dSaddleBlock = Math.Max(SdfMesher.Box2D(x, y, 11.4, 10.2, 2.4), Math.Max(3.2 - z, z - 13.8));
+                //    - Camera Barrel Cavity: 17.6mm wide (|x|<=8.8) x 16.8mm tall (|y|<=8.4), tapering slightly to 17.0 x 16.2mm at z=4.5 for gentle snug grip!
+                double barrelW = 8.4 + 0.5 * zU;
+                double barrelH = 8.0 + 0.5 * zU;
+                double dBarrelCavity = Math.Max(SdfMesher.Box2D(x, y, barrelW, barrelH, 3.2), 4.0 - z);
+
+                //    - Flex-relief slots separating the inner camera-cradle cheeks from the outer shell so they flex softly like rubber cushions!
+                double dFlexSlotX = Math.Max(Math.Abs(ax - 10.6) - 0.85, Math.Max(ay - 7.5, 5.2 - z));
+                double dFlexSlotY = Math.Max(Math.Abs(ay - 9.2) - 0.85, Math.Max(ax - 6.0, 5.2 - z));
+
+                //    - Deep Non-Contact Lens Optical Dome (r=7.25mm -> Ø14.5mm, z in [1.8..5.0]) so NOTHING ever touches the lens glass!
+                double dLensDome = Math.Max(Math.Sqrt(x * x + y * y) - 7.25, 1.8 - z);
+
+                //    - Small finger-grip hole in top pull-tab (r=1.8mm at y=14.2) for optional lanyard / easy pull
+                double dTabHole = Math.Sqrt(x * x + (y - 14.2) * (y - 14.2)) - 1.8;
+
+                // Hollow out the bay EXCEPT keep the soft saddle block, then carve the camera barrel cavity + flex slots + lens dome!
+                double hollowed = Math.Max(body, -dBayInner);
+                double withSaddle = Math.Min(hollowed, Math.Max(dSaddleBlock, dOuter));
+                double innerCuts = Math.Min(Math.Min(dBarrelCavity, dLensDome), Math.Min(Math.Min(dFlexSlotX, dFlexSlotY), dTabHole));
+
+                return Math.Max(withSaddle, -innerCuts);
+            };
+
+            return SdfMesher.ExtractMesh("04i_TPU_90A_Gimbal_Lock_Clip", sdf,
+                new Vec3(-16.5, -12.5, -0.4), new Vec3(16.5, 18.5, 16.2), step);
+        }
     }
 }

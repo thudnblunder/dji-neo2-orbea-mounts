@@ -918,13 +918,26 @@ namespace DjiNeo2OrbeaMounts
             tpuNoseToTailStrap.SnapBottomToZero();
             SaveAndReport(tpuNoseToTailStrap, Path.Combine(stlDir, "04h_TPU_90A_NoseToTail_OverTop_Strap.stl"));
 
-            // Plate 3d: 90A TPU Nose-to-Tail Over-Top Strap w/ Integrated Top-Fisheye Lens Shield (Pre-Rotated 45-Deg for 256x256 P2S Bed!)
+            var tpuGimbalLockClip = PartDesigns.BuildTpu90AGimbalLockClip(0.24);
+            tpuGimbalLockClip.SnapBottomToZero();
+            SaveAndReport(tpuGimbalLockClip, Path.Combine(stlDir, "04i_TPU_90A_Gimbal_Lock_Clip.stl"));
+
+            // Plate 3d: 90A TPU Nose-to-Tail Over-Top Strap (Pre-Rotated 45-Deg for 256x256 P2S Bed!)
             ThreeMfWriter.Save3mf(
                 Path.Combine(threeMfDir, "Plate3d_90A_TPU_NoseToTail_OverTop_Strap.3mf"),
-                "DJI Neo 2 - 90A TPU Nose-to-Tail Over-Top Strap w/ Integrated Fisheye Shield (45-Deg Diagonal, Zero Supports)",
+                "DJI Neo 2 - 90A TPU Nose-to-Tail Over-Top Strap (45-Deg Diagonal, Zero Supports)",
                 new List<PlateItem>
                 {
                     new PlateItem(tpuNoseToTailStrap, 0.0, 0.0, 0.0)
+                });
+
+            // Plate 3e: Low-Profile 90A TPU Snap-In Gimbal Lock Clip (Fits Inside 01h/01i/01g Cradle Nose Vault, Zero Supports!)
+            ThreeMfWriter.Save3mf(
+                Path.Combine(threeMfDir, "Plate3e_90A_TPU_Gimbal_Lock_Clip.3mf"),
+                "DJI Neo 2 - Low-Profile 90A TPU Snap-In Gimbal Lock Clip (Non-Contact Lens Dome, Zero Supports)",
+                new List<PlateItem>
+                {
+                    new PlateItem(tpuGimbalLockClip, 0.0, 0.0, 0.0)
                 });
 
             // Plate 4f: Hybrid 90A TPU Exo-Cradle (Integrated Gimbal Vault, Belly/Heatsink Armor, Nose-to-Tail Strap Loops, Underside Spine Recess)
