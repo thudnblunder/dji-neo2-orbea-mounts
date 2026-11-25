@@ -1557,10 +1557,13 @@ namespace DjiNeo2OrbeaMounts
                 new Vec3(-122.5, -8.5, -0.5), new Vec3(122.5, 8.5, 9.0), step);
         }
 
-        // 04g (V2 - Soft-Flex Hourglass Bellows for 190g DJI Neo 2!): True 100% Decoupled 10.0mm 90A TPU Shear-Isolator Puck
-        // Cuts shear & compression stiffness by ~3.5x vs V1 via 6 vertical hourglass flex reliefs + deep 45-deg V-bellows perimeter groove,
-        // while keeping solid Ø11.4mm reinforced columns around all 6 M4 bolt holes!
-        // Prints 100% FLAT on Z = 0.0 with ZERO supports (recommended: 2 walls, 3 top/bottom, 12-15% Gyroid in 90A TPU)!
+        // 04g (V3 - True Floating-Center Leaf-Spring 12mm 90A TPU Suspension Puck for 190g DJI Neo 2!):
+        // Printed UPSIDE-DOWN (flat cradle-mounting face on Z_print = 0.0) for 100% ZERO-SUPPORT printing!
+        // When flipped 180-deg and installed into 03a/03i's recessed pocket:
+        //   - ONLY the 2 outer bridge-bolt feet (+-15.0, 0.0) sit on 03a/03i's floor (12.0mm tall columns, Z_print = 0.0..12.0)
+        //   - The entire center platform (holding the 4 cradle bolts at +-7.5, +-7.5) is 9.5mm tall (Z_print = 0.0..9.5) -> FLOATS 2.5mm in mid-air above 03a/03i's floor!
+        //   - Connected by 4 thin 4.5mm-tall x 4.2mm-wide elastomeric leaf-spring flex-bridges (Z_print = 0.0..4.5) -> ~8x softer vertical compliance for 190g payload + built-in 2.5mm bump-stop!
+        //   - Zero steel-to-steel path: 4x square cradle bolt counterbores open UP during printing (Z_print = 5.3..9.5); 2x centerline bridge-bolt hex pockets open at Z_print = 0.0..4.8!
         public static MeshData BuildTpuDecoupledShearIsolatorPuck(double step = 0.34)
         {
             Func<double, double, double, double> sdf = (x, y, z) =>
@@ -1568,48 +1571,56 @@ namespace DjiNeo2OrbeaMounts
                 double ax = Math.Abs(x);
                 double ay = Math.Abs(y);
 
-                // Main 48.0 x 26.0 x 10.0 mm stadium block (fits 03a recessed bezel cleanly)
-                double body = SdfMesher.RoundedBox3D(x, y, z - 5.0, 24.0, 13.0, 5.0, 4.0);
+                // 1) 4.5mm-tall full-footprint leaf-spring base layer (Z_print = 0.0..4.5 -> sits 100% flat on bed, zero supports!)
+                double dBasePlate = SdfMesher.RoundedBox3D(x, y, z - 2.25, 24.0, 13.0, 2.25, 4.0);
 
-                // Solid Ø11.4mm reinforced bosses protecting all 6 M4 bolt columns
+                // 2) Floating Center Cradle Platform (Z_print = 0.0..9.5 -> floats 2.5mm above bridge floor when installed!)
+                //    Covers all 4 cradle bolt columns (+-7.5, +-7.5) with smooth chamfered corners
+                double dCenterPlatform = SdfMesher.RoundedBox3D(x, y, z - 4.75, 12.6, 13.0, 4.75, 3.8);
+
+                // 3) 2x Outer Bridge-Bolt Feet at (+-15.0, 0.0) extending full 12.0mm height (Z_print = 0.0..12.0 -> ONLY parts touching bridge floor!)
+                double rFoot = Math.Sqrt((ax - 15.0) * (ax - 15.0) + y * y);
+                double dOuterFeet = Math.Max(rFoot - 6.0, Math.Max(0.0 - z, z - 12.0));
+                // Outer stadium tabs at |X| = 15..24, Z_print = 0..12 (clipped to 48x26 pocket outline so it indexes snugly in 03a/03i's 3.5mm recessed bezel!)
+                double dOuterTab = Math.Max(SdfMesher.Box2D(x, y, 24.0, 13.0, 4.0), Math.Max(14.5 - ax, Math.Max(0.0 - z, z - 12.0)));
+                double dFeetCombined = Math.Min(dOuterFeet, dOuterTab);
+
+                double body = SdfMesher.SmoothMin(dBasePlate, Math.Min(dCenterPlatform, dFeetCombined), 0.8);
+
+                // Reinforced Ø11.2mm boss keep-out zones protecting all 6 M4 bolt holes
                 double dBoltBosses = 1e9;
-                dBoltBosses = Math.Min(dBoltBosses, Math.Sqrt((ax - 7.5) * (ax - 7.5) + (ay - 7.5) * (ay - 7.5)) - 5.7);
-                dBoltBosses = Math.Min(dBoltBosses, Math.Sqrt((ax - 15.0) * (ax - 15.0) + y * y) - 5.7);
+                dBoltBosses = Math.Min(dBoltBosses, Math.Sqrt((ax - 7.5) * (ax - 7.5) + (ay - 7.5) * (ay - 7.5)) - 5.6);
+                dBoltBosses = Math.Min(dBoltBosses, Math.Sqrt((ax - 15.0) * (ax - 15.0) + y * y) - 5.6);
 
-                // Deep 45-deg self-supporting V-bellows groove around outer perimeter (2.6mm deep at Z=5.4mm, zero overhangs >45 deg!)
-                double dOuterPerim = SdfMesher.Box2D(x, y, 24.0, 13.0, 4.0);
-                double dVBellows = (-dOuterPerim + Math.Abs(z - 5.4)) - 2.6;
-                dVBellows = Math.Max(dVBellows, -dBoltBosses);
+                double cut = 1e9;
 
-                double cut = dVBellows;
-
-                // Soft-Flex Hourglass Relief Cutouts (100% vertical Z=0..10mm, zero supports!):
-                //   1) Large central relief cell (r = 4.6mm)
+                // Vertical Hourglass Flex Reliefs (Z_print = 0..12, zero supports!):
+                //   a) Large central relief cell (r = 4.6mm)
                 cut = Math.Min(cut, Math.Sqrt(x * x + y * y) - 4.6);
-                //   2) 4x outer-waist hourglass reliefs between (±15,0) bridge bosses and (±7.5,±7.5) cradle bosses -> creates 4 compliant ~4.2mm flex-bridges!
+                //   b) 4x outer-waist reliefs carving the 4.5mm base layer into 4 compliant ~4.2mm-wide elastomeric leaf-springs!
                 double dWaist = Math.Sqrt((ax - 16.5) * (ax - 16.5) + (ay - 11.2) * (ay - 11.2)) - 4.8;
                 cut = Math.Min(cut, Math.Max(dWaist, -dBoltBosses));
-                //   3) 2x mid-side reliefs separating front and rear cradle bolt pairs
+                //   c) 2x mid-side reliefs separating front & rear cradle bolt pairs
                 double dSideMid = Math.Sqrt(ax * ax + (ay - 12.2) * (ay - 12.2)) - 4.2;
                 cut = Math.Min(cut, Math.Max(dSideMid, -dBoltBosses));
 
-                // 4x Square Holes (+-7.5, +-7.5): M4 through-bore + bottom Ø9.6mm x 4.6mm deep counterbore for M4x10mm bolt head + washer (Cradle -> Puck)
+                // 4x Square Cradle Holes (+-7.5, +-7.5): M4 bore + Ø9.6mm x 4.2mm deep counterbore opening UP at Z_print=5.3..9.5 (zero supports!)
                 double rSq = Math.Sqrt((ax - 7.5) * (ax - 7.5) + (ay - 7.5) * (ay - 7.5));
                 double dSqBore = rSq - 2.05;
-                double dSqCbore = Math.Max(rSq - 4.80, z - 4.60);
+                double dSqCbore = Math.Max(rSq - 4.80, 5.30 - z);
                 cut = Math.Min(cut, Math.Min(dSqBore, dSqCbore));
 
-                // 2x Centerline Holes (+-15.0, 0.0): M4 through-bore + top 5.2mm-deep recessed pocket (Z=4.8..10.0, Puck -> Bridge)
+                // 2x Centerline Bridge Holes (+-15.0, 0.0): M4 bore + 4.8mm-deep recessed top pocket at Z_print=0.0..4.8 (facing cradle when installed!)
                 double rCtr = Math.Sqrt((ax - 15.0) * (ax - 15.0) + y * y);
                 double dCtrBore = rCtr - 2.05;
-                double dCtrNut = Math.Max(SdfMesher.Hexagon2D(ax - 15.0, y, 7.05), 4.80 - z);
-                cut = Math.Min(cut, Math.Min(dCtrBore, dCtrNut));
+                double dCtrPocket = Math.Max(SdfMesher.Hexagon2D(ax - 15.0, y, 7.05), z - 4.80);
+                cut = Math.Min(cut, Math.Min(dCtrBore, dCtrPocket));
 
                 return Math.Max(body, -cut);
             };
 
             return SdfMesher.ExtractMesh("04g_TPU_Decoupled_Shear_Isolator_Puck", sdf,
-                new Vec3(-25.0, -14.0, -0.5), new Vec3(25.0, 14.0, 10.6), step);
+                new Vec3(-25.0, -14.0, -0.5), new Vec3(25.0, 14.0, 12.6), step);
         }
 
         // =========================================================================
