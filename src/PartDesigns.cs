@@ -905,7 +905,7 @@ namespace DjiNeo2OrbeaMounts
 
                 double dRearLug2D = Math.Max(SdfMesher.ChamferBox2D(x - (rIn + 5.2), y - 5.1, 6.5, 4.4, 2.2), rIn - r);
 
-                double upperMain2D = Math.Max(SdfMesher.SmoothMin(SdfMesher.SmoothMin(dRing2D, dSaddle2D, 2.0), dRearLug2D, 1.4), 0.6 - y);
+                double upperMain2D = Math.Max(Math.Max(SdfMesher.SmoothMin(SdfMesher.SmoothMin(dRing2D, dSaddle2D, 2.0), dRearLug2D, 1.4), 0.6 - y), y - ySaddleTop);
                 double profile2D = Math.Max(Math.Min(upperMain2D, dFront2D), rIn - r);
 
                 double dz = Math.Abs(z - 7.5) - 7.5;
@@ -1036,7 +1036,7 @@ namespace DjiNeo2OrbeaMounts
 
                 double dRearLug2D = Math.Max(SdfMesher.ChamferBox2D(x - (rIn + 5.2), y - 5.1, 6.5, 4.4, 2.2), rIn - r);
 
-                double upperMain2D = Math.Max(SdfMesher.SmoothMin(SdfMesher.SmoothMin(dRing2D, dSaddle2D, 2.0), dRearLug2D, 1.4), 0.6 - y);
+                double upperMain2D = Math.Max(Math.Max(SdfMesher.SmoothMin(SdfMesher.SmoothMin(dRing2D, dSaddle2D, 2.0), dRearLug2D, 1.4), 0.6 - y), y - ySaddleTop);
                 double profile2D = Math.Max(Math.Min(upperMain2D, dFront2D), rIn - r);
 
                 double dz = Math.Abs(z - 7.5) - 7.5;
@@ -1181,7 +1181,7 @@ namespace DjiNeo2OrbeaMounts
                 // Rear Pinch Lug (Y in [0.6..10.0]): 2.40mm solid floor + 4.50mm Nyloc pocket + 2.50mm solid roof
                 double dRearLug2D = Math.Max(SdfMesher.ChamferBox2D(x - (rIn + 5.2), y - 5.35, 6.5, 4.65, 2.2), rIn - r);
 
-                double upperMain2D = Math.Max(SdfMesher.SmoothMin(SdfMesher.SmoothMin(dRing2D, dSaddle2D, 2.0), dRearLug2D, 1.4), 0.6 - y);
+                double upperMain2D = Math.Max(Math.Max(SdfMesher.SmoothMin(SdfMesher.SmoothMin(dRing2D, dSaddle2D, 2.0), dRearLug2D, 1.4), 0.6 - y), y - ySaddleTop);
                 double profile2D = Math.Max(Math.Min(upperMain2D, dFront2D), rIn - r);
 
                 double dz = Math.Abs(z - 7.5) - 7.5;
