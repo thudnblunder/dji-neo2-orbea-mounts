@@ -558,10 +558,14 @@ namespace DjiNeo2OrbeaMounts
                     Color.FromArgb(75, 165, 225));
             }
 
-            Console.WriteLine("3. Building Mount 2: Orbea Wild LT 'Stealth OC' Over-Stem Bridge (03a) + Faceted Clamshells (03b/03c)...");
-            var stemBridge = PartDesigns.BuildOrbeaStealthOverStemBridge(0.48);
+            Console.WriteLine("3. Building Mount 2: Orbea Wild LT 'Stealth OC' Over-Stem Bridge (03a/03i) + Faceted Clamshells (03b/03c/03e/03f/03g/03h)...");
+            var stemBridge = PartDesigns.BuildOrbeaStealthOverStemBridge(0.48, includeFrontProw: true, meshName: "03a_Orbea_Stealth_OverStem_Bridge");
             stemBridge.SnapBottomToZero();
             SaveAndReport(stemBridge, Path.Combine(stlDir, "03a_Orbea_Stealth_OverStem_Bridge.stl"));
+
+            var stemBridgeCompact = PartDesigns.BuildOrbeaStealthOverStemBridge(0.48, includeFrontProw: false, meshName: "03i_Orbea_Stealth_OverStem_Bridge_Compact");
+            stemBridgeCompact.SnapBottomToZero();
+            SaveAndReport(stemBridgeCompact, Path.Combine(stlDir, "03i_Orbea_Stealth_OverStem_Bridge_Compact.stl"));
 
             var hingedClampsForTpu = PartDesigns.BuildHandlebarHingedClamshellPair(37.0, "03b_Orbea_Stealth_35mm_Hinged_Clamshells_For_TPU", 0.70);
             hingedClampsForTpu.SnapBottomToZero();
@@ -801,14 +805,23 @@ namespace DjiNeo2OrbeaMounts
                     new PlateItem(heatSetClampsDirect, 0.0, -42.0, 0.0)
                 });
 
-            // Plate 2d: Pause-Embed M4 Nyloc (DIN 985) Hinged Clamshells (1 Single Pause @ Z=11.40mm | Both 37mm For TPU & 35mm Direct — delete whichever pair you don't need!)
+            // Plate 2d: Pause-Embed M4 Nyloc (DIN 985) Hinged Clamshells (1 Single Pause @ Z=11.80mm | Both 37mm For TPU & 35mm Direct — delete whichever pair you don't need!)
             ThreeMfWriter.Save3mf(
                 Path.Combine(threeMfDir, "Plate2d_PauseEmbed_Nyloc_Clamps_35mm_And_37mm.3mf"),
-                "Orbea Wild LT - Pause-Embed M4 Nyloc Clamshells (Pause @ Z=11.40mm | 37mm For TPU & 35mm Direct)",
+                "Orbea Wild LT - Pause-Embed M4 Nyloc Clamshells (Pause @ Z=11.80mm | 37mm For TPU & 35mm Direct)",
                 new List<PlateItem>
                 {
                     new PlateItem(pauseNylocClampsForTpu, 0.0, 42.0, 0.0),
                     new PlateItem(pauseNylocClampsDirect, 0.0, -42.0, 0.0)
+                });
+
+            // Plate 2e: Trimmed Compact Flush-Front Over-Stem Bridge (03i — No Front Beak, Outboard ±22.5mm Slots, Crisp 6.90mm Hex Pockets)
+            ThreeMfWriter.Save3mf(
+                Path.Combine(threeMfDir, "Plate2e_OverStem_Bridge_Compact.3mf"),
+                "Orbea Wild LT - Compact Flush-Front Over-Stem Bridge (No Front Beak, Outboard ±22.5mm Slots)",
+                new List<PlateItem>
+                {
+                    new PlateItem(stemBridgeCompact, 0.0, 0.0, 0.0)
                 });
 
             // Plate 3: Complete 90A TPU 360-Deg Lens, Gimbal & Vibration Armor Suite (All 6 TPU Parts on 1 Plate!)

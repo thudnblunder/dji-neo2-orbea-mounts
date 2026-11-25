@@ -822,7 +822,7 @@ namespace DjiNeo2OrbeaMounts
         // Restyled in angular Orbea Wild LT / OC MC11 stealth facets with:
         //   - Recessed 3.5mm top pocket for the 04a 90A TPU Vibration Isolator Puck (lowering stack height & hiding the puck!)
         //   - Integrated Front Chiseled Aero Roost Deflector Prow (X in [+25, +43mm]) to shield the cradle from upward tire spray!
-        public static MeshData BuildOrbeaStealthOverStemBridge(double step = 0.38)
+        public static MeshData BuildOrbeaStealthOverStemBridge(double step = 0.38, bool includeFrontProw = true, string meshName = "03a_Orbea_Stealth_OverStem_Bridge")
         {
             Func<double, double, double, double> sdf = (x, y, z) =>
             {
@@ -841,20 +841,22 @@ namespace DjiNeo2OrbeaMounts
                 double dMainBevel = (dMain2D + (z - zTop) + 1.6) * 0.70710678;
                 double mainBody = Math.Max(Math.Max(dMain2D, dMainZ), dMainBevel);
 
-                // Integrated Front Stealth Roost Deflector Prow (X in [+22.0, +42.0], Y in [-21.0, +21.0], sweeping up to Z = 16.5mm!)
-                // Echoes the sharp angular prow of the 2027 Orbea Wild LT head tube and shields the front nose/sensors from upward fork spray!
-                double prowU = Math.Max(0.0, Math.Min(1.0, (x - 22.0) / 20.0));
-                double prowHalfY = 21.0 - 7.5 * prowU;
-                double dProw2D = Math.Max(Math.Max(22.0 - x, x - 42.0), ay - prowHalfY);
-                double zProwBot = 6.0 + 6.5 * prowU;
-                double zProwTop = 14.0 + 2.5 * prowU - 0.18 * ay; // V-creased stealth top ridge!
-                double prow3D = Math.Max(dProw2D, Math.Max(zProwBot - z, z - zProwTop));
-
-                double body = Math.Min(mainBody, prow3D);
+                double body = mainBody;
+                if (includeFrontProw)
+                {
+                    // Integrated Front Stealth Roost Deflector Prow (X in [+22.0, +42.0], Y in [-21.0, +21.0], sweeping up to Z = 16.5mm!)
+                    double prowU = Math.Max(0.0, Math.Min(1.0, (x - 22.0) / 20.0));
+                    double prowHalfY = 21.0 - 7.5 * prowU;
+                    double dProw2D = Math.Max(Math.Max(22.0 - x, x - 42.0), ay - prowHalfY);
+                    double zProwBot = 6.0 + 6.5 * prowU;
+                    double zProwTop = 14.0 + 2.5 * prowU - 0.18 * ay; // V-creased stealth top ridge!
+                    double prow3D = Math.Max(dProw2D, Math.Max(zProwBot - z, z - zProwTop));
+                    body = Math.Min(mainBody, prow3D);
+                }
 
                 double cut = 1e9;
 
-                // (A) Recessed 3.5mm Deep Stadium Pocket on Top Deck (Z in [10.5, 15.0]) for the 04a 90A TPU Vibration Isolator Puck!
+                // (A) Recessed 3.5mm Deep Stadium Pocket on Top Deck (Z in [10.5, 15.0]) for the 04a/04g 90A TPU Vibration Isolator Puck!
                 double dPuckPocket = Math.Max(SdfMesher.Box2D(x, y, 24.3, 13.3, 4.1), 10.5 - z);
                 cut = Math.Min(cut, dPuckPocket);
 
@@ -870,7 +872,9 @@ namespace DjiNeo2OrbeaMounts
                 return Math.Max(body, -cut);
             };
 
-            return SdfMesher.ExtractMesh("03a_Orbea_Stealth_OverStem_Bridge", sdf, new Vec3(-30.0, -43.0, -0.6), new Vec3(43.5, 43.0, 17.5), step);
+            double maxX = includeFrontProw ? 43.5 : 30.0;
+            double maxZ = includeFrontProw ? 17.5 : 15.0;
+            return SdfMesher.ExtractMesh(meshName, sdf, new Vec3(-30.0, -43.0, -0.6), new Vec3(maxX, 43.0, maxZ), step);
         }
 
         // 03b & 03f: Restyled Faceted "Orbea OC" Swinging M4 Pin-Hinged Clamshell Handlebar Clamps (Zero Plastic Flexing!)
