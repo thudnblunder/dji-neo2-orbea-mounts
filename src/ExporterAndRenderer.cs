@@ -902,6 +902,58 @@ namespace DjiNeo2OrbeaMounts
                     new PlateItem(cradleFlat72DTpu, 0.0, 0.0, 0.0)
                 });
 
+            // 90A TPU Exo-Cradles (01h Hybrid + 05c Rigid Spine, 01i All-90A One-Piece) & 04h Nose-to-Tail Over-Top Strap!
+            Console.WriteLine("6. Building 90A TPU Exo-Cradles (01h Hybrid + 05c Rigid Spine, 01i One-Piece) & 04h Nose-to-Tail Strap...");
+            var cradle90AHybrid = PartDesigns.BuildCradle90ATpuExo("01h_DJI_Neo2_90A_TPU_ExoCradle_Hybrid", cradleShell, hybridWithSpineRecess: true, step: 0.36);
+            SaveAndReport(cradle90AHybrid, Path.Combine(stlDir, "01h_DJI_Neo2_90A_TPU_ExoCradle_Hybrid.stl"));
+
+            var rigidSpinePlate = PartDesigns.BuildRigidBackboneSpinePlate(0.28);
+            rigidSpinePlate.SnapBottomToZero();
+            SaveAndReport(rigidSpinePlate, Path.Combine(stlDir, "05c_Rigid_Backbone_Spine_72D_Or_PETG.stl"));
+
+            var cradle90AOnePiece = PartDesigns.BuildCradle90ATpuExo("01i_DJI_Neo2_90A_TPU_ExoCradle_OnePiece", cradleShell, hybridWithSpineRecess: false, step: 0.36);
+            SaveAndReport(cradle90AOnePiece, Path.Combine(stlDir, "01i_DJI_Neo2_90A_TPU_ExoCradle_OnePiece.stl"));
+
+            var tpuNoseToTailStrap = PartDesigns.BuildTpu90ANoseToTailStrap(0.36);
+            tpuNoseToTailStrap.SnapBottomToZero();
+            SaveAndReport(tpuNoseToTailStrap, Path.Combine(stlDir, "04h_TPU_90A_NoseToTail_OverTop_Strap.stl"));
+
+            // Plate 3d: 90A TPU Nose-to-Tail Over-Top Strap w/ Integrated Top-Fisheye Lens Shield (Pre-Rotated 45-Deg for 256x256 P2S Bed!)
+            ThreeMfWriter.Save3mf(
+                Path.Combine(threeMfDir, "Plate3d_90A_TPU_NoseToTail_OverTop_Strap.3mf"),
+                "DJI Neo 2 - 90A TPU Nose-to-Tail Over-Top Strap w/ Integrated Fisheye Shield (45-Deg Diagonal, Zero Supports)",
+                new List<PlateItem>
+                {
+                    new PlateItem(tpuNoseToTailStrap, 0.0, 0.0, 0.0)
+                });
+
+            // Plate 4f: Hybrid 90A TPU Exo-Cradle (Integrated Gimbal Vault, Belly/Heatsink Armor, Nose-to-Tail Strap Loops, Underside Spine Recess)
+            ThreeMfWriter.Save3mf(
+                Path.Combine(threeMfDir, "Plate4f_Cradle_90A_TPU_ExoCradle_Hybrid.3mf"),
+                "DJI Neo 2 - Hybrid 90A TPU Exo-Cradle (Integrated Gimbal/Belly Armor + Underside Recess for 05c Spine, Zero Supports)",
+                new List<PlateItem>
+                {
+                    new PlateItem(cradle90AHybrid, 0.0, 0.0, 0.0)
+                });
+
+            // Plate 4g: All-90A One-Piece Thick-Keel Exo-Cradle (Integrated Gimbal/Belly Armor + Stiffening Side-Keels, Zero Supports)
+            ThreeMfWriter.Save3mf(
+                Path.Combine(threeMfDir, "Plate4g_Cradle_90A_TPU_ExoCradle_OnePiece.3mf"),
+                "DJI Neo 2 - All-90A One-Piece Thick-Keel Exo-Cradle (Integrated Gimbal/Belly Armor + Side-Keels, Zero Supports)",
+                new List<PlateItem>
+                {
+                    new PlateItem(cradle90AOnePiece, 0.0, 0.0, 0.0)
+                });
+
+            // Plate 5b: Rigid 72D TPU / PETG Backbone Spine Plate for 01h Hybrid 90A Exo-Cradle (4x 6.90mm Zero-Spin M4 Nyloc Pockets!)
+            ThreeMfWriter.Save3mf(
+                Path.Combine(threeMfDir, "Plate5b_Rigid_Backbone_Spine_72D_Or_PETG.3mf"),
+                "DJI Neo 2 - Rigid 72D TPU / PETG Backbone Spine Plate for 01h Hybrid 90A Exo-Cradle",
+                new List<PlateItem>
+                {
+                    new PlateItem(rigidSpinePlate, 0.0, 0.0, 0.0)
+                });
+
             // Plate 5: Rigid PETG Fastener Reinforcement Inserts for 72D TPU Parts
             ThreeMfWriter.Save3mf(
                 Path.Combine(threeMfDir, "Plate5_PETG_Inserts_For_72D_TPU.3mf"),
