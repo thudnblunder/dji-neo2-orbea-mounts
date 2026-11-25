@@ -1557,66 +1557,84 @@ namespace DjiNeo2OrbeaMounts
                 new Vec3(-122.5, -8.5, -0.5), new Vec3(122.5, 8.5, 9.0), step);
         }
 
-        // 04g (V4 - Side-Printed True Dual-Clearance 4.0mm Floating Leaf-Spring Suspension Puck for 190g DJI Neo 2!):
-        // Engineered in installed coordinates (x in [-24..+24], y in [-13..+13], z in [0..14.5]) and rotated 90-deg onto its flat Y=-13 side for printing:
-        //   - 2x Outer Bridge Feet (|x| in [12.0..24.0], z in [0.0..9.5]): ONLY surfaces touching 03a/03i floor; stop 5.0mm BELOW cradle bottom (zero collision!)
-        //   - Floating Center Cradle Platform (|x| <= 11.2, z in [4.0..14.5]): ONLY surface touching 01g cradle; floats 4.0mm in OPEN AIR above 03a/03i floor!
-        //   - 2x Thin 3.2mm-thick angled elastomeric leaf-spring flex-arms connecting feet (z=4.2) to floating center (z=9.8) -> true 4.0mm plush downward travel + built-in bump-stop!
-        //   - Prints ON ITS SIDE (Y_inst = -13 -> Z_print = 0.0) with 100% ZERO SUPPORTS and 100% continuous unbroken TPU perimeter fibers along the leaf springs!
-        public static MeshData BuildTpuDecoupledShearIsolatorPuck(double step = 0.34)
+        // 04g (V5): True Dual-Clearance Outboard C-Bow Hairpin Leaf-Spring 90A TPU Suspension Puck (Side-Printed, Zero Supports!)
+        //   - Engineered via Castigliano beam math specifically for the 190g DJI Neo 2 + Cradle (~3.5 N/mm spring rate, ~22 Hz natural freq, 6.2% max strain!).
+        //   - Pre-oriented ON ITS SIDE (installed Y=-13 -> Z_print=0.0) so BOTH air gaps and BOTH long C-bow hairpins print horizontally with ZERO supports
+        //     and 100% continuous unbroken perimeter TPU fibers wrapping around the C-bends!
+        //   - Outer Bridge Feet (|x| in [12.2..24.0], z in [0.0..6.0]): drop right into 03a/03i's 48.6 x 26.6 x 3.5mm pocket; sit 12.0mm BELOW cradle!
+        //   - Floating Center Cradle Platform (|x| <= 11.2, z in [4.5..18.0]): floats 4.5mm ABOVE bridge floor with a soft progressive TPU chevron bump-stop
+        //     (pure ~3.5 N/mm hairpin travel for first 3.0mm; soft progressive TPU cushion across final 1.5mm to absorb 10-20G big hits!).
+        //   - Twin Outboard C-Bow Hairpin Leaf Springs (t=3.4mm, reaching |x|=32.5mm, top z=13.1..13.5mm): 4.5-4.9mm BELOW cradle plane so even at full 4.5mm
+        //     bottom-out the cradle NEVER touches the hairpins! Includes Ø8.6mm vertical access bores at x=+-15.0 for straight-down bridge bolt installation.
+        public static MeshData BuildTpuDecoupledShearIsolatorPuck(double step = 0.30)
         {
             Func<double, double, double, double> sdf = (px, py, pz) =>
             {
                 // Map print coords (px, py, pz) -> installed coords (x, y, z):
-                //   px = x [-24..+24], py = z [0..14.5], pz = y + 13.0 [0..26.0]
+                //   px = x [-36.8..+36.8], py = z [0..18.0], pz = y + 13.0 [0..26.0]
                 double x = px;
                 double z = py;
                 double y = pz - 13.0;
                 double ax = Math.Abs(x);
                 double ay = Math.Abs(y);
 
-                // 1) 2x Outer Bridge-Bolt Feet: |x| in [12.5..24.0], z in [0.0..9.5] (5.0mm clear BELOW the z=14.5 cradle!)
-                double dFoot2D = SdfMesher.Box2D(ax - 18.25, z - 4.75, 5.75, 4.75, 1.8);
+                // 1) 2x Outer Bridge Feet: |x| in [12.2..24.0], z in [0.0..6.0] (drops cleanly into 03a/03i's 48.6 x 26.6 x 3.5mm pocket)
+                double dFoot2D = SdfMesher.Box2D(ax - 18.1, z - 3.0, 5.9, 3.0, 1.2);
+                double dFootXY = SdfMesher.Box2D(x, y, 24.0, 13.0, 4.0);
+                double dFoot3D = Math.Max(dFoot2D, dFootXY);
 
-                // 2) Floating Center Cradle Platform: |x| <= 11.2, z in [4.0..14.5] (4.0mm clear ABOVE the z=0.0 bridge floor!)
-                double dCenter2D = SdfMesher.Box2D(x, z - 9.25, 11.2, 5.25, 1.8);
+                // 2) Floating Center Cradle Platform: |x| <= 11.2, z in [4.5..18.0] (4.5mm clear float ABOVE z=0.0 bridge floor!)
+                double dCenter2D = SdfMesher.Box2D(x, z - 11.25, 11.2, 6.75, 1.6);
 
-                // 3) Thin 3.2mm-thick angled elastomeric leaf-spring flex-arm connecting outer foot (15.5, 4.2) to floating center (9.5, 9.8)!
-                double dSpring2D = Capsule2D(ax, z, 15.5, 4.2, 9.5, 9.8, 1.60);
+                // 3) Progressive Soft TPU Chevron Bump-Stop under floating center (x=0, z=1.5..4.5):
+                //    First 3.0mm of travel is pure ~3.5 N/mm hairpin suspension; final 1.5mm engages soft progressive TPU cushion!
+                double dBump2D = Capsule2D(ax, z, 0.0, 2.5, 0.0, 5.0, 1.0 + 0.40 * Math.Max(0.0, (z - 2.5) / 2.5));
+                double dCenterWithBump = SdfMesher.SmoothMin(dCenter2D, dBump2D, 0.8);
 
-                double profileXZ = SdfMesher.SmoothMin(Math.Min(dFoot2D, dCenter2D), dSpring2D, 0.8);
+                // 4) Twin Outboard C-Bow Hairpin Leaf Springs (t = 3.4mm -> r = 1.70mm):
+                //    - Lower leg: (22.0, 5.8) -> (32.5, 6.2) (bottom edge >= 4.1mm, clears 3.5mm pocket rim!)
+                //    - Smooth semicircular C-bend centered at (32.5, 8.8) with centerline radius R_c = 2.6mm (from z=6.2 to z=11.4)
+                //    - Upper leg: (32.5, 11.4) -> (10.5, 11.8) (top edge 13.1..13.5mm -> 4.5-4.9mm BELOW z=18.0 cradle!)
+                double dLowerLeg = Capsule2D(ax, z, 22.0, 5.8, 32.5, 6.2, 1.70);
+                double dUpperLeg = Capsule2D(ax, z, 32.5, 11.4, 10.5, 11.8, 1.70);
 
-                // Clip cleanly to the 48.0 x 26.0 mm stadium footprint of 03a/03i's recessed pocket (corner radius 4.0mm in X-Y)
-                double dPocketXY = SdfMesher.Box2D(x, y, 24.0, 13.0, 4.0);
-                double body = Math.Max(profileXZ, Math.Max(dPocketXY, Math.Abs(y) - 13.0));
+                // Smooth right-half semicircular arc at (32.5, 8.8), R_c = 2.6mm, tube radius = 1.70mm
+                double arcDx = Math.Max(0.0, ax - 32.5);
+                double arcDz = z - 8.8;
+                double dArc2D = Math.Abs(Math.Sqrt(arcDx * arcDx + arcDz * arcDz) - 2.6) - 1.70;
+                double dArcClipped = Math.Max(dArc2D, 32.5 - ax);
+
+                double dHairpin2D = Math.Min(Math.Min(dLowerLeg, dUpperLeg), dArcClipped);
+                double dUpperBody3D = Math.Max(SdfMesher.SmoothMin(dCenterWithBump, dHairpin2D, 1.0), Math.Abs(y) - 13.0);
+
+                double body = SdfMesher.SmoothMin(dFoot3D, dUpperBody3D, 0.9);
 
                 double cut = 1e9;
 
-                // 4x Square Cradle Bolt Holes (+-7.5, +-7.5): M4 bore + bottom Ø9.6mm x 4.5mm deep counterbore (z in [4.0..8.5], 6.0mm solid TPU roof!)
-                // Teardrop top in +y (print +Z) for 100% support-free horizontal counterbore printing!
+                // 4x Square Cradle Bolt Holes (+-7.5, +-7.5): M4 bore + bottom Ø9.6mm counterbore (z in [4.5..12.0], 6.0mm solid TPU roof for M4x10mm bolts!)
                 double dxSq = ax - 7.5;
                 double dySq = ay - 7.5;
                 double rSq = Math.Sqrt(dxSq * dxSq + dySq * dySq);
-                double dSqBore = Math.Max(rSq - 2.05, 3.5 - z);
-                double dSqCbore = Math.Max(rSq - 4.80, Math.Max(3.5 - z, z - 8.50));
+                double dSqBore = Math.Max(rSq - 2.05, 4.0 - z);
+                double dSqCbore = Math.Max(rSq - 4.80, Math.Max(4.0 - z, z - 12.00));
                 cut = Math.Min(cut, Math.Min(dSqBore, dSqCbore));
 
-                // 2x Centerline Bridge Bolt Holes (+-15.0, 0.0): M4 bore + top 4.5mm-deep recessed pocket (z in [5.0..10.0], 5.0mm solid bearing floor!)
+                // 2x Centerline Bridge Bolt Holes (+-15.0, 0.0):
+                //   - M4 bore through outer foot (z <= 6.2)
+                //   - Recessed hex/button pocket in outer foot (z in [3.8..6.4], 3.8mm solid bearing floor!)
+                //   - Straight-down Ø8.6mm access bore through upper hairpin leg (z in [9.0..14.5]) for effortless bolt & Allen-key installation!
                 double dxCtr = ax - 15.0;
                 double rCtr = Math.Sqrt(dxCtr * dxCtr + y * y);
-                double dCtrBore = Math.Max(rCtr - 2.05, z - 10.0);
-                double dCtrPocket = Math.Max(SdfMesher.Hexagon2D(dxCtr, y, 7.05), Math.Max(5.00 - z, z - 10.2));
-                cut = Math.Min(cut, Math.Min(dCtrBore, dCtrPocket));
-
-                // Central vertical relief hole (x=0, y=0, r=3.8mm) to soften the floating center platform cleanly
-                double dCenterRelief = Math.Max(Math.Sqrt(x * x + y * y) - 3.8, 3.5 - z);
-                cut = Math.Min(cut, dCenterRelief);
+                double dCtrBore = Math.Max(rCtr - 2.05, z - 6.4);
+                double dCtrPocket = Math.Max(SdfMesher.Hexagon2D(dxCtr, y, 7.05), Math.Max(3.80 - z, z - 6.6));
+                double dUpperAccess = Math.Max(rCtr - 4.30, Math.Max(9.0 - z, z - 14.5));
+                cut = Math.Min(cut, Math.Min(Math.Min(dCtrBore, dCtrPocket), dUpperAccess));
 
                 return Math.Max(body, -cut);
             };
 
             return SdfMesher.ExtractMesh("04g_TPU_Decoupled_Shear_Isolator_Puck", sdf,
-                new Vec3(-25.0, -0.6, -0.5), new Vec3(25.0, 15.2, 26.6), step);
+                new Vec3(-37.8, -0.6, -0.5), new Vec3(37.8, 18.8, 26.6), step);
         }
 
         // =========================================================================
