@@ -2018,41 +2018,46 @@ namespace DjiNeo2OrbeaMounts
         }
 
         // =========================================================================
-        // 04j: FLAT-PRINTED SNAP-IN 3-STRAND SPIRAL GIMBAL CUSHION (90A TPU!)
-        //   - Prints 100% FLAT on Z=0 with ZERO supports (~8 min!), then flips over so the
-        //     6.2mm outer standoff rim seats against the inside front wall of 01h/01i/01g's nose vault!
-        //   - Center Hollow Bezel Ring (Ø14.0mm open lens hole -> ZERO lens glass contact!) floats
-        //     4.2mm in open air on 3 silky-soft 1.2mm-wide 90A TPU spiral flexure strands!
-        //   - Automatically stabilizes gimbal pitch & roll every time you drop the Neo 2 into the cradle
-        //     with zero loose parts to lose on the trail!
+        // 04j (V2): COMPACT PORTRAIT TAPERED-BASE 3-STRAND SPIRAL GIMBAL CUSHION (90A TPU!)
+        //   - Portrait orientation (23.6mm wide x 26.0mm tall front spiral face), tapering cleanly
+        //     inward at 28.6-deg (zero supports!) to a compact 18.8 x 21.2 mm FLAT GLUING BASE
+        //     at Z=6.2mm that seats 100% dead-flat inside 01h/01i/01g's nose cavity!
+        //   - Preserves the exact same 4.4mm open spring travel & Ø13.6mm open lens hole (zero glass contact)!
         // =========================================================================
         public static MeshData BuildTpu90ASpiralGimbalCushion(double step = 0.20)
         {
             Func<double, double, double, double> sdf = (x, y, z) =>
             {
+                // Portrait orientation: X = width (narrower), Y = height (taller), Z = 0.0 (spiral face) -> 6.2 (compact gluing base)
                 double r = Math.Sqrt(x * x + y * y);
 
-                // 1) Outer Standoff Rim: 29.6 x 26.8 mm rounded stadium (fits cleanly inside 01h/01i/01g nose vault!)
-                //    Full Z = 0.0..6.2mm height gives 4.4mm open compression space behind the 1.8mm spiral face!
-                double dOuterBox = SdfMesher.Box2D(x, y, 14.8, 13.4, 8.5);
-                double dInnerCav = SdfMesher.Box2D(x, y, 12.8, 11.4, 6.8);
+                // 1) Tapered Outer Standoff Rim:
+                //    - Front spiral face (z <= 1.8): 23.6 x 26.0 mm (hx=11.8, hy=13.0, R=6.8)
+                //    - Tapers cleanly inward across z in [1.8..6.2] (28.6 deg, 100% support-free!) to 18.8 x 21.2 mm flat gluing base (hx=9.4, hy=10.6, R=5.0)
+                double zT = Math.Max(0.0, Math.Min(1.0, (z - 1.8) / 4.4));
+                double hxOut = 11.8 - 2.4 * zT;
+                double hyOut = 13.0 - 2.4 * zT;
+                double rOutCorner = 6.8 - 1.8 * zT;
+                double wallW = 1.6 + 0.5 * zT; // 1.6mm front rim widening to 2.1mm flat gluing flange at Z=6.2mm!
+
+                double dOuterBox = SdfMesher.Box2D(x, y, hxOut, hyOut, rOutCorner);
+                double dInnerCav = SdfMesher.Box2D(x, y, hxOut - wallW, hyOut - wallW, Math.Max(2.0, rOutCorner - wallW));
                 double dRim = Math.Max(Math.Max(dOuterBox, -dInnerCav), Math.Max(0.0 - z, z - 6.2));
 
-                // 2) Center Hollow Gimbal-Bezel Cushion Ring (r in [7.0..8.4mm] -> Ø14.0mm open center clears lens glass!)
-                //    Sits flat on Z = 0.0..1.8mm (smooth build-plate face gently contacts camera bezel when flipped!)
-                double dRing2D = Math.Max(7.0 - r, r - 8.4);
+                // 2) Center Hollow Gimbal-Bezel Cushion Ring (r in [6.8..8.0mm] -> Ø13.6mm open center clears lens glass!)
+                double dRing2D = Math.Max(6.8 - r, r - 8.0);
                 double dRing = Math.Max(dRing2D, Math.Max(0.0 - z, z - 1.8));
 
-                // 3) 3-Strand Archimedean Spiral Flexure Arms (1.2mm wide x 1.6mm tall, sweeping 88 deg from r=8.0 to r=12.6mm)
-                //    Evaluated via 12-segment piecewise Capsule2D per strand for exact, crisp SDF thickness!
+                // 3) 3-Strand Archimedean Spiral Flexure Arms (1.15mm wide x 1.6mm tall, sweeping 82 deg from r=7.5 to r=12.6mm)
+                //    Clipped cleanly inside dOuterBox so all 3 strands anchor 100% solidly into the outer rim!
                 double dSpirals2D = 1e9;
                 const int nSeg = 14;
-                const double rStart = 7.8;
-                const double rEnd = 14.5;
-                const double sweepRad = 1.54; // ~88 deg
+                const double rStart = 7.4;
+                const double rEnd = 12.8;
+                const double sweepRad = 1.43; // ~82 deg
                 for (int k = 0; k < 3; k++)
                 {
-                    double baseAng = k * (2.0 * Math.PI / 3.0);
+                    double baseAng = k * (2.0 * Math.PI / 3.0) + 0.35;
                     double prevX = rStart * Math.Cos(baseAng);
                     double prevY = rStart * Math.Sin(baseAng);
                     for (int s = 1; s <= nSeg; s++)
@@ -2062,20 +2067,20 @@ namespace DjiNeo2OrbeaMounts
                         double ak = baseAng + sweepRad * u;
                         double curX = rk * Math.Cos(ak);
                         double curY = rk * Math.Sin(ak);
-                        double dSeg = Capsule2D(x, y, prevX, prevY, curX, curY, 0.62); // 1.24mm strand width
+                        double dSeg = Capsule2D(x, y, prevX, prevY, curX, curY, 0.58); // 1.16mm strand width
                         if (dSeg < dSpirals2D) dSpirals2D = dSeg;
                         prevX = curX;
                         prevY = curY;
                     }
                 }
-                // Clip spirals cleanly inside outer box and outside the Ø14.0mm open lens hole
-                double dSpirals = Math.Max(Math.Max(dSpirals2D, Math.Max(dOuterBox, 7.0 - r)), Math.Max(0.0 - z, z - 1.6));
+                double dOuterAtFront = SdfMesher.Box2D(x, y, 11.8, 13.0, 6.8);
+                double dSpirals = Math.Max(Math.Max(dSpirals2D, Math.Max(dOuterAtFront, 6.8 - r)), Math.Max(0.0 - z, z - 1.6));
 
                 return Math.Min(dRim, Math.Min(dRing, dSpirals));
             };
 
             return SdfMesher.ExtractMesh("04j_TPU_90A_Spiral_Gimbal_Cushion", sdf,
-                new Vec3(-15.6, -14.2, -0.3), new Vec3(15.6, 14.2, 6.8), step);
+                new Vec3(-12.6, -13.8, -0.3), new Vec3(12.6, 13.8, 6.8), step);
         }
     }
 }
