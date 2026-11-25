@@ -1578,11 +1578,11 @@ namespace DjiNeo2OrbeaMounts
                 //    Covers all 4 cradle bolt columns (+-7.5, +-7.5) with smooth chamfered corners
                 double dCenterPlatform = SdfMesher.RoundedBox3D(x, y, z - 4.75, 12.6, 13.0, 4.75, 3.8);
 
-                // 3) 2x Outer Bridge-Bolt Feet at (+-15.0, 0.0) extending full 12.0mm height (Z_print = 0.0..12.0 -> ONLY parts touching bridge floor!)
+                // 3) 2x Outer Bridge-Bolt Feet at (+-15.0, 0.0) extending full 13.5mm height (Z_print = 0.0..13.5 -> 4.0mm floating travel above bridge floor!)
                 double rFoot = Math.Sqrt((ax - 15.0) * (ax - 15.0) + y * y);
-                double dOuterFeet = Math.Max(rFoot - 6.0, Math.Max(0.0 - z, z - 12.0));
-                // Outer stadium tabs at |X| = 15..24, Z_print = 0..12 (clipped to 48x26 pocket outline so it indexes snugly in 03a/03i's 3.5mm recessed bezel!)
-                double dOuterTab = Math.Max(SdfMesher.Box2D(x, y, 24.0, 13.0, 4.0), Math.Max(14.5 - ax, Math.Max(0.0 - z, z - 12.0)));
+                double dOuterFeet = Math.Max(rFoot - 6.0, Math.Max(0.0 - z, z - 13.5));
+                // Outer stadium tabs at |X| = 15..24, Z_print = 0..13.5 (clipped to 48x26 pocket outline so it indexes snugly in 03a/03i's 3.5mm recessed bezel!)
+                double dOuterTab = Math.Max(SdfMesher.Box2D(x, y, 24.0, 13.0, 4.0), Math.Max(14.5 - ax, Math.Max(0.0 - z, z - 13.5)));
                 double dFeetCombined = Math.Min(dOuterFeet, dOuterTab);
 
                 double body = SdfMesher.SmoothMin(dBasePlate, Math.Min(dCenterPlatform, dFeetCombined), 0.8);
@@ -1620,7 +1620,7 @@ namespace DjiNeo2OrbeaMounts
             };
 
             return SdfMesher.ExtractMesh("04g_TPU_Decoupled_Shear_Isolator_Puck", sdf,
-                new Vec3(-25.0, -14.0, -0.5), new Vec3(25.0, 14.0, 12.6), step);
+                new Vec3(-25.0, -14.0, -0.5), new Vec3(25.0, 14.0, 14.1), step);
         }
 
         // =========================================================================
