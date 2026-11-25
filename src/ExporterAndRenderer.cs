@@ -980,6 +980,18 @@ namespace DjiNeo2OrbeaMounts
                     new PlateItem(rigidSpinePlate, 0.0, 0.0, 0.0)
                 });
 
+            // Plate 5c: Dual-End M4 Nyloc (6.83mm) Holding Key (Print in PLA @ 100% Infill / 6 Walls for Maximum Hex Hardness!)
+            var nylocHoldingKey = PartDesigns.BuildM4NylocHoldingKey(0.20);
+            nylocHoldingKey.SnapBottomToZero();
+            SaveAndReport(nylocHoldingKey, Path.Combine(stlDir, "05d_PLA_M4_Nyloc_Holding_Key.stl"));
+            ThreeMfWriter.Save3mf(
+                Path.Combine(threeMfDir, "Plate5c_PLA_M4_Nyloc_Holding_Key.3mf"),
+                "DJI Neo 2 - Dual-End M4 Nyloc Holding Key (Print in PLA @ 100% Infill, Zero Supports)",
+                new List<PlateItem>
+                {
+                    new PlateItem(nylocHoldingKey, 0.0, 0.0, 0.0)
+                });
+
             // Plate 5: Rigid PETG Fastener Reinforcement Inserts for 72D TPU Parts
             ThreeMfWriter.Save3mf(
                 Path.Combine(threeMfDir, "Plate5_PETG_Inserts_For_72D_TPU.3mf"),

@@ -2079,5 +2079,51 @@ namespace DjiNeo2OrbeaMounts
             return SdfMesher.ExtractMesh("04j_TPU_90A_Spiral_Gimbal_Cushion", sdf,
                 new Vec3(-12.6, -13.8, -0.3), new Vec3(12.6, 13.8, 6.8), step);
         }
+
+        // =========================================================================
+        // 05d: DUAL-END M4 NYLOC (6.83mm FLATS) HOLDING KEY — PRINT IN PLA (100% INFILL!)
+        //   - PLA is stiffer & harder than PETG so the 6.92mm hex flats resist rounding under Nyloc torque!
+        //   - End A (-X): Compact 6-Point Closed Ring Socket (12.6mm OD x 6.0mm tall, 6.92mm hex flats) — zero jaw spread!
+        //   - End B (+X): Slim 4.2mm-thin Open-End Fork Wrench (6.92mm parallel jaws) — slides sideways into tight 4.5mm gaps!
+        //   - Prints 100% FLAT on Z=0 in ~8 minutes with ZERO supports!
+        // =========================================================================
+        public static MeshData BuildM4NylocHoldingKey(double step = 0.20)
+        {
+            Func<double, double, double, double> sdf = (x, y, z) =>
+            {
+                // Total length ~78mm along X: Closed Ring Head at X=-31, Ergonomic Handle X=[-24..+24], Slim Fork Head at X=+31
+                double rClosed = Math.Sqrt((x + 31.0) * (x + 31.0) + y * y);
+                double dClosedHead = Math.Max(rClosed - 6.4, Math.Max(0.0 - z, z - 6.0));
+
+                // Slim Open-End Fork Head at X=+31 (4.2mm thin to slide straight into 04g's 4.5mm air gap!)
+                double rOpen = Math.Sqrt((x - 31.0) * (x - 31.0) + y * y);
+                double dOpenHead = Math.Max(rOpen - 6.3, Math.Max(0.0 - z, z - 4.2));
+
+                // Stiff Ergonomic Handle (X in [-28..+28], 10.0mm wide x 4.2mm thick with smooth top/bottom bevels)
+                double dHandle = SdfMesher.StealthBlock3D(x, y, z - 2.1, 29.0, 5.0, 2.1, 2.5, 0.5);
+
+                double body = SdfMesher.SmoothMin(dHandle, Math.Min(dClosedHead, dOpenHead), 1.2);
+
+                double cut = 1e9;
+                // 1) Closed 6-Point Hex Socket at X=-31 (6.92mm across flats -> crisp zero-slop grip on measured 6.83mm M4 Nyloc!)
+                //    Through-hex so the M4 bolt tip can pass straight through!
+                double dClosedHex = SdfMesher.Hexagon2D(x + 31.0, y, 6.92);
+                cut = Math.Min(cut, dClosedHex);
+
+                // 2) Open-End Fork Jaw at X=+31 (6.92mm parallel flats + open +X mouth so it slides sideways onto a nut!)
+                double dOpenHex = SdfMesher.Hexagon2D(y, x - 31.0, 6.92); // parallel flats along X!
+                double dOpenMouth = Math.Max(31.0 - x, Math.Abs(y) - 3.46); // 6.92mm wide open slot exiting +X
+                cut = Math.Min(cut, Math.Min(dOpenHex, dOpenMouth));
+
+                // 3) Center lanyard / keychain hole (X=0, Y=0, r=2.2mm)
+                double dKeyHole = Math.Sqrt(x * x + y * y) - 2.2;
+                cut = Math.Min(cut, dKeyHole);
+
+                return Math.Max(body, -cut);
+            };
+
+            return SdfMesher.ExtractMesh("05d_PLA_M4_Nyloc_Holding_Key", sdf,
+                new Vec3(-39.0, -7.8, -0.3), new Vec3(39.0, 7.8, 6.6), step);
+        }
     }
 }
