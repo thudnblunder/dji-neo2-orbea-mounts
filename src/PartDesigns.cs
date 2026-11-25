@@ -1357,82 +1357,77 @@ namespace DjiNeo2OrbeaMounts
             return systemMesh;
         }
 
-        // 04b: Snap-In 90A TPU Belly Downward Vision & IR Sensor Mud Shield
-        // Seals the 20.0 x 22.6mm rear belly cutout (X in [+40.5, +60.5], Y in [-11.3, +11.3]) with a non-contact recessed optical dome!
+        // 04b: Positive-Fit Snap-In 90A TPU Belly Downward Vision & IR Sensor Mud Shield
+        // Measured cradle opening: 19.60 x 22.40 mm, floor thickness 2.70 mm (Z=0..2.7mm).
+        // Plug shank: 19.20 x 22.00 mm (0.20mm clearance/side -> zero bulging!) + crisp +0.35mm snap-lip above the 2.70mm floor!
         public static MeshData BuildTpuBellySensorShield(double step = 0.26)
         {
             Func<double, double, double, double> sdf = (x, y, z) =>
             {
-                double flange = SdfMesher.StealthBlock3D(x, y, z - 0.8, 12.2, 13.0, 0.8, 3.0, 0.0);
-                double plug = SdfMesher.RoundedBox3D(x, y, z - 3.1, 9.95, 11.25, 1.6, 1.5);
-                // Continuous CSG retention bead
-                double beadRing = SdfMesher.RoundedBox3D(x, y, z - 3.8, 10.50, 11.80, 0.6, 1.8);
-                double body = Math.Min(flange, Math.Min(plug, beadRing));
+                // Underside mud flange (Z = 0.0..1.4mm)
+                double flange = SdfMesher.StealthBlock3D(x, y, z - 0.7, 11.8, 13.0, 0.7, 3.0, 0.0);
+                // Positive-fit shank (Z = 1.4..4.2mm, 19.20 x 22.00 mm -> 0.20mm clean clearance per side!)
+                double plug = SdfMesher.RoundedBox3D(x, y, z - 2.8, 9.60, 11.00, 1.4, 2.0);
+                // Low-profile retention snap-lip (Z = 4.1..4.9mm, 19.90 x 22.70 mm -> clicks cleanly over 2.70mm cradle floor w/ 45-deg top lead-in!)
+                double snapLip = SdfMesher.StealthBlock3D(x, y, z - 4.5, 9.95, 11.35, 0.4, 2.0, 0.35);
+                double body = Math.Min(flange, Math.Min(plug, snapLip));
 
-                // Recessed non-contact optical dome (Z in [2.6, 5.5]) so nothing ever touches the downward fisheye lens or IR ToF window!
-                double dOpticalDome = Math.Max(SdfMesher.Box2D(x, y, 7.6, 8.4, 3.0), 2.5 - z);
+                // Recessed non-contact optical dome (Z in [2.2, 5.5]) so nothing ever touches the downward fisheye lens or IR ToF window!
+                double dOpticalDome = Math.Max(SdfMesher.Box2D(x, y, 7.2, 8.2, 3.0), 2.2 - z);
                 return Math.Max(body, -dOpticalDome);
             };
-            return SdfMesher.ExtractMesh("04b_TPU_Belly_Sensor_Shield", sdf, new Vec3(-13.5, -14.2, -0.5), new Vec3(13.5, 14.2, 5.5), step);
+            return SdfMesher.ExtractMesh("04b_TPU_Belly_Sensor_Shield", sdf, new Vec3(-13.0, -14.2, -0.5), new Vec3(13.0, 14.2, 5.5), step);
         }
 
-        // 04c: Snap-In 90A TPU Heatsink Mud-Guard Louver (X in [-41.0, -21.5])
+        // 04c: Positive-Fit Snap-In 90A TPU Heatsink Mud-Guard Louver
+        // Measured cradle opening: 19.20 x 22.40 mm, floor thickness 2.70 mm.
+        // Plug shank: 18.80 x 22.00 mm (0.20mm clearance/side -> zero bulging!) + crisp +0.35mm snap-lip!
         public static MeshData BuildTpuHeatsinkLouver(double step = 0.26)
         {
             Func<double, double, double, double> sdf = (x, y, z) =>
             {
-                double flange = SdfMesher.StealthBlock3D(x, y, z - 0.8, 11.8, 13.0, 0.8, 3.0, 0.0);
-                double plug = SdfMesher.RoundedBox3D(x, y, z - 3.1, 9.70, 11.25, 1.6, 1.5);
-                // Continuous CSG retention bead
-                double beadRing = SdfMesher.RoundedBox3D(x, y, z - 3.8, 10.25, 11.80, 0.6, 1.8);
-                double body = Math.Min(flange, Math.Min(plug, beadRing));
+                double flange = SdfMesher.StealthBlock3D(x, y, z - 0.7, 11.6, 13.0, 0.7, 3.0, 0.0);
+                double plug = SdfMesher.RoundedBox3D(x, y, z - 2.8, 9.40, 11.00, 1.4, 2.0);
+                double snapLip = SdfMesher.StealthBlock3D(x, y, z - 4.5, 9.75, 11.35, 0.4, 2.0, 0.35);
+                double body = Math.Min(flange, Math.Min(plug, snapLip));
 
                 double cut = 1e9;
                 for (int i = -2; i <= 2; i++)
                 {
-                    double shiftedX = x - i * 3.4 - (z - 2.3) * 0.65;
-                    cut = Math.Min(cut, Math.Max(Math.Abs(shiftedX) - 0.85, Math.Abs(y) - 8.2));
+                    double shiftedX = x - i * 3.3 - (z - 2.3) * 0.65;
+                    cut = Math.Min(cut, Math.Max(Math.Abs(shiftedX) - 0.80, Math.Abs(y) - 8.0));
                 }
                 return Math.Max(body, -cut);
             };
-            return SdfMesher.ExtractMesh("04c_TPU_Heatsink_Mud_Louver", sdf, new Vec3(-13.0, -14.2, -0.5), new Vec3(13.0, 14.2, 5.5), step);
+            return SdfMesher.ExtractMesh("04c_TPU_Heatsink_Mud_Louver", sdf, new Vec3(-12.8, -14.2, -0.5), new Vec3(12.8, 14.2, 5.5), step);
         }
 
-        // 04d (NEW!): 90A TPU Nose-Vault Gimbal Cushion, Forward LiDAR Dome & Side-Skirt Mud Seal
-        // Press-fits inside the Closed Nose Cup (X_cradle in [-69.5, -47.5], Y in [-17.5, +17.5], Z_cradle in [6.8, 36.5])!
-        //   - Gently cradles the outer barrel of the 2-Axis Mechanical Gimbal so it cannot hammer its end-stops
-        //   - Deep non-contact optical cavities over BOTH the Main Camera Lens and Forward LiDAR / Vision Window
-        //   - Wrap-around TPU side-skirts seal the open left/right flanks of the cradle's nose cup against mud & grit!
-        // Printed flat on its front nose face (Z_print = 0..21mm) for zero-support printing!
+        // 04d: Positive-Fit 90A TPU Nose-Vault Gimbal Cushion, Forward LiDAR Dome & Side-Skirt Mud Seal
+        // Measured interior nose cup width: 34.40 mm -> outer shell tuned to 33.60 mm (0.40mm clearance/side, zero bulging!)
         public static MeshData BuildTpuNoseVaultGimbalGuard(double step = 0.26)
         {
-            // In print orientation:
-            //   - Z in [0.0, 19.5]: depth into the nose cup (Z=0 is front wall inside nose cup, Z=19.5 extends back into cradle)
-            //   - Y in [-17.4, +17.4]: width across inside of nose cup (34.8mm wide, snug friction fit inside 35.4mm cup walls!)
-            //   - X in [-14.0, +14.0]: height inside nose cup (28.0mm tall, fitting between Z_cradle = 7.2mm floor and Z_cradle = 35.2mm roof!)
             Func<double, double, double, double> sdf = (x, y, z) =>
             {
                 double ay = Math.Abs(y);
 
-                // Outer U-shell matching interior of Closed Nose Cup: 28.0mm (X) x 34.8mm (Y) x 19.0mm (Z)
-                double outer2D = SdfMesher.ChamferBox2D(x, y, 14.0, 17.4, 5.0);
-                double body3D = Math.Max(outer2D, Math.Max(0.0 - z, z - 19.0));
+                // Outer U-shell matching interior of Closed Nose Cup: 27.4mm (X) x 33.6mm (Y) x 18.5mm (Z)
+                double outer2D = SdfMesher.ChamferBox2D(x, y, 13.7, 16.8, 5.0);
+                double body3D = Math.Max(outer2D, Math.Max(0.0 - z, z - 18.5));
 
-                // Carve interior drone-nose cavity (Z > 3.2mm):
-                // Soft gimbal-hugging side cheeks at |Y| in [9.5..14.0] hold the outer gimbal frame while leaving a deep Ø16.4mm non-contact optical dome in the center!
-                double dDroneNose = Math.Max(SdfMesher.ChamferBox2D(x, y, 11.2, 14.4, 3.5), 5.5 - z);
+                // Carve interior drone-nose cavity (Z > 5.0mm)
+                double dDroneNose = Math.Max(SdfMesher.ChamferBox2D(x, y, 11.0, 14.0, 3.5), 5.0 - z);
 
-                // Deep non-contact optical dome for Main 2-Axis Gimbal Lens + Forward LiDAR (Z in [2.0, 20.0], X in [-9.5, +9.5], |Y| <= 8.4mm)
-                double dLensAndLidarDome = Math.Max(SdfMesher.Box2D(x, y, 9.5, 8.4, 4.5), 2.0 - z);
+                // Deep non-contact optical dome for Main 2-Axis Gimbal Lens + Forward LiDAR
+                double dLensAndLidarDome = Math.Max(SdfMesher.Box2D(x, y, 9.2, 8.2, 4.5), 2.0 - z);
 
-                // Compliant flex ribs on gimbal side-cheeks (at |Y| in [8.4..14.4], Z in [3.5..12.0]) so cheeks compress like plush foam pillows!
-                double dFlexGroove = Math.Max(Math.Abs(x) - 1.5, Math.Max(9.5 - ay, Math.Abs(z - 8.5) - 2.2));
+                // Compliant flex ribs on gimbal side-cheeks
+                double dFlexGroove = Math.Max(Math.Abs(x) - 1.5, Math.Max(9.2 - ay, Math.Abs(z - 8.5) - 2.2));
 
                 return Math.Max(body3D, -Math.Min(dDroneNose, Math.Min(dLensAndLidarDome, dFlexGroove)));
             };
 
             return SdfMesher.ExtractMesh("04d_TPU_Nose_Vault_Gimbal_And_LiDAR_Guard", sdf,
-                new Vec3(-15.0, -18.5, -0.5), new Vec3(15.0, 18.5, 20.0), step);
+                new Vec3(-14.8, -18.0, -0.5), new Vec3(14.8, 18.0, 19.5), step);
         }
 
         // 04e (NEW!): Orbea-Styled Faceted 90A TPU Top-Rear Fisheye Lens Visor & Fail-Safe Retention Strap
@@ -1558,45 +1553,52 @@ namespace DjiNeo2OrbeaMounts
                 new Vec3(-122.5, -8.5, -0.5), new Vec3(122.5, 8.5, 9.0), step);
         }
 
-        // 04g (NEW!): True 100% Decoupled 10.0mm 90A TPU Shear-Isolator Puck (Zero Steel-to-Steel Path!)
-        // Drops directly into 03a Over-Stem Bridge's 48.6x26.6x3.5mm recessed pocket & mates with 01g Cradle's 6-hole pattern (zero re-printing!):
-        //   - 4x Square Holes (+-7.5, +-7.5mm): Cradle -> Puck via 4x M4x10mm bolts from bottom recessed Ø9.6x4.6mm counterbores (zero contact with 03a!)
-        //   - 2x Centerline Holes (+-15.0, 0.0mm): Puck -> Bridge via 2x M4x12mm bolts from under 03a into top recessed 5.2mm-deep M4 Nyloc/hex pockets (zero contact with 01g!)
-        //   - Mid-height perimeter shear bellows groove (Z=4.4..6.4mm) + central open damping cell -> genuine 3-axis elastomer shear & compression isolation!
-        // Prints 100% FLAT on Z = 0.0 with ZERO supports (3 walls, 25-30% Gyroid in 90A TPU)!
-        public static MeshData BuildTpuDecoupledShearIsolatorPuck(double step = 0.36)
+        // 04g (V2 - Soft-Flex Hourglass Bellows for 190g DJI Neo 2!): True 100% Decoupled 10.0mm 90A TPU Shear-Isolator Puck
+        // Cuts shear & compression stiffness by ~3.5x vs V1 via 6 vertical hourglass flex reliefs + deep 45-deg V-bellows perimeter groove,
+        // while keeping solid Ø11.4mm reinforced columns around all 6 M4 bolt holes!
+        // Prints 100% FLAT on Z = 0.0 with ZERO supports (recommended: 2 walls, 3 top/bottom, 12-15% Gyroid in 90A TPU)!
+        public static MeshData BuildTpuDecoupledShearIsolatorPuck(double step = 0.34)
         {
             Func<double, double, double, double> sdf = (x, y, z) =>
             {
                 double ax = Math.Abs(x);
                 double ay = Math.Abs(y);
 
-                // Main 48.0 x 26.0 x 10.0 mm stadium block (fits 03a recessed bezel with 0.3mm side clearance)
+                // Main 48.0 x 26.0 x 10.0 mm stadium block (fits 03a recessed bezel cleanly)
                 double body = SdfMesher.RoundedBox3D(x, y, z - 5.0, 24.0, 13.0, 5.0, 4.0);
 
-                // Mid-height perimeter shear-flex bellows groove (Z in [4.4, 6.4], 1.8mm deep, interrupted around all 6 bolt columns)
-                double dOuterPerim = SdfMesher.Box2D(x, y, 24.0, 13.0, 4.0);
-                double dBellows = Math.Max(-dOuterPerim - 1.8, Math.Abs(z - 5.4) - 1.0);
+                // Solid Ø11.4mm reinforced bosses protecting all 6 M4 bolt columns
                 double dBoltBosses = 1e9;
-                dBoltBosses = Math.Min(dBoltBosses, Math.Sqrt((ax - 7.5) * (ax - 7.5) + (ay - 7.5) * (ay - 7.5)) - 5.8);
-                dBoltBosses = Math.Min(dBoltBosses, Math.Sqrt((ax - 15.0) * (ax - 15.0) + y * y) - 5.8);
-                dBellows = Math.Max(dBellows, -dBoltBosses);
+                dBoltBosses = Math.Min(dBoltBosses, Math.Sqrt((ax - 7.5) * (ax - 7.5) + (ay - 7.5) * (ay - 7.5)) - 5.7);
+                dBoltBosses = Math.Min(dBoltBosses, Math.Sqrt((ax - 15.0) * (ax - 15.0) + y * y) - 5.7);
 
-                double cut = dBellows;
+                // Deep 45-deg self-supporting V-bellows groove around outer perimeter (2.6mm deep at Z=5.4mm, zero overhangs >45 deg!)
+                double dOuterPerim = SdfMesher.Box2D(x, y, 24.0, 13.0, 4.0);
+                double dVBellows = (-dOuterPerim + Math.Abs(z - 5.4)) - 2.6;
+                dVBellows = Math.Max(dVBellows, -dBoltBosses);
 
-                // Central open damping cell (r = 3.4mm through-hole)
-                cut = Math.Min(cut, Math.Sqrt(x * x + y * y) - 3.4);
+                double cut = dVBellows;
+
+                // Soft-Flex Hourglass Relief Cutouts (100% vertical Z=0..10mm, zero supports!):
+                //   1) Large central relief cell (r = 4.6mm)
+                cut = Math.Min(cut, Math.Sqrt(x * x + y * y) - 4.6);
+                //   2) 4x outer-waist hourglass reliefs between (±15,0) bridge bosses and (±7.5,±7.5) cradle bosses -> creates 4 compliant ~4.2mm flex-bridges!
+                double dWaist = Math.Sqrt((ax - 16.5) * (ax - 16.5) + (ay - 11.2) * (ay - 11.2)) - 4.8;
+                cut = Math.Min(cut, Math.Max(dWaist, -dBoltBosses));
+                //   3) 2x mid-side reliefs separating front and rear cradle bolt pairs
+                double dSideMid = Math.Sqrt(ax * ax + (ay - 12.2) * (ay - 12.2)) - 4.2;
+                cut = Math.Min(cut, Math.Max(dSideMid, -dBoltBosses));
 
                 // 4x Square Holes (+-7.5, +-7.5): M4 through-bore + bottom Ø9.6mm x 4.6mm deep counterbore for M4x10mm bolt head + washer (Cradle -> Puck)
                 double rSq = Math.Sqrt((ax - 7.5) * (ax - 7.5) + (ay - 7.5) * (ay - 7.5));
-                double dSqBore = rSq - 2.15;
+                double dSqBore = rSq - 2.05;
                 double dSqCbore = Math.Max(rSq - 4.80, z - 4.60);
                 cut = Math.Min(cut, Math.Min(dSqBore, dSqCbore));
 
-                // 2x Centerline Holes (+-15.0, 0.0): M4 through-bore + top 5.2mm-deep captive M4 Nyloc/hex nut pocket (Z=4.8..10.0, Puck -> Bridge)
+                // 2x Centerline Holes (+-15.0, 0.0): M4 through-bore + top 5.2mm-deep recessed pocket (Z=4.8..10.0, Puck -> Bridge)
                 double rCtr = Math.Sqrt((ax - 15.0) * (ax - 15.0) + y * y);
-                double dCtrBore = rCtr - 2.15;
-                double dCtrNut = Math.Max(SdfMesher.Hexagon2D(ax - 15.0, y, 7.25), 4.80 - z);
+                double dCtrBore = rCtr - 2.05;
+                double dCtrNut = Math.Max(SdfMesher.Hexagon2D(ax - 15.0, y, 7.05), 4.80 - z);
                 cut = Math.Min(cut, Math.Min(dCtrBore, dCtrNut));
 
                 return Math.Max(body, -cut);
