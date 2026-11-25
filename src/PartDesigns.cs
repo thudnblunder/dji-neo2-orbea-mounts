@@ -1877,10 +1877,10 @@ namespace DjiNeo2OrbeaMounts
         }
 
         // =========================================================================
-        // 04h (V4): CLEAN SLEEK 1.6mm NOSE-TO-TAIL 90A TPU STRAP (NO LENS SHIELD!)
-        //   - Continuous 15.2 x 1.6 mm supple strap band (naturally shields top lens with zero bulk!)
+        // 04h (V5): ULTRA-SUPPLE 1.4mm NOSE-TO-TAIL 90A TPU STRAP (NO LENS SHIELD!)
+        //   - Continuous 15.2 x 1.4 mm (7 layers @ 0.20mm) supple strap band (naturally shields top lens with zero bulk!)
         //   - Rear Locking Button at old innermost eyelet position (xLocal=248mm), pairing with ONLY the single outermost eyelet (xLocal=304mm)!
-        //   - Bigger Goldilocks Mushroom Buttons (Ø8.8mm cap / Ø6.2mm stem, 7.4mm tall) so 11.2x6.4mm eyelets snap on cleanly & never pop off!
+        //   - Bigger Goldilocks Mushroom Buttons (Ø8.8mm cap / Ø6.2mm stem, 7.2mm tall) so 11.2x6.4mm eyelets snap on cleanly & never pop off!
         //   - Pre-rotated 45-deg (~233 x 233 mm) so the 318 mm strap fits 256x256 P2S bed flat with ZERO supports!
         // =========================================================================
         public static MeshData BuildTpu90ANoseToTailStrap(double step = 0.36)
@@ -1890,26 +1890,26 @@ namespace DjiNeo2OrbeaMounts
                 double dxS = xLocal - cx;
                 double rStud = Math.Sqrt(dxS * dxS + y * y);
                 double radStud;
-                if (z <= 4.2)
+                if (z <= 4.0)
                     radStud = 3.10; // Ø6.2mm solid neck (snug in 6.4mm eyelet width!)
-                else if (z <= 6.0)
-                    radStud = 3.10 + 0.722 * (z - 4.2); // 40-deg self-supporting conical flare to Ø8.8mm cap (positive lock, won't pop off!)
+                else if (z <= 5.8)
+                    radStud = 3.10 + 0.722 * (z - 4.0); // 40-deg self-supporting conical flare to Ø8.8mm cap (positive lock, won't pop off!)
                 else
-                    radStud = Math.Max(0.2, 4.40 - 1.25 * Math.Min(1.0, (z - 6.0) / 1.4));
-                return Math.Max(rStud - radStud, Math.Max(1.4 - z, z - 7.4));
+                    radStud = Math.Max(0.2, 4.40 - 1.25 * Math.Min(1.0, (z - 5.8) / 1.4));
+                return Math.Max(rStud - radStud, Math.Max(1.2 - z, z - 7.2));
             };
 
             Func<double, double, double, double> sdf = (px, py, pz) =>
             {
-                // Rotate -45 deg into strap-local coords (xLocal in [0..318], yLocal in [-10..+10], z in [0..7.4])
+                // Rotate -45 deg into strap-local coords (xLocal in [0..318], yLocal in [-10..+10], z in [0..7.2])
                 const double invSqrt2 = 0.7071067811865475;
                 double xLocal = (px + py) * invSqrt2 + 159.0;
                 double y = (-px + py) * invSqrt2;
                 double z = pz;
 
-                // 1) Clean, sleek 15.2mm wide x 1.6mm thick continuous 90A strap band (no lens shield bulk!)
+                // 1) Ultra-supple 15.2mm wide x 1.4mm thick continuous 90A strap band (7 layers @ 0.20mm!)
                 double dBand2D = SdfMesher.Box2D(xLocal - 159.0, y, 159.0, 7.6, 3.8);
-                double dBand = Math.Max(dBand2D, Math.Max(0.0 - z, z - 1.6));
+                double dBand = Math.Max(dBand2D, Math.Max(0.0 - z, z - 1.4));
 
                 // 2) Dual Bigger Ø8.8mm Cap / Ø6.2mm Neck Mushroom Bosses:
                 //    - Front Anchor Boss (xLocal=48) gives generous 38mm short loop around the Front Nose Tie Bar
@@ -1917,8 +1917,8 @@ namespace DjiNeo2OrbeaMounts
                 double dFrontBoss = mushroomBossSdf(xLocal, y, z, 48.0);
                 double dRearBoss = mushroomBossSdf(xLocal, y, z, 248.0);
 
-                // 3) Ribbed 2.6mm-tall Glove Pull-Tab at End B (xLocal in [311..318])
-                double dPullTab = Math.Max(SdfMesher.Box2D(xLocal - 314.5, y, 3.5, 7.6, 2.2), Math.Max(0.0 - z, z - 2.6));
+                // 3) Ribbed 2.4mm-tall Glove Pull-Tab at End B (xLocal in [311..318])
+                double dPullTab = Math.Max(SdfMesher.Box2D(xLocal - 314.5, y, 3.5, 7.6, 2.2), Math.Max(0.0 - z, z - 2.4));
 
                 double body = Math.Min(dBand, Math.Min(Math.Min(dFrontBoss, dRearBoss), dPullTab));
 
