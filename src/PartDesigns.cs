@@ -1549,13 +1549,12 @@ namespace DjiNeo2OrbeaMounts
                 new Vec3(-125.5, -8.0, -0.5), new Vec3(125.5, 8.0, 7.8), step);
         }
 
-        // 04g (V5): True Dual-Clearance Outboard C-Bow Hairpin Leaf-Spring 90A TPU Suspension Puck (Side-Printed, Zero Supports!)
+        // 04g (V6): Full-Travel 4.5mm Outboard C-Bow Hairpin Leaf-Spring 90A TPU Suspension Puck (Side-Printed, Zero Supports!)
         //   - Engineered via Castigliano beam math specifically for the 190g DJI Neo 2 + Cradle (~3.5 N/mm spring rate, ~22 Hz natural freq, 6.2% max strain!).
         //   - Pre-oriented ON ITS SIDE (installed Y=-13 -> Z_print=0.0) so BOTH air gaps and BOTH long C-bow hairpins print horizontally with ZERO supports
         //     and 100% continuous unbroken perimeter TPU fibers wrapping around the C-bends!
         //   - Outer Bridge Feet (|x| in [12.2..24.0], z in [0.0..6.0]): drop right into 03a/03i's 48.6 x 26.6 x 3.5mm pocket; sit 12.0mm BELOW cradle!
-        //   - Floating Center Cradle Platform (|x| <= 11.2, z in [4.5..18.0]): floats 4.5mm ABOVE bridge floor with a soft progressive TPU chevron bump-stop
-        //     (pure ~3.5 N/mm hairpin travel for first 3.0mm; soft progressive TPU cushion across final 1.5mm to absorb 10-20G big hits!).
+        //   - Floating Center Cradle Platform (|x| <= 11.2, z in [4.5..18.0]): flat underside with FULL unobstructed 4.5mm vertical travel above bridge floor!
         //   - Twin Outboard C-Bow Hairpin Leaf Springs (t=3.4mm, reaching |x|=32.5mm, top z=13.1..13.5mm): 4.5-4.9mm BELOW cradle plane so even at full 4.5mm
         //     bottom-out the cradle NEVER touches the hairpins! Includes Ø8.6mm vertical access bores at x=+-15.0 for straight-down bridge bolt installation.
         public static MeshData BuildTpuDecoupledShearIsolatorPuck(double step = 0.30)
@@ -1575,15 +1574,10 @@ namespace DjiNeo2OrbeaMounts
                 double dFootXY = SdfMesher.Box2D(x, y, 24.0, 13.0, 4.0);
                 double dFoot3D = Math.Max(dFoot2D, dFootXY);
 
-                // 2) Floating Center Cradle Platform: |x| <= 11.2, z in [4.5..18.0] (4.5mm clear float ABOVE z=0.0 bridge floor!)
+                // 2) Floating Center Cradle Platform: |x| <= 11.2, z in [4.5..18.0] (clean flat underside -> FULL 4.5mm unobstructed vertical travel!)
                 double dCenter2D = SdfMesher.Box2D(x, z - 11.25, 11.2, 6.75, 1.6);
 
-                // 3) Progressive Soft TPU Chevron Bump-Stop under floating center (x=0, z=1.5..4.5):
-                //    First 3.0mm of travel is pure ~3.5 N/mm hairpin suspension; final 1.5mm engages soft progressive TPU cushion!
-                double dBump2D = Capsule2D(ax, z, 0.0, 2.5, 0.0, 5.0, 1.0 + 0.40 * Math.Max(0.0, (z - 2.5) / 2.5));
-                double dCenterWithBump = SdfMesher.SmoothMin(dCenter2D, dBump2D, 0.8);
-
-                // 4) Twin Outboard C-Bow Hairpin Leaf Springs (t = 3.4mm -> r = 1.70mm):
+                // 3) Twin Outboard C-Bow Hairpin Leaf Springs (t = 3.4mm -> r = 1.70mm):
                 //    - Lower leg: (22.0, 5.8) -> (32.5, 6.2) (bottom edge >= 4.1mm, clears 3.5mm pocket rim!)
                 //    - Smooth semicircular C-bend centered at (32.5, 8.8) with centerline radius R_c = 2.6mm (from z=6.2 to z=11.4)
                 //    - Upper leg: (32.5, 11.4) -> (10.5, 11.8) (top edge 13.1..13.5mm -> 4.5-4.9mm BELOW z=18.0 cradle!)
@@ -1597,7 +1591,7 @@ namespace DjiNeo2OrbeaMounts
                 double dArcClipped = Math.Max(dArc2D, 32.5 - ax);
 
                 double dHairpin2D = Math.Min(Math.Min(dLowerLeg, dUpperLeg), dArcClipped);
-                double dUpperBody3D = Math.Max(SdfMesher.SmoothMin(dCenterWithBump, dHairpin2D, 1.0), Math.Abs(y) - 13.0);
+                double dUpperBody3D = Math.Max(SdfMesher.SmoothMin(dCenter2D, dHairpin2D, 1.0), Math.Abs(y) - 13.0);
 
                 double body = SdfMesher.SmoothMin(dFoot3D, dUpperBody3D, 0.9);
 
