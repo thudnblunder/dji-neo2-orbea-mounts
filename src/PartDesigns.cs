@@ -1549,20 +1549,17 @@ namespace DjiNeo2OrbeaMounts
                 new Vec3(-125.5, -8.0, -0.5), new Vec3(125.5, 8.0, 7.8), step);
         }
 
-        // 04g (V6): Full-Travel 4.5mm Outboard C-Bow Hairpin Leaf-Spring 90A TPU Suspension Puck (Side-Printed, Zero Supports!)
-        //   - Engineered via Castigliano beam math specifically for the 190g DJI Neo 2 + Cradle (~3.5 N/mm spring rate, ~22 Hz natural freq, 6.2% max strain!).
-        //   - Pre-oriented ON ITS SIDE (installed Y=-13 -> Z_print=0.0) so BOTH air gaps and BOTH long C-bow hairpins print horizontally with ZERO supports
-        //     and 100% continuous unbroken perimeter TPU fibers wrapping around the C-bends!
-        //   - Outer Bridge Feet (|x| in [12.2..24.0], z in [0.0..6.0]): drop right into 03a/03i's 48.6 x 26.6 x 3.5mm pocket; sit 12.0mm BELOW cradle!
-        //   - Floating Center Cradle Platform (|x| <= 11.2, z in [4.5..18.0]): flat underside with FULL unobstructed 4.5mm vertical travel above bridge floor!
-        //   - Twin Outboard C-Bow Hairpin Leaf Springs (t=3.4mm, reaching |x|=32.5mm, top z=13.1..13.5mm): 4.5-4.9mm BELOW cradle plane so even at full 4.5mm
-        //     bottom-out the cradle NEVER touches the hairpins! Includes Ø8.6mm vertical access bores at x=+-15.0 for straight-down bridge bolt installation.
+        // 04g (V7): Wide-Loop 4.6mm-Gap Full-Travel 4.5mm Outboard C-Bow Hairpin 90A TPU Suspension Puck (Side-Printed, Zero Supports!)
+        //   - Bumped +2.0mm taller (20.0mm total) to open up a massive 4.6mm clear air gap INSIDE the banana loops (R_c=3.9mm) so they NEVER pinch shut!
+        //   - Outer Bridge Feet (|x| in [12.2..24.0], z in [0.0..6.0]): drop right into 03a/03i's 48.6 x 26.6 x 3.5mm pocket!
+        //   - Floating Center Cradle Platform (|x| <= 11.2, z in [4.5..20.0]): flat underside with FULL unobstructed 4.5mm vertical travel above bridge floor!
+        //   - Twin Outboard C-Bow Hairpin Leaf Springs (t=3.2mm, R_c=3.9mm, top z=14.8..15.0mm): 5.0-5.2mm BELOW cradle plane + 4.6mm clear inside loop!
         public static MeshData BuildTpuDecoupledShearIsolatorPuck(double step = 0.30)
         {
             Func<double, double, double, double> sdf = (px, py, pz) =>
             {
                 // Map print coords (px, py, pz) -> installed coords (x, y, z):
-                //   px = x [-36.8..+36.8], py = z [0..18.0], pz = y + 13.0 [0..26.0]
+                //   px = x [-38.0..+38.0], py = z [0..20.0], pz = y + 13.0 [0..26.0]
                 double x = px;
                 double z = py;
                 double y = pz - 13.0;
@@ -1574,20 +1571,20 @@ namespace DjiNeo2OrbeaMounts
                 double dFootXY = SdfMesher.Box2D(x, y, 24.0, 13.0, 4.0);
                 double dFoot3D = Math.Max(dFoot2D, dFootXY);
 
-                // 2) Floating Center Cradle Platform: |x| <= 11.2, z in [4.5..18.0] (clean flat underside -> FULL 4.5mm unobstructed vertical travel!)
-                double dCenter2D = SdfMesher.Box2D(x, z - 11.25, 11.2, 6.75, 1.6);
+                // 2) Floating Center Cradle Platform: |x| <= 11.2, z in [4.5..20.0] (clean flat underside -> FULL 4.5mm unobstructed vertical travel!)
+                double dCenter2D = SdfMesher.Box2D(x, z - 12.25, 11.2, 7.75, 1.6);
 
-                // 3) Twin Outboard C-Bow Hairpin Leaf Springs (t = 3.4mm -> r = 1.70mm):
-                //    - Lower leg: (22.0, 5.8) -> (32.5, 6.2) (bottom edge >= 4.1mm, clears 3.5mm pocket rim!)
-                //    - Smooth semicircular C-bend centered at (32.5, 8.8) with centerline radius R_c = 2.6mm (from z=6.2 to z=11.4)
-                //    - Upper leg: (32.5, 11.4) -> (10.5, 11.8) (top edge 13.1..13.5mm -> 4.5-4.9mm BELOW z=18.0 cradle!)
-                double dLowerLeg = Capsule2D(ax, z, 22.0, 5.8, 32.5, 6.2, 1.70);
-                double dUpperLeg = Capsule2D(ax, z, 32.5, 11.4, 10.5, 11.8, 1.70);
+                // 3) Twin Wide-Open Outboard C-Bow Hairpin Leaf Springs (t = 3.2mm -> r = 1.60mm):
+                //    - Lower leg: (22.0, 5.4) -> (32.5, 5.4) (bottom edge 3.8mm -> clears 3.5mm pocket rim!)
+                //    - Smooth semicircular C-bend centered at (32.5, 9.3) with centerline radius R_c = 3.90mm (z=5.4 to z=13.2 -> 4.6mm internal air gap!)
+                //    - Upper leg: (32.5, 13.2) -> (10.5, 13.4) (top edge 14.8..15.0mm -> 5.0-5.2mm BELOW z=20.0 cradle!)
+                double dLowerLeg = Capsule2D(ax, z, 22.0, 5.4, 32.5, 5.4, 1.60);
+                double dUpperLeg = Capsule2D(ax, z, 32.5, 13.2, 10.5, 13.4, 1.60);
 
-                // Smooth right-half semicircular arc at (32.5, 8.8), R_c = 2.6mm, tube radius = 1.70mm
+                // Smooth right-half semicircular arc at (32.5, 9.3), R_c = 3.90mm, tube radius = 1.60mm
                 double arcDx = Math.Max(0.0, ax - 32.5);
-                double arcDz = z - 8.8;
-                double dArc2D = Math.Abs(Math.Sqrt(arcDx * arcDx + arcDz * arcDz) - 2.6) - 1.70;
+                double arcDz = z - 9.3;
+                double dArc2D = Math.Abs(Math.Sqrt(arcDx * arcDx + arcDz * arcDz) - 3.90) - 1.60;
                 double dArcClipped = Math.Max(dArc2D, 32.5 - ax);
 
                 double dHairpin2D = Math.Min(Math.Min(dLowerLeg, dUpperLeg), dArcClipped);
@@ -1597,30 +1594,30 @@ namespace DjiNeo2OrbeaMounts
 
                 double cut = 1e9;
 
-                // 4x Square Cradle Bolt Holes (+-7.5, +-7.5): M4 bore + bottom Ø9.6mm counterbore (z in [4.5..12.0], 6.0mm solid TPU roof for M4x10mm bolts!)
+                // 4x Square Cradle Bolt Holes (+-7.5, +-7.5): M4 bore + bottom Ø9.6mm counterbore (z in [4.5..14.0], 6.0mm solid TPU roof for M4x10-12mm bolts!)
                 double dxSq = ax - 7.5;
                 double dySq = ay - 7.5;
                 double rSq = Math.Sqrt(dxSq * dxSq + dySq * dySq);
                 double dSqBore = Math.Max(rSq - 2.05, 4.0 - z);
-                double dSqCbore = Math.Max(rSq - 4.80, Math.Max(4.0 - z, z - 12.00));
+                double dSqCbore = Math.Max(rSq - 4.80, Math.Max(4.0 - z, z - 14.00));
                 cut = Math.Min(cut, Math.Min(dSqBore, dSqCbore));
 
                 // 2x Centerline Bridge Bolt Holes (+-15.0, 0.0):
                 //   - M4 bore through outer foot (z <= 6.2)
                 //   - Recessed hex/button pocket in outer foot (z in [3.8..6.4], 3.8mm solid bearing floor!)
-                //   - Straight-down Ø8.6mm access bore through upper hairpin leg (z in [9.0..14.5]) for effortless bolt & Allen-key installation!
+                //   - Straight-down Ø8.6mm access bore through upper hairpin leg (z in [10.5..16.5]) for effortless bolt & Allen-key installation!
                 double dxCtr = ax - 15.0;
                 double rCtr = Math.Sqrt(dxCtr * dxCtr + y * y);
                 double dCtrBore = Math.Max(rCtr - 2.05, z - 6.4);
                 double dCtrPocket = Math.Max(SdfMesher.Hexagon2D(dxCtr, y, 7.05), Math.Max(3.80 - z, z - 6.6));
-                double dUpperAccess = Math.Max(rCtr - 4.30, Math.Max(9.0 - z, z - 14.5));
+                double dUpperAccess = Math.Max(rCtr - 4.30, Math.Max(10.5 - z, z - 16.5));
                 cut = Math.Min(cut, Math.Min(Math.Min(dCtrBore, dCtrPocket), dUpperAccess));
 
                 return Math.Max(body, -cut);
             };
 
             return SdfMesher.ExtractMesh("04g_TPU_Decoupled_Shear_Isolator_Puck", sdf,
-                new Vec3(-37.8, -0.6, -0.5), new Vec3(37.8, 18.8, 26.6), step);
+                new Vec3(-39.0, -0.6, -0.5), new Vec3(39.0, 20.8, 26.6), step);
         }
 
         // =========================================================================
