@@ -2494,7 +2494,7 @@ namespace DjiNeo2OrbeaMounts
         //     * Barbs 0.5mm smaller than 06a V9 on BOTH shaft (5.33mm W / 4.74mm alt) and grab edge (6.66mm W / 5.89mm alt),
         //       keeping the 5.5mm straight shaft (z = 3.5..9.0mm, 13.2mm total).
         //     * J-hooks trimmed 3.0mm off each inner side (ax = 27.7..37.3mm, 9.6mm wide) -> +6.0mm wider inner gap (55.4mm)!
-        //     * J-hook engagement shifted +4.0mm farther from the lower barbs (y_inner = 45.6mm vs 41.6mm) so no plate stretch is needed!
+        //     * J-hook engagement shifted +2.0mm farther from the lower barbs (y_inner = 43.6mm vs 41.6mm) so no plate stretch is needed!
         //     * Same 3.5mm -> 5.0mm ramped Y-truss, top-beveled J-hooks, and Ø9.8mm x 2.3mm M4 washer counterbores.
         // =========================================================================
         public static MeshData BuildLeatt55UniversalChestBaseplate72D(double step = 0.29)
@@ -2522,26 +2522,26 @@ namespace DjiNeo2OrbeaMounts
             {
                 double ax = Math.Abs(x);
 
-                // 1) Stiff 3.5mm X-TRUSS Baseplate ramping to 5.0mm under the +4.0mm-extended J-hooks:
-                double dUpperY = Capsule2D(ax, y, 8.5, 11.0, 32.5, 48.5, 8.2);
+                // 1) Stiff 3.5mm X-TRUSS Baseplate ramping to 5.0mm under the +2.0mm-extended J-hooks:
+                double dUpperY = Capsule2D(ax, y, 8.5, 11.0, 32.5, 46.5, 8.2);
                 double dLowerY = Capsule2D(ax, y, 6.0, 0.0, 14.5, -37.5, 8.2);
                 double dRow1Bridge = SdfMesher.Box2D(x, y + 18.0, 11.0, 10.0, 3.0);
                 double dCenterHub = SdfMesher.Box2D(x, y - 8.0, 15.4, 14.8, 5.5);
                 double dPlate2D = SdfMesher.SmoothMin(Math.Min(dUpperY, Math.Min(dLowerY, dRow1Bridge)), dCenterHub, 4.5);
 
-                double tUpper = Math.Max(0.0, Math.Min(1.0, (y - 20.0) / 16.0));
+                double tUpper = Math.Max(0.0, Math.Min(1.0, (y - 19.0) / 16.0));
                 double plateTopZ = 3.5 + 1.5 * tUpper;
                 double dPlate = Math.Max(dPlate2D, Math.Max(0.0 - z, z - plateTopZ));
 
                 // 2) 2x Upper J-Hooks trimmed 3.0mm off each inner side (ax = 27.7..37.3 -> center 32.5, hx = 4.8mm)
-                //    and shifted +4.0mm upward in +Y (inside chest face y = 45.6mm vs 41.6mm on 06a):
-                double dHookStem = SdfMesher.RoundedBox3D(ax - 32.5, y - 48.4, z - 7.7, 4.8, 2.8, 3.1, 0.7);
+                //    and shifted +2.0mm upward in +Y (inside chest face y = 43.6mm vs 41.6mm on 06a):
+                double dHookStem = SdfMesher.RoundedBox3D(ax - 32.5, y - 46.4, z - 7.7, 4.8, 2.8, 3.1, 0.7);
                 double dHookRamp = Math.Max(
                     Math.Abs(ax - 32.5) - 4.8,
-                    Capsule2D(y, z, 47.5, 10.4, 40.5, 14.6, 1.90));
+                    Capsule2D(y, z, 45.5, 10.4, 38.5, 14.6, 1.90));
                 double dHookBevelRaw = Math.Max(
                     Math.Abs(ax - 32.5) - 4.8,
-                    Triangle2D(y, z, 49.8, 4.6, 54.8, 4.6, 49.8, 10.2) - 0.35);
+                    Triangle2D(y, z, 47.8, 4.6, 52.8, 4.6, 47.8, 10.2) - 0.35);
                 double dHookBevel = Math.Max(dHookBevelRaw, dPlate2D);
                 double dHooks = SdfMesher.SmoothMin(Math.Min(dHookStem, dHookBevel), dHookRamp, 0.8);
 
