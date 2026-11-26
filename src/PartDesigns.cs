@@ -2160,11 +2160,13 @@ namespace DjiNeo2OrbeaMounts
                 // Print coords: front face flat on Z=0.0, chest-facing hooks & triangular plugs stick UP in +Z!
                 double ax = Math.Abs(x);
 
-                // 1) Slim 2.0mm-thick (10 layers @ 0.20mm) Universal Chest Baseplate
-                double dTopWing = SdfMesher.Box2D(x, y - 40.5, 41.0, 7.5, 5.0);
-                double dMidBody = SdfMesher.Box2D(x, y - 4.0, 21.0, 39.0, 6.0);
-                double dLowPad = SdfMesher.Box2D(x, y + 31.0, 26.0, 15.0, 6.0);
-                double dPlate2D = SdfMesher.SmoothMin(Math.Min(dTopWing, dLowPad), dMidBody, 6.0);
+                // 1) Slim 2.0mm-thick (10 layers @ 0.20mm) Y-TRUSS Universal Chest Baseplate:
+                //    Diagonal 16mm-wide Y-arms run in PURE TENSION straight from the center 4x M4 mount boss (+-8, +12)
+                //    up to the 2x upper J-hooks (+-31, +42) — eliminates horizontal T-bar bending droop in 90A TPU!
+                double dYArm = Capsule2D(ax, y, 9.0, 11.0, 31.0, 41.5, 8.0);
+                double dMidBody = SdfMesher.Box2D(x, y + 6.0, 18.0, 26.0, 6.0);
+                double dLowPad = SdfMesher.Box2D(x, y + 31.0, 25.0, 15.0, 6.0);
+                double dPlate2D = SdfMesher.SmoothMin(Math.Min(dYArm, dLowPad), dMidBody, 5.0);
                 double dPlate = Math.Max(dPlate2D, Math.Max(0.0 - z, z - 2.0));
 
                 // 2) 2x Upper 45-Deg Self-Supporting Ramped J-Hooks at X = +-31.0mm (12.0mm wide), sized for EXACT 3.5mm shell (z=2.0..5.5mm)!
