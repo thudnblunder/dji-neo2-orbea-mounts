@@ -2327,7 +2327,7 @@ namespace DjiNeo2OrbeaMounts
                 //    and upper Y-truss arms smoothly ramp up another +1.5mm to 5.0mm thick right under the J-hooks!):
                 double dUpperY = Capsule2D(ax, y, 8.5, 11.0, 31.0, 44.5, 8.5);
                 double dLowerY = Capsule2D(ax, y, 6.0, 0.0, 14.5, -37.5, 8.2);
-                double dRow1Bridge = SdfMesher.Box2D(x, y + 20.5, 11.0, 7.5, 3.0); // clean solid bridge under Row 1 triangle bases (zero stray slit)
+                double dRow1Bridge = SdfMesher.Box2D(x, y + 18.0, 11.0, 10.0, 3.0); // clean solid bridge merging hub to Row 1 barbs (zero pinhole!)
                 double dCenterHub = SdfMesher.Box2D(x, y - 8.0, 15.4, 14.8, 5.5);
                 double dPlate2D = SdfMesher.SmoothMin(Math.Min(dUpperY, Math.Min(dLowerY, dRow1Bridge)), dCenterHub, 4.5);
 
@@ -2459,7 +2459,7 @@ namespace DjiNeo2OrbeaMounts
                 // 1) Stiff 3.5mm X-TRUSS Baseplate ramping to 5.0mm under the +4.0mm-extended J-hooks:
                 double dUpperY = Capsule2D(ax, y, 8.5, 11.0, 32.5, 48.5, 8.2);
                 double dLowerY = Capsule2D(ax, y, 6.0, 0.0, 14.5, -37.5, 8.2);
-                double dRow1Bridge = SdfMesher.Box2D(x, y + 20.5, 11.0, 7.5, 3.0);
+                double dRow1Bridge = SdfMesher.Box2D(x, y + 18.0, 11.0, 10.0, 3.0);
                 double dCenterHub = SdfMesher.Box2D(x, y - 8.0, 15.4, 14.8, 5.5);
                 double dPlate2D = SdfMesher.SmoothMin(Math.Min(dUpperY, Math.Min(dLowerY, dRow1Bridge)), dCenterHub, 4.5);
 
