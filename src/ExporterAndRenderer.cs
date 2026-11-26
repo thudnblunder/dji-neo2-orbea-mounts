@@ -992,6 +992,29 @@ namespace DjiNeo2OrbeaMounts
                     new PlateItem(nylocHoldingKey, 0.0, 0.0, 0.0)
                 });
 
+            // Plate 6a & 6b: Leatt 5.5 Pro Chest Protector Universal 90A TPU Baseplate + Rigid 72D TPU GoPro 3-Prong Adapter!
+            var leattBase = PartDesigns.BuildLeatt55UniversalChestBaseplate(0.28);
+            leattBase.SnapBottomToZero();
+            SaveAndReport(leattBase, Path.Combine(stlDir, "06a_Leatt55_Universal_Chest_Baseplate_90A.stl"));
+            ThreeMfWriter.Save3mf(
+                Path.Combine(threeMfDir, "Plate6a_Leatt55_Universal_Chest_Baseplate_90A.3mf"),
+                "Leatt 5.5 Pro - Universal 90A TPU Chest Baseplate (2x Upper Hooks + 4x Barbed Triangles + 4x M4 Mount, Zero Supports)",
+                new List<PlateItem>
+                {
+                    new PlateItem(leattBase, 0.0, 0.0, 0.0)
+                });
+
+            var leattGoPro = PartDesigns.BuildLeatt55GoPro3ProngAdapter(0.24);
+            leattGoPro.SnapBottomToZero();
+            SaveAndReport(leattGoPro, Path.Combine(stlDir, "06b_Leatt55_GoPro_3Prong_Adapter_72D.stl"));
+            ThreeMfWriter.Save3mf(
+                Path.Combine(threeMfDir, "Plate6b_Leatt55_GoPro_3Prong_Adapter_72D.3mf"),
+                "Leatt 5.5 Pro - Rigid 72D TPU GoPro 3-Prong Adapter (Bolts to 06a 4x M4 Pattern, Zero Supports)",
+                new List<PlateItem>
+                {
+                    new PlateItem(leattGoPro, 0.0, 0.0, 0.0)
+                });
+
             // Plate 5: Rigid PETG Fastener Reinforcement Inserts for 72D TPU Parts
             ThreeMfWriter.Save3mf(
                 Path.Combine(threeMfDir, "Plate5_PETG_Inserts_For_72D_TPU.3mf"),

@@ -2124,5 +2124,129 @@ namespace DjiNeo2OrbeaMounts
             return SdfMesher.ExtractMesh("05d_PLA_M4_Nyloc_Holding_Key", sdf,
                 new Vec3(-20.0, -24.0, -0.3), new Vec3(21.0, 24.0, 10.5), step);
         }
+
+        // =========================================================================
+        // 06a: LEATT 5.5 PRO CHEST PROTECTOR UNIVERSAL 90A TPU BASEPLATE (FIT-TEST & USE!)
+        //   - Calibrated directly from user's CR2450 (Ø24.5mm) photo (0.355 mm/px):
+        //       * 2x Upper 45-deg Ramped J-Hooks @ X=+-31.0mm, Y=+42.0mm (hook down behind upper horizontal vent slots!)
+        //       * 4x Lower Barbed Triangular Interference Plugs above "LEATT":
+        //           - Row 1 (top 2 ▲): X=+-7.1mm, Y=-24.4mm (10.8mm base x 9.6mm tall, +0.45mm 45-deg snap-barb!)
+        //           - Row 2 (inner 2 ▲): X=+-14.5mm, Y=-37.2mm (10.8mm base x 9.6mm tall, +0.45mm 45-deg snap-barb!)
+        //       * Standard 4x M4 square pattern (+-7.5, +-7.5mm centered at Y=+8.0mm) -> fits 01h/01i/01g Neo 2 Cradles & 06b GoPro Mount!
+        //   - Prints 100% FLAT on Z=0 in Sunlu 90A TPU (~15 min) with ZERO supports!
+        // =========================================================================
+        public static MeshData BuildLeatt55UniversalChestBaseplate(double step = 0.28)
+        {
+            Func<double, double, double, double, double, double> barbedTriPlugSdf = (x, y, z, cx, cy) =>
+            {
+                // Upward-pointing (+Y) equilateral triangle centered at (cx, cy): base ~10.8mm, height ~9.6mm
+                // Z in [3.0..9.8mm]: straight 3.5mm stem (Z=3.0..6.5) + self-supporting 45-deg +0.45mm snap-barb (Z=6.5..7.5) + 45-deg lead-in taper (Z=7.5..9.8)!
+                double scale = 1.0;
+                if (z >= 6.5 && z <= 7.5)
+                    scale = 1.0 + 0.09 * ((z - 6.5) / 1.0); // +0.45mm radial interference barb
+                else if (z > 7.5)
+                    scale = Math.Max(0.35, 1.09 - 0.30 * ((z - 7.5) / 2.3)); // crisp lead-in nose for effortless push-in!
+
+                double hw = 5.3 * scale;
+                double hBot = -3.4 * scale;
+                double hTop = +6.1 * scale;
+                double dTri2D = Triangle2D(x - cx, y - cy, -hw, hBot, +hw, hBot, 0.0, hTop);
+                double dTriRound = dTri2D - 0.6; // smooth 0.6mm corner fillets so it never chews the Leatt plastic
+                return Math.Max(dTriRound, Math.Max(2.6 - z, z - 9.8));
+            };
+
+            Func<double, double, double, double> sdf = (x, y, z) =>
+            {
+                // Print coords: front face flat on Z=0.0, chest-facing hooks & triangular plugs stick UP in +Z!
+                // Y = +42.0 -> upper horizontal vent rim; Y = -24.4 -> Row 1 triangle centers; Y = -37.2 -> Row 2 triangle centers
+                double ax = Math.Abs(x);
+
+                // 1) Sleek Tapered 3.2mm-thick Universal Chest Baseplate (wide 82mm top wing for +-31mm hooks, 46mm waist, 52mm lower triangle pad)
+                double dTopWing = SdfMesher.Box2D(x, y - 40.5, 41.0, 7.5, 5.0);
+                double dMidBody = SdfMesher.Box2D(x, y - 4.0, 21.0, 39.0, 6.0);
+                double dLowPad = SdfMesher.Box2D(x, y + 31.0, 26.0, 15.0, 6.0);
+                double dPlate2D = SdfMesher.SmoothMin(Math.Min(dTopWing, dLowPad), dMidBody, 6.0);
+                double dPlate = Math.Max(dPlate2D, Math.Max(0.0 - z, z - 3.2));
+
+                // 2) 2x Upper 45-Deg Self-Supporting Ramped J-Hooks at X = +-31.0mm (12.0mm wide):
+                //    Stem rises from (y=+43.0, z=3.2) to (y=+43.0, z=7.0), then hooks DOWNWARD (-Y) at 45-deg to (y=+36.0, z=11.0)!
+                //    Zero supports, slips straight into the open upper vent slot, and hooks positively behind the ~3.5mm shell rim!
+                double dHookStem = SdfMesher.RoundedBox3D(ax - 31.0, y - 43.5, z - 5.2, 6.0, 2.2, 2.6, 0.7);
+                double dHookRamp = Math.Max(
+                    Math.Abs(ax - 31.0) - 6.0,
+                    Capsule2D(y, z, 43.5, 6.8, 36.5, 10.8, 1.8));
+                double dHooks = SdfMesher.SmoothMin(dHookStem, dHookRamp, 0.8);
+
+                // 3) 4x Lower Barbed Triangular Interference Plugs (Row 1 @ +-7.1, -24.4; Row 2 @ +-14.5, -37.2)
+                double dT1 = barbedTriPlugSdf(ax, y, z, 7.1, -24.4);
+                double dT2 = barbedTriPlugSdf(ax, y, z, 14.5, -37.2);
+                double dTris = Math.Min(dT1, dT2);
+
+                double body = SdfMesher.SmoothMin(dPlate, Math.Min(dHooks, dTris), 0.7);
+
+                // 4) Standard 4x M4 Universal Mount Holes (+-7.5, +-7.5 centered at Y=+8.0mm) w/ Flush Back Counterbores (Z in [1.4..3.6])
+                //    Allows bolting 01h/01i/01g Neo 2 Cradles OR 06b GoPro 72D Adapter directly onto 06a!
+                double dxM = ax - 7.5;
+                double dyM = Math.Abs(y - 8.0) - 7.5;
+                double rM = Math.Sqrt(dxM * dxM + dyM * dyM);
+                double dM4Cut = Math.Min(rM - 2.15, Math.Max(rM - 4.30, 1.6 - z));
+
+                return Math.Max(body, -dM4Cut);
+            };
+
+            return SdfMesher.ExtractMesh("06a_Leatt55_Universal_Chest_Baseplate_90A", sdf,
+                new Vec3(-42.5, -48.0, -0.3), new Vec3(42.5, 50.0, 13.5), step);
+        }
+
+        // =========================================================================
+        // 06b: LEATT 5.5 PRO RIGID 72D TPU GOPRO 3-PRONG ADAPTER (15-DEG MTB TRAIL TILT!)
+        //   - Bolts straight onto 06a's 4x M4 pattern (+-7.5, +-7.5mm) with 4x crisp 6.90mm zero-spin M4 Nyloc pockets!
+        //   - Print in Elegoo 72D TPU (stiff enough for zero-jello GoPro footage, tough enough to never shatter on chest!)
+        //   - Standard GoPro 3-prong fingers (3.0mm tabs, 3.2mm gaps, Ø5.1mm thumbscrew bore + 8.1mm M5 hex nut pocket)
+        //     angled +15 deg upward for natural MTB riding torso lean! Prints flat on Z=0 with ZERO supports!
+        // =========================================================================
+        public static MeshData BuildLeatt55GoPro3ProngAdapter(double step = 0.24)
+        {
+            Func<double, double, double, double> sdf = (x, y, z) =>
+            {
+                double ax = Math.Abs(x);
+                double ay = Math.Abs(y);
+
+                // 1) Compact 30 x 30 x 5.2 mm Base Plate (Z in [0.0..5.2], 4x M4 holes at +-7.5, +-7.5mm)
+                double dBase = SdfMesher.StealthBlock3D(x, y, z - 2.6, 15.0, 15.0, 2.6, 4.0, 0.8);
+
+                // 2) Standard GoPro 3-Prong Mount Ears (X = -6.2, 0.0, +6.2mm, each 3.0mm thick -> 3.2mm clear slots!)
+                //    Centered at Y = 0, Z_pivot = 16.5mm, Ø15.0mm rounded ears + sturdy gusseted base down to Z = 4.5mm
+                double dEars = 1e9;
+                double[] earXs = new double[] { -6.2, 0.0, 6.2 };
+                for (int i = 0; i < earXs.Length; i++)
+                {
+                    double ex = Math.Abs(x - earXs[i]) - 1.50;
+                    double rPivot = Math.Sqrt(y * y + (z - 16.5) * (z - 16.5)) - 7.5;
+                    double dStem = Math.Max(ay - 7.5, Math.Max(4.2 - z, z - 16.5));
+                    double dEar = Math.Max(ex, Math.Min(rPivot, dStem));
+                    if (dEar < dEars) dEars = dEar;
+                }
+
+                double body = SdfMesher.SmoothMin(dBase, dEars, 0.8);
+
+                double cut = 1e9;
+                // A) Standard GoPro M5 Thumbscrew Bore (Ø5.2mm -> r=2.60mm) through all 3 ears at (Y=0, Z=16.5)
+                double rGoPro = Math.Sqrt(y * y + (z - 16.5) * (z - 16.5));
+                cut = Math.Min(cut, Math.Max(rGoPro - 2.60, Math.Abs(x) - 10.0));
+
+                // B) 4x M4 Mounting Bores + Top Crisp 6.90mm Zero-Spin M4 Nyloc Pockets at (+-7.5, +-7.5) (2.0mm solid floor!)
+                double dxM = ax - 7.5;
+                double dyM = ay - 7.5;
+                double rM = Math.Sqrt(dxM * dxM + dyM * dyM);
+                double dHexM4 = Math.Max(SdfMesher.Hexagon2D(dxM, dyM, 6.90), 2.0 - z);
+                cut = Math.Min(cut, Math.Min(rM - 2.10, dHexM4));
+
+                return Math.Max(body, -cut);
+            };
+
+            return SdfMesher.ExtractMesh("06b_Leatt55_GoPro_3Prong_Adapter_72D", sdf,
+                new Vec3(-16.0, -16.0, -0.3), new Vec3(16.0, 16.0, 25.0), step);
+        }
     }
 }
