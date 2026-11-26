@@ -2162,15 +2162,15 @@ namespace DjiNeo2OrbeaMounts
             Func<double, double, double, double, double, double> barbedTriPlugSdf = (x, y, z, cx, cy) =>
             {
                 // Upward-pointing (+Y) equilateral triangle centered at (cx, cy), calibrated to 5.5mm chestplate vents:
-                //   fillet = 0.45mm, r0 = 1.28mm -> stem width 5.33mm / altitude 4.74mm (-0.5mm slimmer for effortless push-in!)
-                //   5.5mm straight shaft (z = 3.5..9.0mm) + snap-barb (z = 9.0..10.2mm, 7.20mm width / 6.35mm alt) + 45-deg nose (z = 10.2..13.2mm)!
+                //   fillet = 0.45mm, r0 = 1.43mm -> snug shaft (5.85mm base width / 5.19mm altitude) for zero rattle in 5.5mm hole!
+                //   5.5mm straight shaft (z = 3.5..9.0mm) + reduced barb hat (z = 9.0..10.2mm, scale 1.0->1.27 = 7.19mm width / 6.35mm alt) + 45-deg nose (z = 10.2..13.2mm)!
                 double scale = 1.0;
                 if (z >= 9.0 && z <= 10.2)
-                    scale = 1.0 + 0.42 * ((z - 9.0) / 1.2);
+                    scale = 1.0 + 0.27 * ((z - 9.0) / 1.2);
                 else if (z > 10.2)
-                    scale = Math.Max(0.28, 1.42 - 1.14 * ((z - 10.2) / 3.0));
+                    scale = Math.Max(0.28, 1.27 - 0.99 * ((z - 10.2) / 3.0));
 
-                double r0 = 1.28 * scale;
+                double r0 = 1.43 * scale;
                 double hw = r0 * 1.7320508; // half-base = r0 * sqrt(3)
                 double hBot = -r0;
                 double hTop = 2.0 * r0;
