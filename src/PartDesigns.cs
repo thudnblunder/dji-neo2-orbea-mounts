@@ -2162,16 +2162,16 @@ namespace DjiNeo2OrbeaMounts
             Func<double, double, double, double, double, double> barbedTriPlugSdf = (x, y, z, cx, cy) =>
             {
                 // Upward-pointing (+Y) equilateral triangle centered at (cx, cy), calibrated to 5.5mm chestplate vents:
-                //   fillet = 0.45mm, r0 = 1.43mm -> stem side-to-point height = 3*1.43 + 2*0.45 = 5.19mm (clean 0.31mm slip fit in 5.5mm hole!)
+                //   fillet = 0.45mm, r0 = 1.28mm -> stem width 5.33mm / altitude 4.74mm (-0.5mm slimmer for effortless push-in!)
                 //   Tuned for exact 3.5mm chestplate shell above 3.5mm baseplate (z = 3.5..7.0mm):
-                //   straight stem (Z=3.1..7.0) + snap-barb (Z=7.0..8.2, scale 1.0->1.38 = 6.84mm peak, ~0.65mm/edge grab) + 45-deg nose (Z=8.2..11.2)!
+                //   straight stem (Z=3.1..7.0) + snap-barb (Z=7.0..8.2, scale 1.0->1.42 = 7.20mm width / 6.35mm altitude) + 45-deg nose (Z=8.2..11.2)!
                 double scale = 1.0;
                 if (z >= 7.0 && z <= 8.2)
-                    scale = 1.0 + 0.38 * ((z - 7.0) / 1.2);
+                    scale = 1.0 + 0.42 * ((z - 7.0) / 1.2);
                 else if (z > 8.2)
-                    scale = Math.Max(0.28, 1.38 - 1.10 * ((z - 8.2) / 3.0));
+                    scale = Math.Max(0.28, 1.42 - 1.14 * ((z - 8.2) / 3.0));
 
-                double r0 = 1.43 * scale;
+                double r0 = 1.28 * scale;
                 double hw = r0 * 1.7320508; // half-base = r0 * sqrt(3)
                 double hBot = -r0;
                 double hTop = 2.0 * r0;
@@ -2245,15 +2245,15 @@ namespace DjiNeo2OrbeaMounts
         {
             Func<double, double, double, double, double, double> tallBarbedTriPlugSdf = (x, y, z, cx, cy) =>
             {
-                // Exact same 5.5mm-calibrated triangle cross-section (5.19mm stem, 6.84mm snap-barb peak),
+                // Slimmed -0.5mm triangle cross-section (5.33mm width / 4.74mm alt stem; 7.20mm width / 6.35mm alt snap-barb peak),
                 // with straight stem extended +5.0mm taller (z = 3.1..12.0 -> barb 12.0..13.2 -> 45-deg nose 13.2..16.2)!
                 double scale = 1.0;
                 if (z >= 12.0 && z <= 13.2)
-                    scale = 1.0 + 0.38 * ((z - 12.0) / 1.2);
+                    scale = 1.0 + 0.42 * ((z - 12.0) / 1.2);
                 else if (z > 13.2)
-                    scale = Math.Max(0.28, 1.38 - 1.10 * ((z - 13.2) / 3.0));
+                    scale = Math.Max(0.28, 1.42 - 1.14 * ((z - 13.2) / 3.0));
 
-                double r0 = 1.43 * scale;
+                double r0 = 1.28 * scale;
                 double hw = r0 * 1.7320508;
                 double hBot = -r0;
                 double hTop = 2.0 * r0;
