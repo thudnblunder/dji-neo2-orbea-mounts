@@ -2200,11 +2200,12 @@ namespace DjiNeo2OrbeaMounts
         }
 
         // =========================================================================
-        // 06b: LEATT 5.5 PRO RIGID 72D TPU GOPRO 3-PRONG ADAPTER (15-DEG MTB TRAIL TILT!)
-        //   - Bolts straight onto 06a's 4x M4 pattern (+-7.5, +-7.5mm) with 4x crisp 6.90mm zero-spin M4 Nyloc pockets!
-        //   - Print in Elegoo 72D TPU (stiff enough for zero-jello GoPro footage, tough enough to never shatter on chest!)
-        //   - Standard GoPro 3-prong fingers (3.0mm tabs, 3.2mm gaps, Ø5.1mm thumbscrew bore + 8.1mm M5 hex nut pocket)
-        //     angled +15 deg upward for natural MTB riding torso lean! Prints flat on Z=0 with ZERO supports!
+        // 06b (V2): LEATT 5.5 PRO RIGID 72D TPU DJI ACTION 5 PRO / GOPRO 3-PRONG ADAPTER
+        //           WITH 19.0mm LENS-CENTERING OFFSET!
+        //   - DJI Osmo Action 5 Pro (70.5 x 44.2 x 32.8mm) has its lens offset ~19.0mm from the mount center.
+        //   - Shifts the 3-prong ears 19.0mm off-center from the 4x M4 bolt square (+-7.5, +-7.5mm) so the lens
+        //     sits DEAD-CENTER on your chest! (Symmetric 4x M4 bolt square lets you flip 180-deg for upside-down or upright!)
+        //   - Extra-stiff 6.0mm-thick baseplate in Elegoo 72D TPU (zero cantilever flex, zero shatter risk, ZERO supports!)
         // =========================================================================
         public static MeshData BuildLeatt55GoPro3ProngAdapter(double step = 0.24)
         {
@@ -2213,18 +2214,18 @@ namespace DjiNeo2OrbeaMounts
                 double ax = Math.Abs(x);
                 double ay = Math.Abs(y);
 
-                // 1) Compact 30 x 30 x 5.2 mm Base Plate (Z in [0.0..5.2], 4x M4 holes at +-7.5, +-7.5mm)
-                double dBase = SdfMesher.StealthBlock3D(x, y, z - 2.6, 15.0, 15.0, 2.6, 4.0, 0.8);
+                // 1) Stiff 6.0mm-thick Offset Base Plate: X in [-15.0..+32.0] (47mm wide), Y in [-15.0..+15.0] (30mm tall), Z in [0.0..6.0]
+                double dBase = SdfMesher.StealthBlock3D(x - 8.5, y, z - 3.0, 23.5, 15.0, 3.0, 4.5, 0.8);
 
-                // 2) Standard GoPro 3-Prong Mount Ears (X = -6.2, 0.0, +6.2mm, each 3.0mm thick -> 3.2mm clear slots!)
-                //    Centered at Y = 0, Z_pivot = 16.5mm, Ø15.0mm rounded ears + sturdy gusseted base down to Z = 4.5mm
+                // 2) Standard GoPro / DJI Action 5 Pro 3-Prong Mount Ears shifted +19.0mm along X (X = 12.8, 19.0, 25.2mm)
+                //    Each ear 3.0mm thick -> 3.2mm clear slots; Ø15.0mm rounded ears centered at (X=+19.0, Y=0, Z=17.5mm)
                 double dEars = 1e9;
-                double[] earXs = new double[] { -6.2, 0.0, 6.2 };
+                double[] earXs = new double[] { 12.8, 19.0, 25.2 };
                 for (int i = 0; i < earXs.Length; i++)
                 {
                     double ex = Math.Abs(x - earXs[i]) - 1.50;
-                    double rPivot = Math.Sqrt(y * y + (z - 16.5) * (z - 16.5)) - 7.5;
-                    double dStem = Math.Max(ay - 7.5, Math.Max(4.2 - z, z - 16.5));
+                    double rPivot = Math.Sqrt(y * y + (z - 17.5) * (z - 17.5)) - 7.5;
+                    double dStem = Math.Max(ay - 7.5, Math.Max(5.0 - z, z - 17.5));
                     double dEar = Math.Max(ex, Math.Min(rPivot, dStem));
                     if (dEar < dEars) dEars = dEar;
                 }
@@ -2232,9 +2233,9 @@ namespace DjiNeo2OrbeaMounts
                 double body = SdfMesher.SmoothMin(dBase, dEars, 0.8);
 
                 double cut = 1e9;
-                // A) Standard GoPro M5 Thumbscrew Bore (Ø5.2mm -> r=2.60mm) through all 3 ears at (Y=0, Z=16.5)
-                double rGoPro = Math.Sqrt(y * y + (z - 16.5) * (z - 16.5));
-                cut = Math.Min(cut, Math.Max(rGoPro - 2.60, Math.Abs(x) - 10.0));
+                // A) Standard M5 Thumbscrew Bore (Ø5.2mm -> r=2.60mm) through all 3 ears at (X=19.0, Y=0, Z=17.5)
+                double rGoPro = Math.Sqrt(y * y + (z - 17.5) * (z - 17.5));
+                cut = Math.Min(cut, Math.Max(rGoPro - 2.60, Math.Abs(x - 19.0) - 10.0));
 
                 // B) 4x M4 Mounting Bores + Top Crisp 6.90mm Zero-Spin M4 Nyloc Pockets at (+-7.5, +-7.5) (2.0mm solid floor!)
                 double dxM = ax - 7.5;
@@ -2247,7 +2248,7 @@ namespace DjiNeo2OrbeaMounts
             };
 
             return SdfMesher.ExtractMesh("06b_Leatt55_GoPro_3Prong_Adapter_72D", sdf,
-                new Vec3(-16.0, -16.0, -0.3), new Vec3(16.0, 16.0, 25.0), step);
+                new Vec3(-16.0, -16.0, -0.3), new Vec3(33.0, 16.0, 26.0), step);
         }
     }
 }
