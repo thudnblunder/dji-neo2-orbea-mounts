@@ -2284,6 +2284,83 @@ namespace DjiNeo2OrbeaMounts
         }
 
         // =========================================================================
+        // 06d: LEATT 5.5 PRO CHEST PROTECTOR UNIVERSAL 72D TPU BASEPLATE (NON-STRETCH!)
+        //   - Dedicated stiffer-filament variant of 06a V9 tuned for Elegoo 72D TPU (minimal squish / stretch):
+        //     * Barbs 0.5mm smaller than 06a V9 on BOTH shaft (5.33mm W / 4.74mm alt) and grab edge (6.66mm W / 5.89mm alt),
+        //       keeping the 5.5mm straight shaft (z = 3.5..9.0mm, 13.2mm total).
+        //     * J-hooks trimmed 3.0mm off each inner side (ax = 27.7..37.3mm, 9.6mm wide) -> +6.0mm wider inner gap (55.4mm)!
+        //     * J-hook engagement shifted +4.0mm farther from the lower barbs (y_inner = 45.6mm vs 41.6mm) so no plate stretch is needed!
+        //     * Same 3.5mm -> 5.0mm ramped Y-truss, top-beveled J-hooks, and Ø9.8mm x 2.3mm M4 washer counterbores.
+        // =========================================================================
+        public static MeshData BuildLeatt55UniversalChestBaseplate72D(double step = 0.29)
+        {
+            Func<double, double, double, double, double, double> barbedTriPlug72DSdf = (x, y, z, cx, cy) =>
+            {
+                // 0.5mm smaller than 06a V9 on both shaft (r0=1.28 -> 5.33mm W / 4.74mm alt) and barb hat (scale 1.30 -> 6.66mm W / 5.89mm alt)
+                // 5.5mm straight shaft (z = 3.5..9.0mm) + snap-barb (9.0..10.2mm) + 45-deg nose (10.2..13.2mm)
+                double scale = 1.0;
+                if (z >= 9.0 && z <= 10.2)
+                    scale = 1.0 + 0.30 * ((z - 9.0) / 1.2);
+                else if (z > 10.2)
+                    scale = Math.Max(0.28, 1.30 - 1.02 * ((z - 10.2) / 3.0));
+
+                double r0 = 1.28 * scale;
+                double hw = r0 * 1.7320508;
+                double hBot = -r0;
+                double hTop = 2.0 * r0;
+                double dTri2D = Triangle2D(x - cx, y - cy, -hw, hBot, +hw, hBot, 0.0, hTop);
+                double dTriRound = dTri2D - 0.45;
+                return Math.Max(dTriRound, Math.Max(3.1 - z, z - 13.2));
+            };
+
+            Func<double, double, double, double> sdf = (x, y, z) =>
+            {
+                double ax = Math.Abs(x);
+
+                // 1) Stiff 3.5mm X-TRUSS Baseplate ramping to 5.0mm under the +4.0mm-extended J-hooks:
+                double dUpperY = Capsule2D(ax, y, 8.5, 11.0, 32.5, 48.5, 8.2);
+                double dLowerY = Capsule2D(ax, y, 6.0, 0.0, 14.5, -37.5, 8.2);
+                double dRow1Bridge = SdfMesher.Box2D(x, y + 20.5, 11.0, 7.5, 3.0);
+                double dCenterHub = SdfMesher.Box2D(x, y - 8.0, 15.4, 14.8, 5.5);
+                double dPlate2D = SdfMesher.SmoothMin(Math.Min(dUpperY, Math.Min(dLowerY, dRow1Bridge)), dCenterHub, 4.5);
+
+                double tUpper = Math.Max(0.0, Math.Min(1.0, (y - 20.0) / 16.0));
+                double plateTopZ = 3.5 + 1.5 * tUpper;
+                double dPlate = Math.Max(dPlate2D, Math.Max(0.0 - z, z - plateTopZ));
+
+                // 2) 2x Upper J-Hooks trimmed 3.0mm off each inner side (ax = 27.7..37.3 -> center 32.5, hx = 4.8mm)
+                //    and shifted +4.0mm upward in +Y (inside chest face y = 45.6mm vs 41.6mm on 06a):
+                double dHookStem = SdfMesher.RoundedBox3D(ax - 32.5, y - 48.4, z - 7.7, 4.8, 2.8, 3.1, 0.7);
+                double dHookRamp = Math.Max(
+                    Math.Abs(ax - 32.5) - 4.8,
+                    Capsule2D(y, z, 47.5, 10.4, 40.5, 14.6, 1.90));
+                double dHookBevelRaw = Math.Max(
+                    Math.Abs(ax - 32.5) - 4.8,
+                    Triangle2D(y, z, 49.8, 4.6, 54.8, 4.6, 49.8, 10.2) - 0.35);
+                double dHookBevel = Math.Max(dHookBevelRaw, dPlate2D);
+                double dHooks = SdfMesher.SmoothMin(Math.Min(dHookStem, dHookBevel), dHookRamp, 0.8);
+
+                // 3) 4x Lower 72D-Sized Barbed Triangular Plugs at exact verified centers (+-7.1, -24.4 & +-14.5, -37.2)
+                double dT1 = barbedTriPlug72DSdf(ax, y, z, 7.1, -24.4);
+                double dT2 = barbedTriPlug72DSdf(ax, y, z, 14.5, -37.2);
+                double dTris = Math.Min(dT1, dT2);
+
+                double body = SdfMesher.SmoothMin(dPlate, Math.Min(dHooks, dTris), 0.7);
+
+                // 4) Standard 4x M4 Universal Mount Holes (+-7.5, +-7.5 centered at Y=+8.0mm) w/ Ø9.8mm x 2.3mm Washer Counterbores
+                double dxM = ax - 7.5;
+                double dyM = Math.Abs(y - 8.0) - 7.5;
+                double rM = Math.Sqrt(dxM * dxM + dyM * dyM);
+                double dM4Cut = Math.Min(rM - 2.15, Math.Max(rM - 4.90, 1.2 - z));
+
+                return Math.Max(body, -dM4Cut);
+            };
+
+            return SdfMesher.ExtractMesh("06d_Leatt55_Universal_Chest_Baseplate_72D", sdf,
+                new Vec3(-43.0, -48.0, -0.3), new Vec3(43.0, 58.5, 17.5), step);
+        }
+
+        // =========================================================================
         // 06b (V2): LEATT 5.5 PRO RIGID 72D TPU DJI ACTION 5 PRO / GOPRO 3-PRONG ADAPTER
         //           WITH 19.0mm LENS-CENTERING OFFSET!
         //   - DJI Osmo Action 5 Pro (70.5 x 44.2 x 32.8mm) has its lens offset ~19.0mm from the mount center.
