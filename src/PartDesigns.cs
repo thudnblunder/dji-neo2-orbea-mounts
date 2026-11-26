@@ -2235,6 +2235,72 @@ namespace DjiNeo2OrbeaMounts
         }
 
         // =========================================================================
+        // 04k: WIDE-GLUE-SEAM 3-STRAND SPIRAL GIMBAL CUSHION (90A TPU, ZERO SUPPORTS!)
+        //   - Thickened rim & gluing flange version of 04j V2 for much stronger adhesive bonding:
+        //     * Outer perimeter wall widened from 1.6->2.1mm up to 2.2->3.8mm (nearly 2x the flat
+        //       gluing surface area at Z=7.0mm + thicker side seams for filleting!).
+        //     * Gentle 37.6-deg internal taper (100% support-free in 90A TPU) down to the same
+        //       compact 18.8 x 21.2 mm flat gluing base that seats flush inside 01h/01i/01j!
+        // =========================================================================
+        public static MeshData BuildTpu90ASpiralGimbalCushionWideGlue(double step = 0.20)
+        {
+            Func<double, double, double, double> sdf = (x, y, z) =>
+            {
+                double r = Math.Sqrt(x * x + y * y);
+
+                // 1) Thick-Seam Tapered Outer Standoff Rim (Z in [0.0..7.0]):
+                //    - Front spiral face (z <= 1.8): 23.6 x 26.0 mm (hx=11.8, hy=13.0, R=6.8), wallW = 2.2mm
+                //    - Tapers cleanly across z in [1.8..7.0] to 18.8 x 21.2 mm flat gluing base (hx=9.4, hy=10.6, R=5.0)
+                //      with wallW widening from 2.2mm -> 3.8mm (37.6-deg self-supporting inner taper, massive 3.8mm glue ring!)
+                double zT = Math.Max(0.0, Math.Min(1.0, (z - 1.8) / 5.2));
+                double hxOut = 11.8 - 2.4 * zT;
+                double hyOut = 13.0 - 2.4 * zT;
+                double rOutCorner = 6.8 - 1.8 * zT;
+                double wallW = 2.2 + 1.6 * zT; // 2.2mm thick side seams widening to 3.8mm flat gluing flange at Z=7.0mm!
+
+                double dOuterBox = SdfMesher.Box2D(x, y, hxOut, hyOut, rOutCorner);
+                double dInnerCav = SdfMesher.Box2D(x, y, hxOut - wallW, hyOut - wallW, Math.Max(1.8, rOutCorner - wallW));
+                double dRim = Math.Max(Math.Max(dOuterBox, -dInnerCav), Math.Max(0.0 - z, z - 7.0));
+
+                // 2) Center Hollow Gimbal-Bezel Cushion Ring (r in [6.8..8.0mm] -> Ø13.6mm open center clears lens glass!)
+                double dRing2D = Math.Max(6.8 - r, r - 8.0);
+                double dRing = Math.Max(dRing2D, Math.Max(0.0 - z, z - 1.8));
+
+                // 3) 3-Strand Archimedean Spiral Flexure Arms anchored solidly into the 2.2mm outer rim
+                double dSpirals2D = 1e9;
+                const int nSeg = 14;
+                const double rStart = 7.4;
+                const double rEnd = 12.8;
+                const double sweepRad = 1.43;
+                for (int k = 0; k < 3; k++)
+                {
+                    double baseAng = k * (2.0 * Math.PI / 3.0) + 0.35;
+                    double prevX = rStart * Math.Cos(baseAng);
+                    double prevY = rStart * Math.Sin(baseAng);
+                    for (int s = 1; s <= nSeg; s++)
+                    {
+                        double u = (double)s / nSeg;
+                        double rk = rStart + (rEnd - rStart) * u;
+                        double ak = baseAng + sweepRad * u;
+                        double curX = rk * Math.Cos(ak);
+                        double curY = rk * Math.Sin(ak);
+                        double dSeg = Capsule2D(x, y, prevX, prevY, curX, curY, 0.58);
+                        if (dSeg < dSpirals2D) dSpirals2D = dSeg;
+                        prevX = curX;
+                        prevY = curY;
+                    }
+                }
+                double dOuterAtFront = SdfMesher.Box2D(x, y, 11.8, 13.0, 6.8);
+                double dSpirals = Math.Max(Math.Max(dSpirals2D, Math.Max(dOuterAtFront, 6.8 - r)), Math.Max(0.0 - z, z - 1.6));
+
+                return Math.Min(dRim, Math.Min(dRing, dSpirals));
+            };
+
+            return SdfMesher.ExtractMesh("04k_TPU_90A_Spiral_Gimbal_Cushion_WideGlue", sdf,
+                new Vec3(-12.6, -13.8, -0.3), new Vec3(12.6, 13.8, 7.6), step);
+        }
+
+        // =========================================================================
         // 05d (V2): COMPACT SHALLOW-SOCKET T-HANDLE M4 NYLOC (6.83mm) KEY — PRINT IN PLA (100% INFILL!)
         //   - Prints 100% FLAT on Z=0 (ZERO supports!) with continuous perimeter fibers from T-handle to socket!
         //   - Compact 39mm-long x 46mm-wide T-handle driver (11.0 x 10.0 mm flat-sided barrel, >=1.50mm solid walls!)
