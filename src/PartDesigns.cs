@@ -1840,6 +1840,145 @@ namespace DjiNeo2OrbeaMounts
         }
 
         // =========================================================================
+        // 01j: CHEST-MOUNT LOW-HANG EXO-CRADLE (72D TPU RECOMMENDED, OR 90A TPU)
+        //   - Moves the 4x M4 universal mount square UP between the curved locking arms
+        //     (X = +50.0 +- 7.5 = +42.5 & +57.5, Y = +-7.5) — shifting the drone 40.5mm LOWER
+        //     on the chestplate to clear full-face helmet chinbars & chin-mounted action cameras!
+        //   - Keeps the exact same flush nose-to-tail 04h strap loops, gimbal bumper, heatsink louvers,
+        //     tapered curved locking arms, and twin longitudinal stiffening side-keels!
+        // =========================================================================
+        public static MeshData BuildCradleChestLowHang(
+            string name,
+            MeshData refCradleShell,
+            double step = 0.36)
+        {
+            Vec3 minB, maxB;
+            refCradleShell.GetBounds(out minB, out maxB);
+            if (-82.5 < minB.X) minB.X = -82.5;
+            if (84.0 > maxB.X) maxB.X = 84.0;
+            if (-23.0 < minB.Y) minB.Y = -23.0;
+            if (23.0 > maxB.Y) maxB.Y = 23.0;
+
+            double ox = minB.X - 2.0 * step;
+            double oy = minB.Y - 2.0 * step;
+            double oz = Math.Floor((minB.Z - step) / step) * step - 0.5 * step;
+
+            int nx = (int)Math.Ceiling((maxB.X + 2.0 * step - ox) / step) + 2;
+            int ny = (int)Math.Ceiling((maxB.Y + 2.0 * step - oy) / step) + 2;
+            int nz = (int)Math.Ceiling((maxB.Z + 2.0 * step - oz) / step) + 2;
+
+            float[,,] grid = SdfMesher.ComputeMeshSignedDistanceGrid(refCradleShell, ox, oy, oz, nx, ny, nz, step);
+
+            for (int ix = 0; ix <= nx; ix++)
+            {
+                double x = ox + ix * step;
+                for (int iy = 0; iy <= ny; iy++)
+                {
+                    double y = oy + iy * step;
+                    double ay = Math.Abs(y);
+                    for (int iz = 0; iz <= nz; iz++)
+                    {
+                        double z = oz + iz * step;
+                        float d = grid[ix, iy, iz];
+
+                        // 1) Plug circular rear-arm side holes (X=53, Z=6) and smoothly taper rear locking arms (4.2 -> 3.0mm)
+                        if (x >= 46.5 && x <= 59.5 && ay >= 16.2 && z >= 0.0 && z <= 12.5)
+                        {
+                            float dPlug = (float)RearArmBaseHolePlugSdf(x, y, z);
+                            if (dPlug < d) d = dPlug;
+                        }
+                        if (x >= 43.0 && ay >= 18.0)
+                        {
+                            float dTrim = -(float)RearFlexClipReinforcedTrimSdf(x, y, z);
+                            if (dTrim > d) d = dTrim;
+                        }
+
+                        // 2) Self-supporting 29.4-deg front lower nose chin + integrated +2.4mm front gimbal bumper pad
+                        if (x <= -46.0 && z >= -0.5 && z <= 17.5)
+                        {
+                            float dChin = (float)NoseChin30DegFillSdf(x, y, z);
+                            if (dChin < d) d = dChin;
+                        }
+                        if (x >= -77.0 && x <= -66.0 && ay <= 16.5 && z >= 4.0 && z <= 37.5)
+                        {
+                            double dBumper = SdfMesher.RoundedBox3D(x + 71.5, y, z - 21.0, 4.0, 14.2, 14.5, 2.2);
+                            double dGuardClip = Math.Max(dBumper, x - (-69.2));
+                            if ((float)dGuardClip < d) d = (float)dGuardClip;
+                        }
+
+                        // 3) Integrated Front Heatsink Mud-Louver Bars (3 slats across X in [-41..-21.5], |Y|<=11.5, Z in [0..2.7])
+                        if (x >= -42.0 && x <= -20.5 && ay <= 12.0 && z >= -0.5 && z <= 3.5)
+                        {
+                            double dLouvers = 1e9;
+                            double[] slatXs = new double[] { -37.2, -31.2, -25.2 };
+                            for (int s = 0; s < slatXs.Length; s++)
+                            {
+                                double dSlat = SdfMesher.RoundedBox3D(x - slatXs[s], y, z - 1.35, 1.45, 11.6, 1.35, 0.4);
+                                if (dSlat < dLouvers) dLouvers = dSlat;
+                            }
+                            if ((float)dLouvers < d) d = (float)dLouvers;
+                        }
+
+                        // 4) Clean solid lower-belly floor across old center zone (X in [-16..+36], |Y|<=12.5, Z in [0..2.8])
+                        if (x >= -17.0 && x <= 37.0 && ay <= 13.5 && z >= -0.5 && z <= 3.5)
+                        {
+                            double dFloor = SdfMesher.RoundedBox3D(x - 10.0, y, z - 1.40, 26.5, 12.2, 1.40, 0.6);
+                            if ((float)dFloor < d) d = (float)dFloor;
+                        }
+
+                        // 5) NEW Solid Upper Mounting Deck RIGHT BETWEEN THE CURVED LOCKING ARMS (X in [35..66], |Y|<=13.4, Z in [0..5.55])
+                        if (x >= 34.0 && x <= 67.5 && ay <= 15.0 && z >= -0.5 && z <= 6.2)
+                        {
+                            double dMountDeck = SdfMesher.StealthBlock3D(x - 50.5, y, z - 2.775, 15.5, 13.4, 2.775, 3.0, 0.6);
+                            if ((float)dMountDeck < d) d = (float)dMountDeck;
+                        }
+
+                        // 6) Flush Nose-to-Tail Strap Loops (identical to 01h/01i for 04h 90A TPU strap, ZERO supports!)
+                        if (x <= -68.0 && ay <= 13.0 && z >= -0.5 && z <= 7.5)
+                        {
+                            double dFrontLoop = SdfMesher.StealthBlock3D(x + 75.25, y, z - 3.25, 5.75, 11.5, 3.25, 2.5, 0.8);
+                            if ((float)dFrontLoop < d) d = (float)dFrontLoop;
+                            double dFrontSlot = Math.Max(SdfMesher.Box2D(x + 75.9, y, 1.90, 8.0, 0.9), Math.Max(-1.0 - z, z - 8.0));
+                            if ((float)(-dFrontSlot) > d) d = (float)(-dFrontSlot);
+                        }
+                        if (x >= 69.5 && ay <= 13.0 && z >= -0.5 && z <= 7.5)
+                        {
+                            double dRearLoop = SdfMesher.StealthBlock3D(x - 76.75, y, z - 3.25, 5.75, 11.5, 3.25, 2.5, 0.8);
+                            if ((float)dRearLoop < d) d = (float)dRearLoop;
+                            double dRearSlot = Math.Max(SdfMesher.Box2D(x - 77.4, y, 1.90, 8.0, 0.9), Math.Max(-1.0 - z, z - 8.0));
+                            if ((float)(-dRearSlot) > d) d = (float)(-dRearSlot);
+                        }
+
+                        // 7) Twin Deep Longitudinal Stiffening Side-Keels (X in [-50..+66], |Y| in [12.0..16.8], Z in [0..6.2])
+                        //    Prevents cantilever flex when hanging nose-down from the upper 4x M4 bolt square!
+                        if (x >= -51.0 && x <= 67.0 && ay >= 11.2 && ay <= 17.5 && z >= -0.5 && z <= 6.8)
+                        {
+                            double dKeel = SdfMesher.RoundedBox3D(x - 8.0, ay - 14.4, z - 3.1, 58.0, 2.4, 3.1, 1.0);
+                            if ((float)dKeel < d) d = (float)dKeel;
+                        }
+
+                        // 8) 4x M4 Mount Bores + Top-Access Ø9.6mm Washer/Nyloc Counterbores BETWEEN THE CURVED ARMS!
+                        //    Centered at X = +50.0, Y = 0.0 -> (+42.5, +-7.5) & (+57.5, +-7.5), 1.80mm solid floor + 3.75mm recess!
+                        if (x >= 36.5 && x <= 63.5 && ay <= 13.5 && z <= 6.5)
+                        {
+                            double dxM = Math.Abs(x - 50.00) - 7.50;
+                            double dyM = ay - 7.50;
+                            double rM = Math.Sqrt(dxM * dxM + dyM * dyM);
+                            double dBoltCut = Math.Min(rM - 2.15, Math.Max(rM - 4.80, 1.80 - z));
+                            if ((float)(-dBoltCut) > d) d = (float)(-dBoltCut);
+                        }
+
+                        grid[ix, iy, iz] = d;
+                    }
+                }
+            }
+
+            var result = SdfMesher.ExtractFromGrid(name, grid, ox, oy, oz, step, null);
+            result.SnapBottomToZero();
+            return result;
+        }
+
+        // =========================================================================
         // 05c: RIGID BACKBONE SPINE PLATE FOR 01h HYBRID 90A EXO-CRADLE
         //   - Print in Elegoo 72D TPU or PETG (flat on bed, ~10 min, ZERO supports!)
         //   - 113.2 x 23.6 x 3.50 mm (snaps flush into 01h's underside recess!)
