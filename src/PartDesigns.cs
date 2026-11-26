@@ -2163,13 +2163,12 @@ namespace DjiNeo2OrbeaMounts
             {
                 // Upward-pointing (+Y) equilateral triangle centered at (cx, cy), calibrated to 5.5mm chestplate vents:
                 //   fillet = 0.45mm, r0 = 1.28mm -> stem width 5.33mm / altitude 4.74mm (-0.5mm slimmer for effortless push-in!)
-                //   Tuned for exact 3.5mm chestplate shell above 3.5mm baseplate (z = 3.5..7.0mm):
-                //   straight stem (Z=3.1..7.0) + snap-barb (Z=7.0..8.2, scale 1.0->1.42 = 7.20mm width / 6.35mm altitude) + 45-deg nose (Z=8.2..11.2)!
+                //   5.5mm straight shaft (z = 3.5..9.0mm) + snap-barb (z = 9.0..10.2mm, 7.20mm width / 6.35mm alt) + 45-deg nose (z = 10.2..13.2mm)!
                 double scale = 1.0;
-                if (z >= 7.0 && z <= 8.2)
-                    scale = 1.0 + 0.42 * ((z - 7.0) / 1.2);
-                else if (z > 8.2)
-                    scale = Math.Max(0.28, 1.42 - 1.14 * ((z - 8.2) / 3.0));
+                if (z >= 9.0 && z <= 10.2)
+                    scale = 1.0 + 0.42 * ((z - 9.0) / 1.2);
+                else if (z > 10.2)
+                    scale = Math.Max(0.28, 1.42 - 1.14 * ((z - 10.2) / 3.0));
 
                 double r0 = 1.28 * scale;
                 double hw = r0 * 1.7320508; // half-base = r0 * sqrt(3)
@@ -2177,7 +2176,7 @@ namespace DjiNeo2OrbeaMounts
                 double hTop = 2.0 * r0;
                 double dTri2D = Triangle2D(x - cx, y - cy, -hw, hBot, +hw, hBot, 0.0, hTop);
                 double dTriRound = dTri2D - 0.45; // crisp 0.45mm rounded corners
-                return Math.Max(dTriRound, Math.Max(3.1 - z, z - 11.2));
+                return Math.Max(dTriRound, Math.Max(3.1 - z, z - 13.2));
             };
 
             Func<double, double, double, double> sdf = (x, y, z) =>
@@ -2246,12 +2245,12 @@ namespace DjiNeo2OrbeaMounts
             Func<double, double, double, double, double, double> tallBarbedTriPlugSdf = (x, y, z, cx, cy) =>
             {
                 // Slimmed -0.5mm triangle cross-section (5.33mm width / 4.74mm alt stem; 7.20mm width / 6.35mm alt snap-barb peak),
-                // with straight stem extended +5.0mm taller (z = 3.1..12.0 -> barb 12.0..13.2 -> 45-deg nose 13.2..16.2)!
+                // with 5.5mm straight shaft (z = 3.1..9.0 -> barb 9.0..10.2 -> 45-deg nose 10.2..13.2)!
                 double scale = 1.0;
-                if (z >= 12.0 && z <= 13.2)
-                    scale = 1.0 + 0.42 * ((z - 12.0) / 1.2);
-                else if (z > 13.2)
-                    scale = Math.Max(0.28, 1.42 - 1.14 * ((z - 13.2) / 3.0));
+                if (z >= 9.0 && z <= 10.2)
+                    scale = 1.0 + 0.42 * ((z - 9.0) / 1.2);
+                else if (z > 10.2)
+                    scale = Math.Max(0.28, 1.42 - 1.14 * ((z - 10.2) / 3.0));
 
                 double r0 = 1.28 * scale;
                 double hw = r0 * 1.7320508;
@@ -2259,7 +2258,7 @@ namespace DjiNeo2OrbeaMounts
                 double hTop = 2.0 * r0;
                 double dTri2D = Triangle2D(x - cx, y - cy, -hw, hBot, +hw, hBot, 0.0, hTop);
                 double dTriRound = dTri2D - 0.45;
-                return Math.Max(dTriRound, Math.Max(3.1 - z, z - 16.2));
+                return Math.Max(dTriRound, Math.Max(3.1 - z, z - 13.2));
             };
 
             Func<double, double, double, double> sdf = (x, y, z) =>
