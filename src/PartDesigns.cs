@@ -2190,7 +2190,7 @@ namespace DjiNeo2OrbeaMounts
                 double dUpperY = Capsule2D(ax, y, 8.5, 11.0, 31.0, 44.5, 8.5);
                 double dLowerY = Capsule2D(ax, y, 6.0, 0.0, 14.5, -37.5, 8.2);
                 double dRow1Bridge = SdfMesher.Box2D(x, y + 20.5, 11.0, 7.5, 3.0); // clean solid bridge under Row 1 triangle bases (zero stray slit)
-                double dCenterHub = SdfMesher.Box2D(x, y - 8.0, 14.8, 14.0, 5.5);
+                double dCenterHub = SdfMesher.Box2D(x, y - 8.0, 15.4, 14.8, 5.5);
                 double dPlate2D = SdfMesher.SmoothMin(Math.Min(dUpperY, Math.Min(dLowerY, dRow1Bridge)), dCenterHub, 4.5);
 
                 // Smoothly thicken upper Y-truss from 3.5mm (y <= 18mm) to 5.0mm (y >= 34mm) under the J-hooks:
@@ -2221,11 +2221,12 @@ namespace DjiNeo2OrbeaMounts
 
                 double body = SdfMesher.SmoothMin(dPlate, Math.Min(dHooks, dTris), 0.7);
 
-                // 4) Standard 4x M4 Universal Mount Holes (+-7.5, +-7.5 centered at Y=+8.0mm) w/ Back Counterbores (1.5mm solid gasket + 2.0mm recess)
+                // 4) Standard 4x M4 Universal Mount Holes (+-7.5, +-7.5 centered at Y=+8.0mm) w/ Washer-Sized Back Counterbores
+                //    (Ø9.8mm bore fits standard Ø9.0mm DIN 125 M4 washers cleanly; 1.2mm solid TPU floor + 2.3mm recess!)
                 double dxM = ax - 7.5;
                 double dyM = Math.Abs(y - 8.0) - 7.5;
                 double rM = Math.Sqrt(dxM * dxM + dyM * dyM);
-                double dM4Cut = Math.Min(rM - 2.15, Math.Max(rM - 4.30, 1.5 - z));
+                double dM4Cut = Math.Min(rM - 2.15, Math.Max(rM - 4.90, 1.2 - z));
 
                 return Math.Max(body, -dM4Cut);
             };
