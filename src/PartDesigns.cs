@@ -2140,19 +2140,20 @@ namespace DjiNeo2OrbeaMounts
             Func<double, double, double, double, double, double> barbedTriPlugSdf = (x, y, z, cx, cy) =>
             {
                 // Upward-pointing (+Y) equilateral triangle centered at (cx, cy): base ~10.8mm, height ~9.6mm
-                // Z in [3.0..9.8mm]: straight 3.5mm stem (Z=3.0..6.5) + self-supporting 45-deg +0.45mm snap-barb (Z=6.5..7.5) + 45-deg lead-in taper (Z=7.5..9.8)!
+                // Tuned for exact 3.5mm chestplate shell (z = 3.2..6.7mm):
+                //   straight stem (Z=3.0..6.8) + 45-deg +0.45mm snap-barb right behind 3.5mm shell (Z=6.8..7.8) + lead-in nose (Z=7.8..10.2)!
                 double scale = 1.0;
-                if (z >= 6.5 && z <= 7.5)
-                    scale = 1.0 + 0.09 * ((z - 6.5) / 1.0); // +0.45mm radial interference barb
-                else if (z > 7.5)
-                    scale = Math.Max(0.35, 1.09 - 0.30 * ((z - 7.5) / 2.3)); // crisp lead-in nose for effortless push-in!
+                if (z >= 6.8 && z <= 7.8)
+                    scale = 1.0 + 0.09 * ((z - 6.8) / 1.0); // +0.45mm radial snap-barb locking cleanly behind 3.5mm shell!
+                else if (z > 7.8)
+                    scale = Math.Max(0.35, 1.09 - 0.30 * ((z - 7.8) / 2.4)); // crisp lead-in nose for effortless push-in!
 
                 double hw = 5.3 * scale;
                 double hBot = -3.4 * scale;
                 double hTop = +6.1 * scale;
                 double dTri2D = Triangle2D(x - cx, y - cy, -hw, hBot, +hw, hBot, 0.0, hTop);
                 double dTriRound = dTri2D - 0.6; // smooth 0.6mm corner fillets so it never chews the Leatt plastic
-                return Math.Max(dTriRound, Math.Max(2.6 - z, z - 9.8));
+                return Math.Max(dTriRound, Math.Max(2.6 - z, z - 10.2));
             };
 
             Func<double, double, double, double> sdf = (x, y, z) =>
@@ -2168,13 +2169,13 @@ namespace DjiNeo2OrbeaMounts
                 double dPlate2D = SdfMesher.SmoothMin(Math.Min(dTopWing, dLowPad), dMidBody, 6.0);
                 double dPlate = Math.Max(dPlate2D, Math.Max(0.0 - z, z - 3.2));
 
-                // 2) 2x Upper 45-Deg Self-Supporting Ramped J-Hooks at X = +-31.0mm (12.0mm wide):
-                //    Stem rises from (y=+43.0, z=3.2) to (y=+43.0, z=7.0), then hooks DOWNWARD (-Y) at 45-deg to (y=+36.0, z=11.0)!
-                //    Zero supports, slips straight into the open upper vent slot, and hooks positively behind the ~3.5mm shell rim!
-                double dHookStem = SdfMesher.RoundedBox3D(ax - 31.0, y - 43.5, z - 5.2, 6.0, 2.2, 2.6, 0.7);
+                // 2) 2x Upper 45-Deg Self-Supporting Ramped J-Hooks at X = +-31.0mm (12.0mm wide), sized for EXACT 3.5mm shell (z=3.2..6.7mm)!
+                //    Stem rises cleanly through vent slot from z=3.2 to z=8.4mm, then hooks DOWNWARD (-Y) at 45-deg from (43.5, 8.4) to (36.5, 12.6)
+                //    (r=1.70 -> inner throat at z=6.70mm = exact 3.50mm snug grip on the 3.5mm Leatt chestplate with 7.0mm downward catch!)
+                double dHookStem = SdfMesher.RoundedBox3D(ax - 31.0, y - 43.5, z - 5.8, 6.0, 1.9, 3.2, 0.7);
                 double dHookRamp = Math.Max(
                     Math.Abs(ax - 31.0) - 6.0,
-                    Capsule2D(y, z, 43.5, 6.8, 36.5, 10.8, 1.8));
+                    Capsule2D(y, z, 43.5, 8.4, 36.5, 12.6, 1.70));
                 double dHooks = SdfMesher.SmoothMin(dHookStem, dHookRamp, 0.8);
 
                 // 3) 4x Lower Barbed Triangular Interference Plugs (Row 1 @ +-7.1, -24.4; Row 2 @ +-14.5, -37.2)
@@ -2195,7 +2196,7 @@ namespace DjiNeo2OrbeaMounts
             };
 
             return SdfMesher.ExtractMesh("06a_Leatt55_Universal_Chest_Baseplate_90A", sdf,
-                new Vec3(-42.5, -48.0, -0.3), new Vec3(42.5, 50.0, 13.5), step);
+                new Vec3(-42.5, -48.0, -0.3), new Vec3(42.5, 50.0, 15.0), step);
         }
 
         // =========================================================================
