@@ -2141,19 +2141,19 @@ namespace DjiNeo2OrbeaMounts
             {
                 // Upward-pointing (+Y) equilateral triangle centered at (cx, cy): base ~10.8mm, height ~9.6mm
                 // Tuned for exact 3.5mm chestplate shell (z = 3.2..6.7mm):
-                //   straight stem (Z=3.0..6.8) + 45-deg +0.45mm snap-barb right behind 3.5mm shell (Z=6.8..7.8) + lead-in nose (Z=7.8..10.2)!
+                //   straight stem (Z=3.0..6.7) + chunky 41-deg +1.15mm radial snap-barb (Z=6.7..8.0) + smooth 45-deg lead-in pyramid nose (Z=8.0..11.4)!
                 double scale = 1.0;
-                if (z >= 6.8 && z <= 7.8)
-                    scale = 1.0 + 0.09 * ((z - 6.8) / 1.0); // +0.45mm radial snap-barb locking cleanly behind 3.5mm shell!
-                else if (z > 7.8)
-                    scale = Math.Max(0.35, 1.09 - 0.30 * ((z - 7.8) / 2.4)); // crisp lead-in nose for effortless push-in!
+                if (z >= 6.7 && z <= 8.0)
+                    scale = 1.0 + 0.22 * ((z - 6.7) / 1.3); // chunky +1.15mm radial snap-ridge grabbing cleanly behind 3.5mm shell!
+                else if (z > 8.0)
+                    scale = Math.Max(0.28, 1.22 - 0.94 * ((z - 8.0) / 3.4)); // smooth 45-deg lead-in nose for effortless push-in!
 
                 double hw = 5.3 * scale;
                 double hBot = -3.4 * scale;
                 double hTop = +6.1 * scale;
                 double dTri2D = Triangle2D(x - cx, y - cy, -hw, hBot, +hw, hBot, 0.0, hTop);
                 double dTriRound = dTri2D - 0.6; // smooth 0.6mm corner fillets so it never chews the Leatt plastic
-                return Math.Max(dTriRound, Math.Max(2.6 - z, z - 10.2));
+                return Math.Max(dTriRound, Math.Max(2.6 - z, z - 11.4));
             };
 
             Func<double, double, double, double> sdf = (x, y, z) =>
