@@ -2236,6 +2236,55 @@ namespace DjiNeo2OrbeaMounts
         }
 
         // =========================================================================
+        // 06c: LEATT 5.5 PRO BARB FIT-TEST COUPON (LOWER-X PLATFORM + 5mm TALLER BARBS!)
+        //   - Fast-printing lower-half of the 06a V8 X-truss (3.5mm thick, exact Row 1 & Row 2 centers).
+        //   - 4x 5.5mm-vent triangular barbs extended +5.0mm taller (8.5mm stem -> z=12.0..13.2 barb -> z=16.2 tip)
+        //     for rapid push-in / retention / depth testing before printing the full chest baseplate!
+        // =========================================================================
+        public static MeshData BuildLeatt55BarbTestCoupon(double step = 0.27)
+        {
+            Func<double, double, double, double, double, double> tallBarbedTriPlugSdf = (x, y, z, cx, cy) =>
+            {
+                // Exact same 5.5mm-calibrated triangle cross-section (5.19mm stem, 6.84mm snap-barb peak),
+                // with straight stem extended +5.0mm taller (z = 3.1..12.0 -> barb 12.0..13.2 -> 45-deg nose 13.2..16.2)!
+                double scale = 1.0;
+                if (z >= 12.0 && z <= 13.2)
+                    scale = 1.0 + 0.38 * ((z - 12.0) / 1.2);
+                else if (z > 13.2)
+                    scale = Math.Max(0.28, 1.38 - 1.10 * ((z - 13.2) / 3.0));
+
+                double r0 = 1.43 * scale;
+                double hw = r0 * 1.7320508;
+                double hBot = -r0;
+                double hTop = 2.0 * r0;
+                double dTri2D = Triangle2D(x - cx, y - cy, -hw, hBot, +hw, hBot, 0.0, hTop);
+                double dTriRound = dTri2D - 0.45;
+                return Math.Max(dTriRound, Math.Max(3.1 - z, z - 16.2));
+            };
+
+            Func<double, double, double, double> sdf = (x, y, z) =>
+            {
+                double ax = Math.Abs(x);
+
+                // Lower half of 06a V8 X-truss (3.5mm thick flat platform covering Row 1 & Row 2 barbs)
+                double dLowerY = Capsule2D(ax, y, 6.5, -16.0, 14.5, -37.5, 8.2);
+                double dRow1Bridge = SdfMesher.Box2D(x, y + 20.5, 11.0, 7.5, 3.0);
+                double dPlate2D = SdfMesher.SmoothMin(dLowerY, dRow1Bridge, 3.5);
+                double dPlate = Math.Max(dPlate2D, Math.Max(0.0 - z, z - 3.5));
+
+                // 4x +5mm Taller Barbed Triangular Plugs at exact 06a V8 centers (+-7.1, -24.4 & +-14.5, -37.2)
+                double dT1 = tallBarbedTriPlugSdf(ax, y, z, 7.1, -24.4);
+                double dT2 = tallBarbedTriPlugSdf(ax, y, z, 14.5, -37.2);
+                double dTris = Math.Min(dT1, dT2);
+
+                return SdfMesher.SmoothMin(dPlate, dTris, 0.7);
+            };
+
+            return SdfMesher.ExtractMesh("06c_Leatt55_Barb_Test_Coupon_90A", sdf,
+                new Vec3(-25.0, -48.0, -0.3), new Vec3(25.0, -6.0, 17.0), step);
+        }
+
+        // =========================================================================
         // 06b (V2): LEATT 5.5 PRO RIGID 72D TPU DJI ACTION 5 PRO / GOPRO 3-PRONG ADAPTER
         //           WITH 19.0mm LENS-CENTERING OFFSET!
         //   - DJI Osmo Action 5 Pro (70.5 x 44.2 x 32.8mm) has its lens offset ~19.0mm from the mount center.
