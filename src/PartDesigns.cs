@@ -2147,27 +2147,37 @@ namespace DjiNeo2OrbeaMounts
         //   - Exact 3.5mm shell geometry (z = 2.0..5.5mm):
         //       * 2x Upper 45-deg Ramped J-Hooks @ X=+-31.0mm (inner throat z=5.50mm = exact 3.50mm grip!)
         //       * 4x Lower Chunky +1.15mm Barbed Triangular Plugs locking right behind z=5.5mm shell!
-        //       * 4x M4 universal mount holes (+-7.5, +-7.5mm centered at Y=+8.0mm) w/ back counterbores!
         // =========================================================================
-        public static MeshData BuildLeatt55UniversalChestBaseplate(double step = 0.28)
+        // 06a (V8): LEATT 5.5 PRO CHEST PROTECTOR UNIVERSAL 90A TPU BASEPLATE
+        //           (3.5mm THICK X-TRUSS + 5.0mm J-HOOK ARMS + TOP-BEVELED HOOKS + 5.5mm BARBS!)
+        //   - Baseplate thickened by +1.5mm (2.0 -> 3.5mm) so DJI Action 5 Pro weight never pulls/flexes it away.
+        //   - Upper Y-truss arms ramp up an extra +1.5mm (3.5 -> 5.0mm) under the J-hooks for zero hook flex.
+        //   - J-hooks thickened on the top (+Y) side with a 45-deg beveled reinforcement buttress (inside chest throat unchanged!).
+        //   - 4x Lower barbed triangles sized to user's caliper-measured 5.5mm equilateral chestplate vents
+        //     (5.2mm slip-fit stem, 6.84mm snap-barb ridge behind 3.5mm shell, tapered 45-deg push-in nose).
+        //   - 4x M4 universal mount holes (+-7.5, +-7.5mm centered at Y=+8.0mm) w/ 2.0mm back counterbores!
+        // =========================================================================
+        public static MeshData BuildLeatt55UniversalChestBaseplate(double step = 0.29)
         {
             Func<double, double, double, double, double, double> barbedTriPlugSdf = (x, y, z, cx, cy) =>
             {
-                // Upward-pointing (+Y) equilateral triangle centered at (cx, cy): base ~10.8mm, height ~9.6mm
-                // Tuned for exact 3.5mm chestplate shell (z = 2.0..5.5mm):
-                //   straight stem (Z=1.8..5.5) + chunky 41-deg +1.15mm radial snap-barb (Z=5.5..6.8) + smooth 45-deg lead-in pyramid nose (Z=6.8..10.2)!
+                // Upward-pointing (+Y) equilateral triangle centered at (cx, cy), calibrated to 5.5mm chestplate vents:
+                //   fillet = 0.45mm, r0 = 1.43mm -> stem side-to-point height = 3*1.43 + 2*0.45 = 5.19mm (clean 0.31mm slip fit in 5.5mm hole!)
+                //   Tuned for exact 3.5mm chestplate shell above 3.5mm baseplate (z = 3.5..7.0mm):
+                //   straight stem (Z=3.1..7.0) + snap-barb (Z=7.0..8.2, scale 1.0->1.38 = 6.84mm peak, ~0.65mm/edge grab) + 45-deg nose (Z=8.2..11.2)!
                 double scale = 1.0;
-                if (z >= 5.5 && z <= 6.8)
-                    scale = 1.0 + 0.22 * ((z - 5.5) / 1.3); // chunky +1.15mm radial snap-ridge grabbing cleanly behind 3.5mm shell!
-                else if (z > 6.8)
-                    scale = Math.Max(0.28, 1.22 - 0.94 * ((z - 6.8) / 3.4)); // smooth 45-deg lead-in nose for effortless push-in!
+                if (z >= 7.0 && z <= 8.2)
+                    scale = 1.0 + 0.38 * ((z - 7.0) / 1.2);
+                else if (z > 8.2)
+                    scale = Math.Max(0.28, 1.38 - 1.10 * ((z - 8.2) / 3.0));
 
-                double hw = 5.3 * scale;
-                double hBot = -3.4 * scale;
-                double hTop = +6.1 * scale;
+                double r0 = 1.43 * scale;
+                double hw = r0 * 1.7320508; // half-base = r0 * sqrt(3)
+                double hBot = -r0;
+                double hTop = 2.0 * r0;
                 double dTri2D = Triangle2D(x - cx, y - cy, -hw, hBot, +hw, hBot, 0.0, hTop);
-                double dTriRound = dTri2D - 0.6; // smooth 0.6mm corner fillets so it never chews the Leatt plastic
-                return Math.Max(dTriRound, Math.Max(1.6 - z, z - 10.2));
+                double dTriRound = dTri2D - 0.45; // crisp 0.45mm rounded corners
+                return Math.Max(dTriRound, Math.Max(3.1 - z, z - 11.2));
             };
 
             Func<double, double, double, double> sdf = (x, y, z) =>
@@ -2175,25 +2185,34 @@ namespace DjiNeo2OrbeaMounts
                 // Print coords: front face flat on Z=0.0, chest-facing hooks & triangular plugs stick UP in +Z!
                 double ax = Math.Abs(x);
 
-                // 1) Slim 2.0mm-thick (10 layers @ 0.20mm) PURE-TENSION X-TRUSS Universal Chest Baseplate:
-                //    - Upper Y-arms: diagonal 16mm-wide tension arms from center 4x M4 mount (+-9, +11) up to 2x J-hooks (+-31, +41.5)
-                //    - Lower Y-arms: matching diagonal arms from center 4x M4 mount (+-6.5, +2) through Row 1 (+-7.1, -24.4) to Row 2 (+-14.5, -37.2)
-                //    - Compact center 4x M4 mount hub (30 x 28 mm @ Y=+8.0) -> ultra-light, breathable, conforms cleanly to 3D chest curve!
-                double dUpperY = Capsule2D(ax, y, 8.5, 11.0, 31.0, 41.5, 7.8);
-                double dLowerY = Capsule2D(ax, y, 6.0, 0.0, 14.5, -37.5, 9.2);
-                double dRow1Bridge = SdfMesher.Box2D(x, y + 23.0, 13.0, 7.0, 3.5); // 100% full flat support under Row 1 triangle bases!
+                // 1) Stiffened 3.5mm-thick X-TRUSS Universal Chest Baseplate (+1.5mm thicker everywhere,
+                //    and upper Y-truss arms smoothly ramp up another +1.5mm to 5.0mm thick right under the J-hooks!):
+                double dUpperY = Capsule2D(ax, y, 8.5, 11.0, 31.0, 44.5, 8.5);
+                double dLowerY = Capsule2D(ax, y, 6.0, 0.0, 14.5, -37.5, 8.2);
+                double dRow1Bridge = SdfMesher.Box2D(x, y + 20.5, 11.0, 7.5, 3.0); // clean solid bridge under Row 1 triangle bases (zero stray slit)
                 double dCenterHub = SdfMesher.Box2D(x, y - 8.0, 14.8, 14.0, 5.5);
                 double dPlate2D = SdfMesher.SmoothMin(Math.Min(dUpperY, Math.Min(dLowerY, dRow1Bridge)), dCenterHub, 4.5);
-                double dPlate = Math.Max(dPlate2D, Math.Max(0.0 - z, z - 2.0));
 
-                // 2) 2x Upper 45-Deg Self-Supporting Ramped J-Hooks at X = +-31.0mm (12.0mm wide), sized for EXACT 3.5mm shell (z=2.0..5.5mm)!
-                //    Stem rises cleanly through vent slot from z=2.0 to z=7.2mm, then hooks DOWNWARD (-Y) at 45-deg from (43.5, 7.2) to (36.5, 11.4)
-                //    (r=1.70 -> inner throat at z=5.50mm = exact 3.50mm snug grip on the 3.5mm Leatt chestplate with 7.0mm downward catch!)
-                double dHookStem = SdfMesher.RoundedBox3D(ax - 31.0, y - 43.5, z - 4.6, 6.0, 1.9, 3.0, 0.7);
+                // Smoothly thicken upper Y-truss from 3.5mm (y <= 18mm) to 5.0mm (y >= 34mm) under the J-hooks:
+                double tUpper = Math.Max(0.0, Math.Min(1.0, (y - 18.0) / 16.0));
+                double plateTopZ = 3.5 + 1.5 * tUpper;
+                double dPlate = Math.Max(dPlate2D, Math.Max(0.0 - z, z - plateTopZ));
+
+                // 2) 2x Reinforced Upper 45-Deg Self-Supporting Ramped J-Hooks at X = +-31.0mm (12.6mm wide),
+                //    sized for EXACT 3.5mm shell above the 5.0mm J-hook pad (z = 5.0..8.5mm):
+                //    - Inside chest-contact face stays at exact y = 41.6mm (preserves verified J-hook-to-barb spacing!).
+                //    - Stem thickened outward on the top (+Y) side (y = 41.6..47.2mm, 5.6mm thick!).
+                //    - Top (+Y) side reinforced with a 45-deg beveled triangular buttress clipped cleanly inside the 5.0mm Y-truss!
+                double dHookStem = SdfMesher.RoundedBox3D(ax - 31.0, y - 44.4, z - 7.7, 6.3, 2.8, 3.1, 0.7);
                 double dHookRamp = Math.Max(
-                    Math.Abs(ax - 31.0) - 6.0,
-                    Capsule2D(y, z, 43.5, 7.2, 36.5, 11.4, 1.70));
-                double dHooks = SdfMesher.SmoothMin(dHookStem, dHookRamp, 0.8);
+                    Math.Abs(ax - 31.0) - 6.3,
+                    Capsule2D(y, z, 43.5, 10.4, 36.5, 14.6, 1.90));
+                // Top-side (+Y) 45-deg beveled gusset triangle in (Y, Z), clipped cleanly inside dPlate2D so zero overhang:
+                double dHookBevelRaw = Math.Max(
+                    Math.Abs(ax - 31.0) - 6.3,
+                    Triangle2D(y, z, 45.8, 4.6, 50.8, 4.6, 45.8, 10.2) - 0.35);
+                double dHookBevel = Math.Max(dHookBevelRaw, dPlate2D);
+                double dHooks = SdfMesher.SmoothMin(Math.Min(dHookStem, dHookBevel), dHookRamp, 0.8);
 
                 // 3) 4x Lower Barbed Triangular Interference Plugs (Row 1 @ +-7.1, -24.4; Row 2 @ +-14.5, -37.2)
                 double dT1 = barbedTriPlugSdf(ax, y, z, 7.1, -24.4);
@@ -2202,17 +2221,17 @@ namespace DjiNeo2OrbeaMounts
 
                 double body = SdfMesher.SmoothMin(dPlate, Math.Min(dHooks, dTris), 0.7);
 
-                // 4) Standard 4x M4 Universal Mount Holes (+-7.5, +-7.5 centered at Y=+8.0mm) w/ Back Counterbores (1.0mm solid clamping gasket + 1.0mm recess)
+                // 4) Standard 4x M4 Universal Mount Holes (+-7.5, +-7.5 centered at Y=+8.0mm) w/ Back Counterbores (1.5mm solid gasket + 2.0mm recess)
                 double dxM = ax - 7.5;
                 double dyM = Math.Abs(y - 8.0) - 7.5;
                 double rM = Math.Sqrt(dxM * dxM + dyM * dyM);
-                double dM4Cut = Math.Min(rM - 2.15, Math.Max(rM - 4.30, 1.0 - z));
+                double dM4Cut = Math.Min(rM - 2.15, Math.Max(rM - 4.30, 1.5 - z));
 
                 return Math.Max(body, -dM4Cut);
             };
 
             return SdfMesher.ExtractMesh("06a_Leatt55_Universal_Chest_Baseplate_90A", sdf,
-                new Vec3(-42.5, -48.0, -0.3), new Vec3(42.5, 50.0, 13.8), step);
+                new Vec3(-42.5, -48.0, -0.3), new Vec3(42.5, 54.0, 17.5), step);
         }
 
         // =========================================================================
