@@ -2160,13 +2160,14 @@ namespace DjiNeo2OrbeaMounts
                 // Print coords: front face flat on Z=0.0, chest-facing hooks & triangular plugs stick UP in +Z!
                 double ax = Math.Abs(x);
 
-                // 1) Slim 2.0mm-thick (10 layers @ 0.20mm) Y-TRUSS Universal Chest Baseplate:
-                //    Diagonal 16mm-wide Y-arms run in PURE TENSION straight from the center 4x M4 mount boss (+-8, +12)
-                //    up to the 2x upper J-hooks (+-31, +42) — eliminates horizontal T-bar bending droop in 90A TPU!
-                double dYArm = Capsule2D(ax, y, 9.0, 11.0, 31.0, 41.5, 8.0);
-                double dMidBody = SdfMesher.Box2D(x, y + 6.0, 18.0, 26.0, 6.0);
-                double dLowPad = SdfMesher.Box2D(x, y + 31.0, 25.0, 15.0, 6.0);
-                double dPlate2D = SdfMesher.SmoothMin(Math.Min(dYArm, dLowPad), dMidBody, 5.0);
+                // 1) Slim 2.0mm-thick (10 layers @ 0.20mm) PURE-TENSION X-TRUSS Universal Chest Baseplate:
+                //    - Upper Y-arms: diagonal 16mm-wide tension arms from center 4x M4 mount (+-9, +11) up to 2x J-hooks (+-31, +41.5)
+                //    - Lower Y-arms: matching diagonal arms from center 4x M4 mount (+-6.5, +2) through Row 1 (+-7.1, -24.4) to Row 2 (+-14.5, -37.2)
+                //    - Compact center 4x M4 mount hub (30 x 28 mm @ Y=+8.0) -> ultra-light, breathable, conforms cleanly to 3D chest curve!
+                double dUpperY = Capsule2D(ax, y, 8.5, 11.0, 31.0, 41.5, 7.8);
+                double dLowerY = Capsule2D(ax, y, 5.2, 2.0, 14.5, -37.5, 9.2);
+                double dCenterHub = SdfMesher.Box2D(x, y - 8.0, 14.8, 14.0, 5.5);
+                double dPlate2D = SdfMesher.SmoothMin(Math.Min(dUpperY, dLowerY), dCenterHub, 4.5);
                 double dPlate = Math.Max(dPlate2D, Math.Max(0.0 - z, z - 2.0));
 
                 // 2) 2x Upper 45-Deg Self-Supporting Ramped J-Hooks at X = +-31.0mm (12.0mm wide), sized for EXACT 3.5mm shell (z=2.0..5.5mm)!
