@@ -1549,17 +1549,17 @@ namespace DjiNeo2OrbeaMounts
                 new Vec3(-125.5, -8.0, -0.5), new Vec3(125.5, 8.0, 7.8), step);
         }
 
-        // 04g (V7): Wide-Loop 4.6mm-Gap Full-Travel 4.5mm Outboard C-Bow Hairpin 90A TPU Suspension Puck (Side-Printed, Zero Supports!)
-        //   - Bumped +2.0mm taller (20.0mm total) to open up a massive 4.6mm clear air gap INSIDE the banana loops (R_c=3.9mm) so they NEVER pinch shut!
-        //   - Outer Bridge Feet (|x| in [12.2..24.0], z in [0.0..6.0]): drop right into 03a/03i's 48.6 x 26.6 x 3.5mm pocket!
-        //   - Floating Center Cradle Platform (|x| <= 11.2, z in [4.5..20.0]): flat underside with FULL unobstructed 4.5mm vertical travel above bridge floor!
-        //   - Twin Outboard C-Bow Hairpin Leaf Springs (t=3.2mm, R_c=3.9mm, top z=14.8..15.0mm): 5.0-5.2mm BELOW cradle plane + 4.6mm clear inside loop!
+        // 04g (V8): Stiffened Laterally + Trimmed Center Block Outboard C-Bow Hairpin Suspension Puck (Side-Printed, Zero Supports!)
+        //   - Trimmed floating center block (z in [11.2..20.0], only 8.8mm tall!) sits 7.7mm ABOVE 03a/03i's 3.5mm pocket walls -> ZERO catching during wobble!
+        //     Still keeps 6.0mm solid TPU roof (z=14.0..20.0) + 2.8mm flush M4 button-head counterbore (z=11.2..14.0)!
+        //   - Beefier 4.2mm-thick banana loops (r=2.10mm) + tighter 29.5mm outboard reach -> ~2.6x stiffer laterally & vertically (print @ 5 walls for solid arms!)
+        //   - Wide-open 3.6mm internal banana-loop gap (R_c=3.90mm) + 4.5mm air gap below cradle plane + Ø8.0mm straight-down bridge-bolt access bores!
         public static MeshData BuildTpuDecoupledShearIsolatorPuck(double step = 0.30)
         {
             Func<double, double, double, double> sdf = (px, py, pz) =>
             {
                 // Map print coords (px, py, pz) -> installed coords (x, y, z):
-                //   px = x [-38.0..+38.0], py = z [0..20.0], pz = y + 13.0 [0..26.0]
+                //   px = x [-35.8..+35.8], py = z [0..20.0], pz = y + 13.0 [0..26.0]
                 double x = px;
                 double z = py;
                 double y = pz - 13.0;
@@ -1571,21 +1571,21 @@ namespace DjiNeo2OrbeaMounts
                 double dFootXY = SdfMesher.Box2D(x, y, 24.0, 13.0, 4.0);
                 double dFoot3D = Math.Max(dFoot2D, dFootXY);
 
-                // 2) Floating Center Cradle Platform: |x| <= 11.2, z in [4.5..20.0] (clean flat underside -> FULL 4.5mm unobstructed vertical travel!)
-                double dCenter2D = SdfMesher.Box2D(x, z - 12.25, 11.2, 7.75, 1.6);
+                // 2) Trimmed Floating Center Cradle Block: |x| <= 11.2, z in [11.2..20.0] (only 8.8mm tall -> 7.7mm clear above bridge pocket walls!)
+                double dCenter2D = SdfMesher.Box2D(x, z - 15.6, 11.2, 4.4, 1.6);
 
-                // 3) Twin Wide-Open Outboard C-Bow Hairpin Leaf Springs (t = 3.2mm -> r = 1.60mm):
-                //    - Lower leg: (22.0, 5.4) -> (32.5, 5.4) (bottom edge 3.8mm -> clears 3.5mm pocket rim!)
-                //    - Smooth semicircular C-bend centered at (32.5, 9.3) with centerline radius R_c = 3.90mm (z=5.4 to z=13.2 -> 4.6mm internal air gap!)
-                //    - Upper leg: (32.5, 13.2) -> (10.5, 13.4) (top edge 14.8..15.0mm -> 5.0-5.2mm BELOW z=20.0 cradle!)
-                double dLowerLeg = Capsule2D(ax, z, 22.0, 5.4, 32.5, 5.4, 1.60);
-                double dUpperLeg = Capsule2D(ax, z, 32.5, 13.2, 10.5, 13.4, 1.60);
+                // 3) Stiffened 4.2mm-Thick Outboard C-Bow Banana Loops (r = 2.10mm, tighter 29.5mm reach):
+                //    - Lower leg: (22.0, 5.8) -> (29.5, 5.8) (bottom edge 3.7mm -> clears 3.5mm pocket rim!)
+                //    - Smooth semicircular C-bend centered at (29.5, 9.7) with centerline radius R_c = 3.90mm (z=5.8..13.6 -> 3.6mm internal air gap!)
+                //    - Upper leg: (29.5, 13.6) -> (10.5, 13.4) (top edge 15.5..15.7mm -> 4.3-4.5mm BELOW z=20.0 cradle!)
+                double dLowerLeg = Capsule2D(ax, z, 22.0, 5.8, 29.5, 5.8, 2.10);
+                double dUpperLeg = Capsule2D(ax, z, 29.5, 13.6, 10.5, 13.4, 2.10);
 
-                // Smooth right-half semicircular arc at (32.5, 9.3), R_c = 3.90mm, tube radius = 1.60mm
-                double arcDx = Math.Max(0.0, ax - 32.5);
-                double arcDz = z - 9.3;
-                double dArc2D = Math.Abs(Math.Sqrt(arcDx * arcDx + arcDz * arcDz) - 3.90) - 1.60;
-                double dArcClipped = Math.Max(dArc2D, 32.5 - ax);
+                // Smooth right-half semicircular arc at (29.5, 9.7), R_c = 3.90mm, tube radius = 2.10mm
+                double arcDx = Math.Max(0.0, ax - 29.5);
+                double arcDz = z - 9.7;
+                double dArc2D = Math.Abs(Math.Sqrt(arcDx * arcDx + arcDz * arcDz) - 3.90) - 2.10;
+                double dArcClipped = Math.Max(dArc2D, 29.5 - ax);
 
                 double dHairpin2D = Math.Min(Math.Min(dLowerLeg, dUpperLeg), dArcClipped);
                 double dUpperBody3D = Math.Max(SdfMesher.SmoothMin(dCenter2D, dHairpin2D, 1.0), Math.Abs(y) - 13.0);
@@ -1594,30 +1594,30 @@ namespace DjiNeo2OrbeaMounts
 
                 double cut = 1e9;
 
-                // 4x Square Cradle Bolt Holes (+-7.5, +-7.5): M4 bore + bottom Ø9.6mm counterbore (z in [4.5..14.0], 6.0mm solid TPU roof for M4x10-12mm bolts!)
+                // 4x Square Cradle Bolt Holes (+-7.5, +-7.5): M4 bore + flush 2.8mm-deep bottom counterbore (z in [10.8..14.0], 6.0mm solid TPU roof!)
                 double dxSq = ax - 7.5;
                 double dySq = ay - 7.5;
                 double rSq = Math.Sqrt(dxSq * dxSq + dySq * dySq);
-                double dSqBore = Math.Max(rSq - 2.05, 4.0 - z);
-                double dSqCbore = Math.Max(rSq - 4.80, Math.Max(4.0 - z, z - 14.00));
+                double dSqBore = Math.Max(rSq - 2.05, 10.5 - z);
+                double dSqCbore = Math.Max(rSq - 4.80, Math.Max(10.5 - z, z - 14.00));
                 cut = Math.Min(cut, Math.Min(dSqBore, dSqCbore));
 
                 // 2x Centerline Bridge Bolt Holes (+-15.0, 0.0):
                 //   - M4 bore through outer foot (z <= 6.2)
                 //   - Recessed hex/button pocket in outer foot (z in [3.8..6.4], 3.8mm solid bearing floor!)
-                //   - Straight-down Ø8.6mm access bore through upper hairpin leg (z in [10.5..16.5]) for effortless bolt & Allen-key installation!
+                //   - Straight-down Ø8.0mm access bore through upper banana leg (z in [10.8..16.5]) aligned with 01h/01i cradle access holes!
                 double dxCtr = ax - 15.0;
                 double rCtr = Math.Sqrt(dxCtr * dxCtr + y * y);
                 double dCtrBore = Math.Max(rCtr - 2.05, z - 6.4);
                 double dCtrPocket = Math.Max(SdfMesher.Hexagon2D(dxCtr, y, 7.05), Math.Max(3.80 - z, z - 6.6));
-                double dUpperAccess = Math.Max(rCtr - 4.30, Math.Max(10.5 - z, z - 16.5));
+                double dUpperAccess = Math.Max(rCtr - 4.00, Math.Max(10.8 - z, z - 16.5));
                 cut = Math.Min(cut, Math.Min(Math.Min(dCtrBore, dCtrPocket), dUpperAccess));
 
                 return Math.Max(body, -cut);
             };
 
             return SdfMesher.ExtractMesh("04g_TPU_Decoupled_Shear_Isolator_Puck", sdf,
-                new Vec3(-39.0, -0.6, -0.5), new Vec3(39.0, 20.8, 26.6), step);
+                new Vec3(-36.5, -0.6, -0.5), new Vec3(36.5, 20.8, 26.6), step);
         }
 
         // =========================================================================
@@ -1819,6 +1819,16 @@ namespace DjiNeo2OrbeaMounts
                             }
                         }
 
+                        // 8) 2x Straight-Down Ø8.6mm Banana-Puck Bridge-Bolt Access Holes (X = 9.50 +- 15.00 = -5.50 & +24.50, Y = 0.0)
+                        //    Allows bolting the cradle + banana puck to the stem bridge straight down through the cradle floor!
+                        if (Math.Abs(Math.Abs(x - 9.50) - 15.00) <= 5.0 && ay <= 5.0 && z <= 6.5)
+                        {
+                            double dxAcc = Math.Abs(x - 9.50) - 15.00;
+                            double rAcc = Math.Sqrt(dxAcc * dxAcc + y * y);
+                            double dAccCut = rAcc - 4.30;
+                            if ((float)(-dAccCut) > d) d = (float)(-dAccCut);
+                        }
+
                         grid[ix, iy, iz] = d;
                     }
                 }
@@ -1853,6 +1863,11 @@ namespace DjiNeo2OrbeaMounts
                 double rM = Math.Sqrt(dxM * dxM + dyM * dyM);
                 double dHex = Math.Max(SdfMesher.Hexagon2D(dyM, dxM, 6.90), 1.25 - z);
                 cut = Math.Min(cut, Math.Min(rM - 2.10, dHex));
+
+                // 2x Straight-Down Ø8.6mm Bridge-Bolt Access Holes matching 01h & 04g (x_local = +0.50 +- 15.00 = -14.50 & +15.50, y = 0.0)
+                double dxAcc = Math.Abs(x - 0.50) - 15.00;
+                double dAcc = Math.Sqrt(dxAcc * dxAcc + y * y) - 4.30;
+                cut = Math.Min(cut, dAcc);
 
                 // Weight-saving stealth truss windows in front (x in [-48..-16]) and rear (x in [+18..+48])
                 // Leaves rigid 4.8mm outer longitudinal rails (|y| in [7.0..11.8]) for maximum bending stiffness!
