@@ -2165,9 +2165,10 @@ namespace DjiNeo2OrbeaMounts
                 //    - Lower Y-arms: matching diagonal arms from center 4x M4 mount (+-6.5, +2) through Row 1 (+-7.1, -24.4) to Row 2 (+-14.5, -37.2)
                 //    - Compact center 4x M4 mount hub (30 x 28 mm @ Y=+8.0) -> ultra-light, breathable, conforms cleanly to 3D chest curve!
                 double dUpperY = Capsule2D(ax, y, 8.5, 11.0, 31.0, 41.5, 7.8);
-                double dLowerY = Capsule2D(ax, y, 5.2, 2.0, 14.5, -37.5, 9.2);
+                double dLowerY = Capsule2D(ax, y, 6.0, 0.0, 14.5, -37.5, 9.2);
+                double dRow1Bridge = SdfMesher.Box2D(x, y + 23.0, 13.0, 7.0, 3.5); // 100% full flat support under Row 1 triangle bases!
                 double dCenterHub = SdfMesher.Box2D(x, y - 8.0, 14.8, 14.0, 5.5);
-                double dPlate2D = SdfMesher.SmoothMin(Math.Min(dUpperY, dLowerY), dCenterHub, 4.5);
+                double dPlate2D = SdfMesher.SmoothMin(Math.Min(dUpperY, Math.Min(dLowerY, dRow1Bridge)), dCenterHub, 4.5);
                 double dPlate = Math.Max(dPlate2D, Math.Max(0.0 - z, z - 2.0));
 
                 // 2) 2x Upper 45-Deg Self-Supporting Ramped J-Hooks at X = +-31.0mm (12.0mm wide), sized for EXACT 3.5mm shell (z=2.0..5.5mm)!
