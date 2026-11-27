@@ -2524,7 +2524,7 @@ namespace DjiNeo2OrbeaMounts
 
                 // 1) Stiff 3.5mm X-TRUSS Baseplate ramping to 5.0mm under the triangular cutout-matched J-hooks:
                 double dUpperY = Capsule2D(ax, y, 8.5, 11.0, 28.5, 46.8, 8.6);
-                double dLowerY = Capsule2D(ax, y, 6.0, 0.0, 14.5, -37.5, 8.2);
+                double dLowerY = Capsule2D(ax, y, 6.0, 0.0, 14.5, -38.5, 8.2);
                 double dRow1Bridge = SdfMesher.Box2D(x, y + 18.0, 11.0, 10.0, 3.0);
                 double dCenterHub = SdfMesher.Box2D(x, y - 8.0, 15.4, 14.8, 5.5);
                 double dPlate2D = SdfMesher.SmoothMin(Math.Min(dUpperY, Math.Min(dLowerY, dRow1Bridge)), dCenterHub, 4.5);
@@ -2536,10 +2536,12 @@ namespace DjiNeo2OrbeaMounts
                 // 2) 2x TRUE TRIANGULAR-RISER J-Hooks matched directly to the ruler-measured Leatt cutout!
                 //    - Measured cutout vertices (1/16" ruler @ 3.92 px/mm):
                 //        A (bottom-inner tip): (22.1, 42.2), B (bottom-outer): (33.1, 44.8), C (top-outer): (33.8, 54.5)
-                //    - Triangular riser (inset ~0.6mm for clean 72D drop-in, 1.0mm corner fillet) locks into ALL 3 walls
-                //      of the triangular cutout with zero twist and snug inward+downward tension!
-                double dHookStem2D = Triangle2D(ax, y, 23.0, 43.2, 31.6, 45.2, 32.0, 52.2) - 1.0;
-                double dHookStem = Math.Max(dHookStem2D, Math.Max(4.6 - z, z - 11.8));
+                //    - Generous 1.8mm rounded corners + smooth 2.0mm 45-deg top-back bevel removes the sharp rear edge
+                //      while keeping the full z=5.0..8.5mm triangular cutout engagement 100% intact!
+                double dHookStem2D = Math.Max(Triangle2D(ax, y, 23.6, 43.8, 30.8, 45.6, 31.2, 51.4) - 1.8, dPlate2D);
+                double dHookStemRaw = Math.Max(dHookStem2D, Math.Max(4.6 - z, z - 11.8));
+                double dHookStemTopBevel = (dHookStem2D + (z - 9.0)) * 0.70710678; // smooth 2.8mm 45-deg bevel knocking off sharp rear tip!
+                double dHookStem = Math.Max(dHookStemRaw, dHookStemTopBevel);
 
                 // Flat parallel grabbing tongue (z = 8.50..11.80mm -> exact 3.50mm parallel throat) extending 5.5mm
                 // diagonally downward-and-inward (28 deg) from the triangular riser onto the ~6.5mm gray plastic ledge next to the foam:
@@ -2550,16 +2552,18 @@ namespace DjiNeo2OrbeaMounts
                 double hu = hdx * cosA - hdy * sinA;
                 double hv = hdx * sinA + hdy * cosA;
 
-                double dHookTongue2D = SdfMesher.Box2D(hu, hv + 4.0, 4.5, 4.2, 1.6);
-                double dHookTongue = Math.Max(dHookTongue2D, Math.Max(8.50 - z, z - 11.80));
+                double dHookTongue2D = SdfMesher.Box2D(hu, hv + 4.0, 4.5, 4.2, 1.8);
+                double dHookTongueRaw = Math.Max(dHookTongue2D, Math.Max(8.50 - z, z - 11.80));
+                double dHookTongueBevel = (dHookTongue2D + (z - 10.9)) * 0.70710678; // smooth 0.9mm top bevel on tongue
+                double dHookTongue = Math.Max(dHookTongueRaw, dHookTongueBevel);
 
                 // Smoothly blend the beefy triangular riser into the 5.0mm Y-truss (clean 1.2mm root fillet, zero stray fin!)
                 double dPlateWithRiser = SdfMesher.SmoothMin(dPlate, dHookStem, 1.2);
                 double dPlateAndHooks = SdfMesher.SmoothMin(dPlateWithRiser, dHookTongue, 0.5);
 
-                // 3) 4x Lower 72D-Sized Barbed Triangular Plugs at exact verified centers (+-7.1, -24.4 & +-14.5, -37.2)
+                // 3) 4x Lower 72D-Sized Barbed Triangular Plugs (Row 1 @ +-7.1, -24.4 unchanged; Row 2 moved 1mm down to +-14.5, -38.2)
                 double dT1 = barbedTriPlug72DSdf(ax, y, z, 7.1, -24.4);
-                double dT2 = barbedTriPlug72DSdf(ax, y, z, 14.5, -37.2);
+                double dT2 = barbedTriPlug72DSdf(ax, y, z, 14.5, -38.2);
                 double dTris = Math.Min(dT1, dT2);
 
                 double body = SdfMesher.SmoothMin(dPlateAndHooks, dTris, 0.7);
