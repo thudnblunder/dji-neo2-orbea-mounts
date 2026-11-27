@@ -2522,8 +2522,8 @@ namespace DjiNeo2OrbeaMounts
             {
                 double ax = Math.Abs(x);
 
-                // 1) Stiff 3.5mm X-TRUSS Baseplate ramping to 5.0mm under the J-hooks (moved 4mm closer together: ax = 30.5mm):
-                double dUpperY = Capsule2D(ax, y, 8.5, 11.0, 30.5, 46.5, 8.2);
+                // 1) Stiff 3.5mm X-TRUSS Baseplate ramping to 5.0mm under the ruler-calibrated J-hooks (ax = 26.0mm, y = 45.5mm):
+                double dUpperY = Capsule2D(ax, y, 8.5, 11.0, 26.0, 45.5, 8.2);
                 double dLowerY = Capsule2D(ax, y, 6.0, 0.0, 14.5, -37.5, 8.2);
                 double dRow1Bridge = SdfMesher.Box2D(x, y + 18.0, 11.0, 10.0, 3.0);
                 double dCenterHub = SdfMesher.Box2D(x, y - 8.0, 15.4, 14.8, 5.5);
@@ -2533,16 +2533,14 @@ namespace DjiNeo2OrbeaMounts
                 double plateTopZ = 3.5 + 1.5 * tUpper;
                 double dPlate = Math.Max(dPlate2D, Math.Max(0.0 - z, z - plateTopZ));
 
-                // 2) 2x Cutout-Contoured Diagonal J-Hooks moved 4.0mm closer together (ax = 30.5mm),
-                //    rotated 28-deg INWARD to match the caliper/ruler-measured Leatt "5.5" V-rib (27.8 deg):
-                //    - Riser (stem) contoured as a rounded wedge (9.0mm wide at base tapering to 6.8mm up the cutout, 6.0mm long)
-                //      that keys snugly into the bottom-inner corner of the Leatt vent cutout!
-                //    - Flat parallel grabbing tongue (z = 8.50..11.80mm -> exact 3.50mm parallel throat, 5.5mm catch, 8.8mm wide)
-                //      sized specifically to sit 100% on the ~6.5mm exposed gray plastic ledge right next to the black foam!
+                // 2) 2x Cutout-Contoured Diagonal J-Hooks calibrated directly from the 1/16" ruler photo:
+                //    - Measured Leatt cutouts: 44.2mm inner-to-inner (+-22.1mm), 54.4mm center-to-center (+-27.2mm), 27.8-deg V-rib.
+                //    - Pivots set at ax = +-26.0mm (52.0mm c-to-c -> inner edges at +-22.0mm for snug inward pull-together tension!)
+                //      and y = 45.4mm (-1.0mm tighter for crisp downward tension!).
                 const double cosA = 0.88294759; // cos(28 deg)
                 const double sinA = 0.46947156; // sin(28 deg)
-                double hdx = ax - 30.5;
-                double hdy = y - 46.4;
+                double hdx = ax - 26.0;
+                double hdy = y - 45.4;
                 double hu = hdx * cosA - hdy * sinA;  // across hook width
                 double hv = hdx * sinA + hdy * cosA;  // along hook axis (-hv = downward + inward diagonal grab!)
 
