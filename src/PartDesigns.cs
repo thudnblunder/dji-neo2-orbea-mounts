@@ -2522,8 +2522,8 @@ namespace DjiNeo2OrbeaMounts
             {
                 double ax = Math.Abs(x);
 
-                // 1) Stiff 3.5mm X-TRUSS Baseplate ramping to 5.0mm under the +2.0mm-extended J-hooks:
-                double dUpperY = Capsule2D(ax, y, 8.5, 11.0, 32.5, 46.5, 8.2);
+                // 1) Stiff 3.5mm X-TRUSS Baseplate ramping to 5.0mm under the J-hooks (moved 4mm closer together: ax = 30.5mm):
+                double dUpperY = Capsule2D(ax, y, 8.5, 11.0, 30.5, 46.5, 8.2);
                 double dLowerY = Capsule2D(ax, y, 6.0, 0.0, 14.5, -37.5, 8.2);
                 double dRow1Bridge = SdfMesher.Box2D(x, y + 18.0, 11.0, 10.0, 3.0);
                 double dCenterHub = SdfMesher.Box2D(x, y - 8.0, 15.4, 14.8, 5.5);
@@ -2533,21 +2533,34 @@ namespace DjiNeo2OrbeaMounts
                 double plateTopZ = 3.5 + 1.5 * tUpper;
                 double dPlate = Math.Max(dPlate2D, Math.Max(0.0 - z, z - plateTopZ));
 
-                // 2) 2x Upper J-Hooks trimmed 3.0mm off each inner side (hx = 4.8mm, 9.6mm wide),
-                //    shifted +2.0mm upward in +Y, rotated 25-deg INWARD for a self-centering diagonal V-grab,
-                //    with a FLAT PARALLEL inner clamping face (z = 8.50mm = exact 3.50mm parallel gap above 5.0mm pad!)
-                const double cosA = 0.90630779; // cos(25 deg)
-                const double sinA = 0.42261826; // sin(25 deg)
-                double hdx = ax - 32.5;
+                // 2) 2x Cutout-Contoured Diagonal J-Hooks moved 4.0mm closer together (ax = 30.5mm),
+                //    rotated 28-deg INWARD to match the caliper/ruler-measured Leatt "5.5" V-rib (27.8 deg):
+                //    - Riser (stem) contoured as a rounded wedge (9.0mm wide at base tapering to 6.8mm up the cutout, 6.0mm long)
+                //      that keys snugly into the bottom-inner corner of the Leatt vent cutout!
+                //    - Flat parallel grabbing tongue (z = 8.50..11.80mm -> exact 3.50mm parallel throat, 5.5mm catch, 8.8mm wide)
+                //      sized specifically to sit 100% on the ~6.5mm exposed gray plastic ledge right next to the black foam!
+                const double cosA = 0.88294759; // cos(28 deg)
+                const double sinA = 0.46947156; // sin(28 deg)
+                double hdx = ax - 30.5;
                 double hdy = y - 46.4;
-                double hu = hdx * cosA - hdy * sinA;  // across hook width (9.6mm)
-                double hv = hdx * sinA + hdy * cosA;  // along hook axis (-hv = downward + inward grab!)
+                double hu = hdx * cosA - hdy * sinA;  // across hook width
+                double hv = hdx * sinA + hdy * cosA;  // along hook axis (-hv = downward + inward diagonal grab!)
 
-                double dHookStem = SdfMesher.RoundedBox3D(hu, hv, z - 8.35, 4.8, 2.8, 3.75, 0.65);
-                double dHookTongue = SdfMesher.RoundedBox3D(hu, hv + 4.4, z - 10.30, 4.8, 4.2, 1.80, 0.55); // flat inside at z=8.50mm!
+                // Contoured cutout-fitting riser: slightly wider toward the bottom-inner corner (hv=-3.0), tapering smoothly up (hv=+3.0)
+                double stemT = Math.Max(0.0, Math.Min(1.0, (hv + 3.0) / 6.0));
+                double stemHalfW = 4.5 - 1.1 * stemT; // 9.0mm wide at bottom-inner corner -> 6.8mm wide at top of cutout
+                double dHookStem2D = SdfMesher.Box2D(hu, hv, stemHalfW, 3.0, 1.1);
+                double dHookStem = Math.Max(dHookStem2D, Math.Max(4.6 - z, z - 11.8));
+
+                // Flat parallel grabbing tongue fitting the ~6.5mm gray plastic shelf next to the black foam (z = 8.50..11.80mm):
+                //   hv in [-8.5..-0.5] (5.5mm clear parallel catch past riser face hv=-3.0), 8.8mm wide (hx=4.4), 1.4mm corner radius!
+                double dHookTongue2D = SdfMesher.Box2D(hu, hv + 4.5, 4.4, 4.0, 1.4);
+                double dHookTongue = Math.Max(dHookTongue2D, Math.Max(8.50 - z, z - 11.80));
+
+                // Top-side (+hv) 45-deg beveled reinforcement buttress clipped cleanly inside dPlate2D:
                 double dHookBevelRaw = Math.Max(
-                    Math.Abs(hu) - 4.8,
-                    Triangle2D(hv, z, 1.4, 4.6, 6.4, 4.6, 1.4, 11.4) - 0.35);
+                    Math.Abs(hu) - 4.0,
+                    Triangle2D(hv, z, 1.6, 4.6, 6.4, 4.6, 1.6, 11.2) - 0.35);
                 double dHookBevel = Math.Max(dHookBevelRaw, dPlate2D);
                 double dHooks = SdfMesher.SmoothMin(Math.Min(dHookStem, dHookBevel), dHookTongue, 0.5);
 
