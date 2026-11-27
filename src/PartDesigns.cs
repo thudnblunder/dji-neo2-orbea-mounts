@@ -2533,17 +2533,23 @@ namespace DjiNeo2OrbeaMounts
                 double plateTopZ = 3.5 + 1.5 * tUpper;
                 double dPlate = Math.Max(dPlate2D, Math.Max(0.0 - z, z - plateTopZ));
 
-                // 2) 2x Upper J-Hooks trimmed 3.0mm off each inner side (ax = 27.7..37.3 -> center 32.5, hx = 4.8mm)
-                //    and shifted +2.0mm upward in +Y (inside chest face y = 43.6mm vs 41.6mm on 06a):
-                double dHookStem = SdfMesher.RoundedBox3D(ax - 32.5, y - 46.4, z - 7.7, 4.8, 2.8, 3.1, 0.7);
-                double dHookRamp = Math.Max(
-                    Math.Abs(ax - 32.5) - 4.8,
-                    Capsule2D(y, z, 45.5, 10.4, 38.5, 14.6, 1.90));
+                // 2) 2x Upper J-Hooks trimmed 3.0mm off each inner side (hx = 4.8mm, 9.6mm wide),
+                //    shifted +2.0mm upward in +Y, rotated 25-deg INWARD for a self-centering diagonal V-grab,
+                //    with a FLAT PARALLEL inner clamping face (z = 8.50mm = exact 3.50mm parallel gap above 5.0mm pad!)
+                const double cosA = 0.90630779; // cos(25 deg)
+                const double sinA = 0.42261826; // sin(25 deg)
+                double hdx = ax - 32.5;
+                double hdy = y - 46.4;
+                double hu = hdx * cosA - hdy * sinA;  // across hook width (9.6mm)
+                double hv = hdx * sinA + hdy * cosA;  // along hook axis (-hv = downward + inward grab!)
+
+                double dHookStem = SdfMesher.RoundedBox3D(hu, hv, z - 8.35, 4.8, 2.8, 3.75, 0.65);
+                double dHookTongue = SdfMesher.RoundedBox3D(hu, hv + 4.4, z - 10.30, 4.8, 4.2, 1.80, 0.55); // flat inside at z=8.50mm!
                 double dHookBevelRaw = Math.Max(
-                    Math.Abs(ax - 32.5) - 4.8,
-                    Triangle2D(y, z, 47.8, 4.6, 52.8, 4.6, 47.8, 10.2) - 0.35);
+                    Math.Abs(hu) - 4.8,
+                    Triangle2D(hv, z, 1.4, 4.6, 6.4, 4.6, 1.4, 11.4) - 0.35);
                 double dHookBevel = Math.Max(dHookBevelRaw, dPlate2D);
-                double dHooks = SdfMesher.SmoothMin(Math.Min(dHookStem, dHookBevel), dHookRamp, 0.8);
+                double dHooks = SdfMesher.SmoothMin(Math.Min(dHookStem, dHookBevel), dHookTongue, 0.5);
 
                 // 3) 4x Lower 72D-Sized Barbed Triangular Plugs at exact verified centers (+-7.1, -24.4 & +-14.5, -37.2)
                 double dT1 = barbedTriPlug72DSdf(ax, y, z, 7.1, -24.4);
