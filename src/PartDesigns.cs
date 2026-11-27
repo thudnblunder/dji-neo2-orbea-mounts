@@ -2522,8 +2522,8 @@ namespace DjiNeo2OrbeaMounts
             {
                 double ax = Math.Abs(x);
 
-                // 1) Stiff 3.5mm X-TRUSS Baseplate ramping to 5.0mm under the ruler-calibrated J-hooks (ax = 26.0mm, y = 45.5mm):
-                double dUpperY = Capsule2D(ax, y, 8.5, 11.0, 26.0, 45.5, 8.2);
+                // 1) Stiff 3.5mm X-TRUSS Baseplate ramping to 5.0mm under the triangular cutout-matched J-hooks:
+                double dUpperY = Capsule2D(ax, y, 8.5, 11.0, 28.5, 46.8, 8.6);
                 double dLowerY = Capsule2D(ax, y, 6.0, 0.0, 14.5, -37.5, 8.2);
                 double dRow1Bridge = SdfMesher.Box2D(x, y + 18.0, 11.0, 10.0, 3.0);
                 double dCenterHub = SdfMesher.Box2D(x, y - 8.0, 15.4, 14.8, 5.5);
@@ -2533,41 +2533,36 @@ namespace DjiNeo2OrbeaMounts
                 double plateTopZ = 3.5 + 1.5 * tUpper;
                 double dPlate = Math.Max(dPlate2D, Math.Max(0.0 - z, z - plateTopZ));
 
-                // 2) 2x Cutout-Contoured Diagonal J-Hooks calibrated directly from the 1/16" ruler photo:
-                //    - Measured Leatt cutouts: 44.2mm inner-to-inner (+-22.1mm), 54.4mm center-to-center (+-27.2mm), 27.8-deg V-rib.
-                //    - Pivots set at ax = +-26.0mm (52.0mm c-to-c -> inner edges at +-22.0mm for snug inward pull-together tension!)
-                //      and y = 45.4mm (-1.0mm tighter for crisp downward tension!).
-                const double cosA = 0.88294759; // cos(28 deg)
-                const double sinA = 0.46947156; // sin(28 deg)
-                double hdx = ax - 26.0;
-                double hdy = y - 45.4;
-                double hu = hdx * cosA - hdy * sinA;  // across hook width
-                double hv = hdx * sinA + hdy * cosA;  // along hook axis (-hv = downward + inward diagonal grab!)
-
-                // Contoured cutout-fitting riser: slightly wider toward the bottom-inner corner (hv=-3.0), tapering smoothly up (hv=+3.0)
-                double stemT = Math.Max(0.0, Math.Min(1.0, (hv + 3.0) / 6.0));
-                double stemHalfW = 4.5 - 1.1 * stemT; // 9.0mm wide at bottom-inner corner -> 6.8mm wide at top of cutout
-                double dHookStem2D = SdfMesher.Box2D(hu, hv, stemHalfW, 3.0, 1.1);
+                // 2) 2x TRUE TRIANGULAR-RISER J-Hooks matched directly to the ruler-measured Leatt cutout!
+                //    - Measured cutout vertices (1/16" ruler @ 3.92 px/mm):
+                //        A (bottom-inner tip): (22.1, 42.2), B (bottom-outer): (33.1, 44.8), C (top-outer): (33.8, 54.5)
+                //    - Triangular riser (inset ~0.6mm for clean 72D drop-in, 1.0mm corner fillet) locks into ALL 3 walls
+                //      of the triangular cutout with zero twist and snug inward+downward tension!
+                double dHookStem2D = Triangle2D(ax, y, 23.0, 43.2, 31.6, 45.2, 32.0, 52.2) - 1.0;
                 double dHookStem = Math.Max(dHookStem2D, Math.Max(4.6 - z, z - 11.8));
 
-                // Flat parallel grabbing tongue fitting the ~6.5mm gray plastic shelf next to the black foam (z = 8.50..11.80mm):
-                //   hv in [-8.5..-0.5] (5.5mm clear parallel catch past riser face hv=-3.0), 8.8mm wide (hx=4.4), 1.4mm corner radius!
-                double dHookTongue2D = SdfMesher.Box2D(hu, hv + 4.5, 4.4, 4.0, 1.4);
+                // Flat parallel grabbing tongue (z = 8.50..11.80mm -> exact 3.50mm parallel throat) extending 5.5mm
+                // diagonally downward-and-inward (28 deg) from the triangular riser onto the ~6.5mm gray plastic ledge next to the foam:
+                const double cosA = 0.88294759; // cos(28 deg)
+                const double sinA = 0.46947156; // sin(28 deg)
+                double hdx = ax - 27.5;
+                double hdy = y - 45.8;
+                double hu = hdx * cosA - hdy * sinA;
+                double hv = hdx * sinA + hdy * cosA;
+
+                double dHookTongue2D = SdfMesher.Box2D(hu, hv + 4.0, 4.5, 4.2, 1.6);
                 double dHookTongue = Math.Max(dHookTongue2D, Math.Max(8.50 - z, z - 11.80));
 
-                // Top-side (+hv) 45-deg beveled reinforcement buttress clipped cleanly inside dPlate2D:
-                double dHookBevelRaw = Math.Max(
-                    Math.Abs(hu) - 4.0,
-                    Triangle2D(hv, z, 1.6, 4.6, 6.4, 4.6, 1.6, 11.2) - 0.35);
-                double dHookBevel = Math.Max(dHookBevelRaw, dPlate2D);
-                double dHooks = SdfMesher.SmoothMin(Math.Min(dHookStem, dHookBevel), dHookTongue, 0.5);
+                // Smoothly blend the beefy triangular riser into the 5.0mm Y-truss (clean 1.2mm root fillet, zero stray fin!)
+                double dPlateWithRiser = SdfMesher.SmoothMin(dPlate, dHookStem, 1.2);
+                double dPlateAndHooks = SdfMesher.SmoothMin(dPlateWithRiser, dHookTongue, 0.5);
 
                 // 3) 4x Lower 72D-Sized Barbed Triangular Plugs at exact verified centers (+-7.1, -24.4 & +-14.5, -37.2)
                 double dT1 = barbedTriPlug72DSdf(ax, y, z, 7.1, -24.4);
                 double dT2 = barbedTriPlug72DSdf(ax, y, z, 14.5, -37.2);
                 double dTris = Math.Min(dT1, dT2);
 
-                double body = SdfMesher.SmoothMin(dPlate, Math.Min(dHooks, dTris), 0.7);
+                double body = SdfMesher.SmoothMin(dPlateAndHooks, dTris, 0.7);
 
                 // 4) Standard 4x M4 Universal Mount Holes (+-7.5, +-7.5 centered at Y=+8.0mm) w/ Ø9.8mm x 2.3mm Washer Counterbores
                 double dxM = ax - 7.5;
