@@ -2385,12 +2385,14 @@ namespace DjiNeo2OrbeaMounts
         }
 
         // =========================================================================
-        // 04k: WIDE-GLUE-SEAM 3-STRAND SPIRAL GIMBAL CUSHION (90A TPU, ZERO SUPPORTS!)
-        //   - Thickened rim & gluing flange version of 04j V2 for much stronger adhesive bonding:
-        //     * Outer perimeter wall widened from 1.6->2.1mm up to 2.2->3.8mm (nearly 2x the flat
-        //       gluing surface area at Z=7.0mm + thicker side seams for filleting!).
-        //     * Gentle 37.6-deg internal taper (100% support-free in 90A TPU) down to the same
-        //       compact 18.8 x 21.2 mm flat gluing base that seats flush inside 01h/01i/01j!
+        // 04k (V2): FULL-POCKET ULTRA-SOFT SLIM SPIRAL GIMBAL CUSHION (90A TPU, ZERO SUPPORTS!)
+        //   - Exact drop-in fit for the entire cradle nose pocket (35.1 x 25.0mm inner cavity ->
+        //     34.4 x 24.4mm front tapering subtly to 32.4 x 22.4mm flat gluing base) so ZERO rim
+        //     edges sit anywhere near the gimbal!
+        //   - Slimmed from 7.0mm -> 4.2mm total height so it only lightly kisses the gimbal bezel
+        //     (never hard-loads gimbal damper balls or motor shafts!).
+        //   - Longer, thinner 0.90mm x 1.2mm 3-strand spiral arms (~3x softer!) + wide 2.2->3.4mm
+        //     flat gluing flange (~260 mm^2 bonding area, ZERO supports!).
         // =========================================================================
         public static MeshData BuildTpu90ASpiralGimbalCushionWideGlue(double step = 0.20)
         {
@@ -2398,33 +2400,34 @@ namespace DjiNeo2OrbeaMounts
             {
                 double r = Math.Sqrt(x * x + y * y);
 
-                // 1) Thick-Seam Tapered Outer Standoff Rim (Z in [0.0..7.0]):
-                //    - Front spiral face (z <= 1.8): 23.6 x 26.0 mm (hx=11.8, hy=13.0, R=6.8), wallW = 2.2mm
-                //    - Tapers cleanly across z in [1.8..7.0] to 18.8 x 21.2 mm flat gluing base (hx=9.4, hy=10.6, R=5.0)
-                //      with wallW widening from 2.2mm -> 3.8mm (37.6-deg self-supporting inner taper, massive 3.8mm glue ring!)
-                double zT = Math.Max(0.0, Math.Min(1.0, (z - 1.8) / 5.2));
-                double hxOut = 11.8 - 2.4 * zT;
-                double hyOut = 13.0 - 2.4 * zT;
-                double rOutCorner = 6.8 - 1.8 * zT;
-                double wallW = 2.2 + 1.6 * zT; // 2.2mm thick side seams widening to 3.8mm flat gluing flange at Z=7.0mm!
+                // 1) Full-Pocket Landscape Outer Rim (X = 34.4mm wide, Y = 24.4mm tall, Z in [0.0..4.2mm]):
+                //    - Front face (z <= 1.4): 34.4 x 24.4mm (hx=17.2, hy=12.2, R=6.2), wallW = 2.2mm
+                //    - Gently tapers across z in [1.4..4.2] to 32.4 x 22.4mm flat gluing base (clears cradle inner corner fillets!)
+                //      while wallW widens 2.2mm -> 3.4mm (~37-deg self-supporting inner taper, ~260 mm^2 flat glue flange!)
+                double zT = Math.Max(0.0, Math.Min(1.0, (z - 1.4) / 2.8));
+                double hxOut = 17.2 - 1.0 * zT;
+                double hyOut = 12.2 - 1.0 * zT;
+                double rOutCorner = 6.2 - 1.0 * zT;
+                double wallW = 2.2 + 1.2 * zT;
 
                 double dOuterBox = SdfMesher.Box2D(x, y, hxOut, hyOut, rOutCorner);
-                double dInnerCav = SdfMesher.Box2D(x, y, hxOut - wallW, hyOut - wallW, Math.Max(1.8, rOutCorner - wallW));
-                double dRim = Math.Max(Math.Max(dOuterBox, -dInnerCav), Math.Max(0.0 - z, z - 7.0));
+                double dInnerCav = SdfMesher.Box2D(x, y, hxOut - wallW, hyOut - wallW, Math.Max(2.2, rOutCorner - wallW));
+                double dRim = Math.Max(Math.Max(dOuterBox, -dInnerCav), Math.Max(0.0 - z, z - 4.2));
 
-                // 2) Center Hollow Gimbal-Bezel Cushion Ring (r in [6.8..8.0mm] -> Ø13.6mm open center clears lens glass!)
-                double dRing2D = Math.Max(6.8 - r, r - 8.0);
-                double dRing = Math.Max(dRing2D, Math.Max(0.0 - z, z - 1.8));
+                // 2) Center Hollow Gimbal-Bezel Cushion Ring (r in [6.8..7.9mm] -> Ø13.6mm open center clears lens glass!)
+                double dRing2D = Math.Max(6.8 - r, r - 7.9);
+                double dRing = Math.Max(dRing2D, Math.Max(0.0 - z, z - 1.4));
 
-                // 3) 3-Strand Archimedean Spiral Flexure Arms anchored solidly into the 2.2mm outer rim
+                // 3) 3-Strand Ultra-Soft Long-Sweep Spiral Flexure Arms (0.90mm wide x 1.2mm tall, sweeping 115 deg!)
+                //    Longer reach across the 34.4mm wide pocket makes the spring ~3x softer with feather-light gimbal contact!
                 double dSpirals2D = 1e9;
-                const int nSeg = 14;
+                const int nSeg = 18;
                 const double rStart = 7.4;
-                const double rEnd = 12.8;
-                const double sweepRad = 1.43;
+                const double rEnd = 17.5;
+                const double sweepRad = 2.00; // ~115 deg long soft sweep
                 for (int k = 0; k < 3; k++)
                 {
-                    double baseAng = k * (2.0 * Math.PI / 3.0) + 0.35;
+                    double baseAng = k * (2.0 * Math.PI / 3.0) + 0.25;
                     double prevX = rStart * Math.Cos(baseAng);
                     double prevY = rStart * Math.Sin(baseAng);
                     for (int s = 1; s <= nSeg; s++)
@@ -2434,20 +2437,20 @@ namespace DjiNeo2OrbeaMounts
                         double ak = baseAng + sweepRad * u;
                         double curX = rk * Math.Cos(ak);
                         double curY = rk * Math.Sin(ak);
-                        double dSeg = Capsule2D(x, y, prevX, prevY, curX, curY, 0.58);
+                        double dSeg = Capsule2D(x, y, prevX, prevY, curX, curY, 0.45); // 0.90mm ultra-soft strand width
                         if (dSeg < dSpirals2D) dSpirals2D = dSeg;
                         prevX = curX;
                         prevY = curY;
                     }
                 }
-                double dOuterAtFront = SdfMesher.Box2D(x, y, 11.8, 13.0, 6.8);
-                double dSpirals = Math.Max(Math.Max(dSpirals2D, Math.Max(dOuterAtFront, 6.8 - r)), Math.Max(0.0 - z, z - 1.6));
+                double dOuterAtFront = SdfMesher.Box2D(x, y, 17.2, 12.2, 6.2);
+                double dSpirals = Math.Max(Math.Max(dSpirals2D, Math.Max(dOuterAtFront, 6.8 - r)), Math.Max(0.0 - z, z - 1.2));
 
                 return Math.Min(dRim, Math.Min(dRing, dSpirals));
             };
 
             return SdfMesher.ExtractMesh("04k_TPU_90A_Spiral_Gimbal_Cushion_WideGlue", sdf,
-                new Vec3(-12.6, -13.8, -0.3), new Vec3(12.6, 13.8, 7.6), step);
+                new Vec3(-18.0, -13.0, -0.3), new Vec3(18.0, 13.0, 4.8), step);
         }
 
         // =========================================================================
